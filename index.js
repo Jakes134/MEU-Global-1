@@ -12,18 +12,15 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Optional: for CSS/JS files if separated
 
 
-
 // Database Configuration
-const dbUrl = process.env.DATABASE_URL || "";
-// This safely grabs the part after the '@' symbol but before the port/database name
-const hostPart = dbUrl.split('@')[1] ? dbUrl.split('@')[1].split(':')[0] : "No host found";
-console.log("DEBUG: The server address is:", hostPart);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // Required for DigitalOcean Managed Databases
+    require: true,
+    rejectUnauthorized: false
   }
 });
+
 
 /**
  * INITIAL DATABASE SETUP
