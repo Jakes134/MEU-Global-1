@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path'); // Tool to handle file paths
 const { Pool } = require('pg');
 const app = express();
 const port = process.env.PORT || 8080;
@@ -8,12 +9,18 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-app.get('/', async (req, res) => {
+// This line tells Express to serve your index.html file
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// We keep this endpoint so the dashboard can check the database later
+app.get('/db-check', async (req, res) => {
   try {
     const dbRes = await pool.query('SELECT NOW()');
-    res.send(`✅ MEU Global CRM is LIVE. DB Time: ${dbRes.rows[0].now}`);
+    res.json({ status: 'success', time: dbRes.rows[0].now });
   } catch (err) {
-    res.status(500).send(`❌ Connection Error: ${err.message}`);
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
