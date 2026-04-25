@@ -11,7 +11,10 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Optional: for CSS/JS files if separated
 
+
+
 // Database Configuration
+console.log("DEBUG: DATABASE_URL value starts with:", process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 10) : "Nothing found");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
