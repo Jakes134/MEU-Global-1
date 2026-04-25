@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 
-[span_3](start_span)[span_4](start_span)// We use the variable you just set in DigitalOcean for security and scaling[span_3](end_span)[span_4](end_span)
+// We use the variable you just set in DigitalOcean for security and scaling[span_3](end_span)[span_4](end_span)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
