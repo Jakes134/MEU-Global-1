@@ -14,7 +14,10 @@ app.use(express.static(path.join(__dirname, 'public'))); // Optional: for CSS/JS
 
 
 // Database Configuration
-console.log("DEBUG: DATABASE_URL value starts with:", process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 10) : "Nothing found");
+const dbUrl = process.env.DATABASE_URL || "";
+// This safely grabs the part after the '@' symbol but before the port/database name
+const hostPart = dbUrl.split('@')[1] ? dbUrl.split('@')[1].split(':')[0] : "No host found";
+console.log("DEBUG: The server address is:", hostPart);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
