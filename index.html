@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MEU Global | CRM Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f4f1;
+      --bg-tertiary: #eeede9;
+      --text-primary: #1a1916;
+      --text-secondary: #6b6a66;
+      --text-hint: #a09f9a;
+      --border: rgba(26,25,22,0.1);
+      --border-md: rgba(26,25,22,0.18);
+      --accent: #1a1916;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --sidebar-w: 64px;
+      --topbar-h: 52px;
+      --font: 'DM Sans', sans-serif;
+      --font-serif: 'DM Serif Display', serif;
+      --red-text: #a32d2d;
+      --error: #d32f2f;
+      --success: #388e3c;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── AUTH OVERLAY ─── */
+    #login-overlay {
+      position: fixed; inset: 0; background: var(--bg-secondary);
+      z-index: 2000; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 24px;
+    }
+    .login-card {
+      background: white; padding: 40px; border-radius: var(--radius-lg);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border);
+      width: 100%; max-width: 400px;
+    }
+    .form-group {
+      margin-bottom: 16px; text-align: left;
+    }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--text-secondary);
+    }
+    .form-group input {
+      width: 100%; padding: 10px; border: 1px solid var(--border-md); border-radius: var(--radius-md);
+      font-family: var(--font); font-size: 14px; color: var(--text-primary);
+    }
+    .form-group input:focus {
+      outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,25,22,0.1);
+    }
+    .login-btn {
+      width: 100%; padding: 12px 24px; background: var(--text-primary); color: white;
+      border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500;
+      font-size: 14px; transition: background 0.2s;
+    }
+    .login-btn:hover { background: #333; }
+    .login-btn:disabled { background: #ccc; cursor: not-allowed; }
+    
+    .error-msg {
+      color: var(--error); font-size: 13px; margin-top: 8px; padding: 8px; background: #ffebee;
+      border-radius: var(--radius-md); border-left: 3px solid var(--error);
+    }
+    .success-msg {
+      color: var(--success); font-size: 13px; margin-top: 8px; padding: 8px; background: #e8f5e9;
+      border-radius: var(--radius-md); border-left: 3px solid var(--success);
+    }
+
+    /* ─── LAYOUT ─── */
+    .app { display: flex; height: 100vh; overflow: hidden; display: none; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--bg-primary);
+      border-right: 0.5px solid var(--border); display: flex;
+      flex-direction: column; align-items: center; padding: 12px 0; gap: 4px;
+      z-index: 200; flex-shrink: 0;
+    }
+    .sidebar-btn {
+      width: 40px; height: 40px; border-radius: var(--radius-md);
+      border: none; background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); transition: background 0.15s;
+    }
+    .sidebar-btn:hover, .sidebar-btn.active { background: var(--bg-secondary); color: var(--text-primary); }
+    .sidebar-spacer { flex: 1; }
+
+    /* ─── PANELS ─── */
+    .dropdown-panel, .profile-panel {
+      position: fixed; left: calc(var(--sidebar-w) + 4px);
+      width: 224px; background: var(--bg-primary); border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-lg); box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      padding: 8px; z-index: 500; display: none;
+    }
+    .dropdown-panel.open, .profile-panel.open { display: block; }
+    .dropdown-panel { top: 8px; }
+    .profile-panel { bottom: 8px; padding: 12px; }
+
+    .profile-menu-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px;
+      border-radius: var(--radius-md); cursor: pointer; font-size: 13px;
+      color: var(--text-secondary); text-decoration: none; transition: background 0.1s;
+    }
+    .profile-menu-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .profile-menu-item.danger { color: var(--red-text); }
+
+    /* ─── MAIN ─── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: var(--topbar-h); background: var(--bg-primary); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+    .topbar-client-name { font-size: 14px; font-weight: 500; }
+    .topbar-spacer { flex: 1; }
+    .topbar-action.primary { height: 30px; padding: 0 14px; border-radius: var(--radius-md); background: var(--text-primary); color: white; border: none; font-weight: 500; cursor: pointer; }
+
+    .content { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
+    .card { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+    .stat-val { font-size: 28px; font-weight: 500; font-family: var(--font-serif); }
+
+    /* ─── MODALS ─── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; }
+    .modal-card { background:white; padding:30px; border-radius:12px; width:500px; max-height:85vh; overflow-y:auto; }
+
+    input, select { width: 100%; padding: 10px; border: 1px solid var(--border-md); border-radius: 6px; margin-bottom: 12px; font-family: var(--font); }
+    
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 20px; }
+    .admin-table th { text-align: left; color: var(--text-hint); padding: 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+    .admin-table td { padding: 8px; border-bottom: 1px solid var(--border); }
+    .admin-table .delete-btn { background: var(--red-text); color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN / PASSWORD SETUP SCREEN -->
+<div id="login-overlay">
+  <div class="login-card">
+    <h1 style="font-family: var(--font-serif); font-size: 32px; margin-bottom: 8px;">MEU Global</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">CRM Dashboard</p>
+    
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="login-btn" onclick="handleLogin()">Sign In</button>
+      <div id="login-error"></div>
+    </div>
+
+    <!-- PASSWORD SETUP FORM (shown after first login) -->
+    <div id="password-setup" style="display:none;">
+      <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Set your password to activate your account:</p>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="setup-password" placeholder="At least 8 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="setup-confirm" placeholder="Confirm password">
+      </div>
+      <button class="login-btn" onclick="handlePasswordSetup()">Set Password & Continue</button>
+      <div id="setup-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app-shell">
+  <aside class="sidebar">
+    <div style="position:relative;">
+      <button class="sidebar-btn active" id="menu-btn" onclick="toggleDropdown()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width:20px;"><path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+      </button>
+      <div class="dropdown-panel" id="client-dropdown">
+        <div style="font-size:11px; font-weight:500; color:var(--text-hint); padding:4px 8px;">CLIENTS</div>
+        <div style="height:0.5px; background:var(--border); margin:6px 0;" class="dropdown-divider"></div>
+        <button class="profile-menu-item admin-only" onclick="document.getElementById('add-client-modal').style.display='flex'">
+          + Add new client
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div style="position:relative; margin-bottom:4px;">
+      <button class="sidebar-btn" id="profile-btn" onclick="toggleProfile()">
+        <div id="user-initials" style="width:32px;height:32px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#0C447C;">??</div>
+      </button>
+      <div class="profile-panel" id="profile-panel">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <div id="user-avatar-lg" style="width:40px;height:40px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-weight:500;">??</div>
+          <div>
+            <div id="user-name" style="font-size:14px; font-weight:500;">User</div>
+            <div id="user-role-label" style="font-size:12px; color:var(--text-secondary);">Role</div>
+          </div>
+        </div>
+        <div style="height:0.5px; background:var(--border); margin:6px 0;"></div>
+        
+        <div class="profile-menu-item admin-only" onclick="openAdminPanel()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;"><path d="M10.5 6h9.75M10.5 12h9.75M10.5 18h9.75M3 6h.008v.008H3V6zm0 6h.008v.008H3v-.008zm0 6h.008v.008H3v-.008z"/></svg>
+          Admin Panel
+        </div>
+        
+        <a href="/logout" class="profile-menu-item danger">Sign out</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="topbar-client-name" id="topbar-name">Select a client</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <button class="topbar-action primary admin-only">+ Log activity</button>
+    </header>
+    <div class="content">
+      <div class="card"><div style="font-size:11px; color:var(--text-hint);">REVENUE</div><div class="stat-val" id="stat-rev">$0</div></div>
+      <div class="card"><div style="font-size:11px; color:var(--text-hint);">OPEN DEALS</div><div class="stat-val" id="stat-deals">0</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL MODAL -->
+<div id="admin-modal" class="modal-overlay">
+  <div class="modal-card">
+    <h2 style="font-family:var(--font-serif); margin-bottom:20px;">User Management</h2>
+    <div style="background:var(--bg-secondary); padding:20px; border-radius:8px; margin-bottom:24px;">
+      <h4 style="margin-bottom:12px;">Invite/Add User</h4>
+      <input type="email" id="adm-email" placeholder="user@email.com">
+      <input type="text" id="adm-fullname" placeholder="Full Name">
+      <select id="adm-role">
+        <option value="Client">Role: Client</option>
+        <option value="Owner">Role: Owner (Client Lead)</option>
+        <option value="Manager">Role: Manager</option>
+      </select>
+      <select id="adm-client-select">
+        <option value="">Global (No specific client)</option>
+      </select>
+      <button onclick="addUser()" style="width:100%; padding:12px; background:black; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Add User to System</button>
+    </div>
+    
+    <table class="admin-table" id="user-table">
+      <thead><tr><th>User</th><th>Role</th><th>Client Mapping</th><th>Actions</th></tr></thead>
+      <tbody id="user-table-body"></tbody>
+    </table>
+    <button onclick="document.getElementById('admin-modal').style.display='none'" style="margin-top:20px; background:none; border:none; color:var(--text-hint); cursor:pointer;">Close Admin Panel</button>
+  </div>
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div id="add-client-modal" class="modal-overlay">
+  <div class="modal-card" style="width:320px;">
+    <h3>Add New Client</h3>
+    <input type="text" id="new-client-name" placeholder="Client Name">
+    <input type="text" id="new-client-desc" placeholder="Company Type">
+    <div style="display:flex; justify-content:flex-end; gap:12px;">
+      <button onclick="document.getElementById('add-client-modal').style.display='none'" style="background:none; border:none;">Cancel</button>
+      <button onclick="saveClient()" style="padding:8px 16px; background:black; color:white; border-radius:6px;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let clients = [];
+  let selected = 0;
+  let currentUser = null;
+  let needsPasswordSetup = false;
+
+  // 🔐 Login Handler
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+
+    if (!email || !password) {
+      errorDiv.innerHTML = '<div class="error-msg">Email and password required</div>';
+      return;
+    }
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.error === 'Account not activated. Please set your password.') {
+          // User exists but hasn't set password yet
+          needsPasswordSetup = true;
+          document.getElementById('login-form').style.display = 'none';
+          document.getElementById('password-setup').style.display = 'block';
+          document.getElementById('setup-error').innerHTML = '';
+        } else {
+          errorDiv.innerHTML = `<div class="error-msg">${data.error}</div>`;
+        }
+        return;
+      }
+
+      // Success - show dashboard
+      currentUser = data.user;
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('app-shell').style.display = 'flex';
+
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('user-initials').textContent = initials;
+      document.getElementById('user-avatar-lg').textContent = initials;
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-role-label').textContent = currentUser.role;
+
+      applyPermissions(currentUser.role);
+      loadClients();
+    } catch (err) {
+      errorDiv.innerHTML = `<div class="error-msg">Connection error. Try again.</div>`;
+      console.error(err);
+    }
+  }
+
+  // 🔑 Password Setup Handler
+  async function handlePasswordSetup() {
+    const password = document.getElementById('setup-password').value;
+    const confirm = document.getElementById('setup-confirm').value;
+    const errorDiv = document.getElementById('setup-error');
+
+    if (!password || password.length < 8) {
+      errorDiv.innerHTML = '<div class="error-msg">Password must be at least 8 characters</div>';
+      return;
+    }
+
+    if (password !== confirm) {
+      errorDiv.innerHTML = '<div class="error-msg">Passwords do not match</div>';
+      return;
+    }
+
+    try {
+      const res = await fetch('/auth/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorDiv.innerHTML = `<div class="error-msg">${data.error}</div>`;
+        return;
+      }
+
+      // Success
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('password-setup').style.display = 'none';
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('setup-password').value = '';
+      document.getElementById('setup-confirm').value = '';
+      document.getElementById('login-error').innerHTML = '<div class="success-msg">✓ Password set! Please log in.</div>';
+      needsPasswordSetup = false;
+    } catch (err) {
+      errorDiv.innerHTML = '<div class="error-msg">Failed to set password. Try again.</div>';
+      console.error(err);
+    }
+  }
+
+  // 🔑 Check if already logged in
+  window.addEventListener('DOMContentLoaded', async () => {
+    const res = await fetch('/user-status');
+    const status = await res.json();
+    if (status.loggedIn) {
+      currentUser = status.user;
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('app-shell').style.display = 'flex';
+      
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('user-initials').textContent = initials;
+      document.getElementById('user-avatar-lg').textContent = initials;
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-role-label').textContent = currentUser.role;
+
+      applyPermissions(currentUser.role);
+      loadClients();
+    }
+  });
+
+  function applyPermissions(role) {
+    const isAdmin = (role === 'SiteOwner' || role === 'Manager');
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
+  }
+
+  async function loadClients() {
+    const response = await fetch('/clients');
+    clients = await response.json();
+    renderClientList();
+    if (clients.length > 0) selectClient(0);
+  }
+
+  function renderClientList() {
+    document.querySelectorAll('.client-item-row').forEach(el => el.remove());
+    const divider = document.querySelector('.dropdown-divider');
+    clients.forEach((c, i) => {
+      const html = `
+        <div class="profile-menu-item client-item-row" onclick="selectClient(${i})">
+          <div style="width:24px; height:24px; border-radius:50%; background:#B5D4F4; display:flex; align-items:center; justify-content:center; font-size:10px; margin-right:8px;">${c.initials}</div>
+          ${c.name}
+        </div>`;
+      divider.insertAdjacentHTML('beforebegin', html);
+    });
+  }
+
+  async function openAdminPanel() {
+    document.getElementById('admin-modal').style.display = 'flex';
+    
+    const sel = document.getElementById('adm-client-select');
+    sel.innerHTML = '<option value="">Global (No client)</option>';
+    clients.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+
+    const res = await fetch('/admin/users');
+    const users = await res.json();
+    const body = document.getElementById('user-table-body');
+    body.innerHTML = '';
+    users.forEach(u => {
+      body.innerHTML += `
+        <tr>
+          <td>${u.email}</td>
+          <td>${u.role}</td>
+          <td>${u.client_name || '—'}</td>
+          <td>
+            <button class="delete-btn" onclick="deleteUser(${u.id})">Delete</button>
+          </td>
+        </tr>`;
+    });
+  }
+
+  async function addUser() {
+    const data = {
+      email: document.getElementById('adm-email').value,
+      name: document.getElementById('adm-fullname').value,
+      role: document.getElementById('adm-role').value,
+      client_id: document.getElementById('adm-client-select').value || null
+    };
+
+    if (!data.email || !data.name) {
+      alert('Email and name required');
+      return;
+    }
+
+    const res = await fetch('/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      alert('User created. They must set their password on first login.');
+      document.getElementById('adm-email').value = '';
+      document.getElementById('adm-fullname').value = '';
+      openAdminPanel();
+    } else {
+      const err = await res.json();
+      alert('Error: ' + (err.error || 'Failed to add user'));
+    }
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    const res = await fetch(`/admin/users/${userId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('User deleted');
+      openAdminPanel();
+    } else {
+      alert('Failed to delete user');
+    }
+  }
+
+  async function saveClient() {
+    const name = document.getElementById('new-client-name').value;
+    const type = document.getElementById('new-client-desc').value;
+    const res = await fetch('/clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initials: name.substring(0, 2).toUpperCase(), name, type: type || 'Enterprise', revenue: '$0', deals: 0 })
+    });
+    if (res.ok) {
+      document.getElementById('add-client-modal').style.display = 'none';
+      document.getElementById('new-client-name').value = '';
+      document.getElementById('new-client-desc').value = '';
+      loadClients();
+    }
+  }
+
+  function selectClient(i) {
+    selected = i;
+    const c = clients[i];
+    document.getElementById('topbar-name').textContent = c.name;
+    document.getElementById('stat-rev').textContent = c.revenue;
+    document.getElementById('stat-deals').textContent = c.deals;
+    document.getElementById('client-dropdown').classList.remove('open');
+  }
+
+  function toggleDropdown() { document.getElementById('client-dropdown').classList.toggle('open'); }
+  function toggleProfile() { document.getElementById('profile-panel').classList.toggle('open'); }
+
+  window.onclick = (e) => {
+    if (!e.target.closest('#menu-btn') && !e.target.closest('#client-dropdown')) document.getElementById('client-dropdown').classList.remove('open');
+    if (!e.target.closest('#profile-btn') && !e.target.closest('#profile-panel')) document.getElementById('profile-panel').classList.remove('open');
+  }
+</script>
+</body>
+</html>
