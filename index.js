@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─────────────────────────────────────────────
-//  DATABASE SETUP
+//  DATABASE CONNECTION
 // ─────────────────────────────────────────────
 const dbUrl = process.env.DATABASE_URL
   ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, '')
@@ -28,17 +28,18 @@ pool.query('SELECT NOW()')
   .catch(e => console.error('❌ PostgreSQL connection FAILED:', e.message));
 
 // ─────────────────────────────────────────────
-//  SYSTEM SETUP & MIGRATIONS
+//  SYSTEM SETUP & MIGRATIONS (Auto-updates Schema)
 // ─────────────────────────────────────────────
 app.get('/setup-db', async (req, res) => {
   if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) {
     return res.status(403).send('Forbidden – provide ?secret=YOUR_SETUP_SECRET');
   }
   try {
-    // 1. Users Table
+    // 1. Users Table (Updated with Name column)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
         email VARCHAR(100) UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role VARCHAR(20) DEFAULT 'user', 
@@ -48,7 +49,8 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // Migration: Add columns to users if they don't exist
+    // Run Migrations (Adds columns if they were missing from earlier versions)
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
 
@@ -79,8 +81,6 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
-    // Migration: Add columns to posts if they don't exist
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
 
     // 4. Tasks Table
@@ -96,19 +96,19 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // Seed Admin if no users exist
+    // Seed Admin if needed
     const { rows } = await pool.query('SELECT COUNT(*) FROM users');
     if (parseInt(rows[0].count) === 0) {
       const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@meuglobal.com';
       const adminPass  = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!';
       const hashed     = await bcrypt.hash(adminPass, 12);
       await pool.query(
-        `INSERT INTO users (email, password, role, must_change_password) VALUES ($1, $2, 'admin', TRUE)`,
+        `INSERT INTO users (name, email, password, role, must_change_password) VALUES ('System Admin', $1, $2, 'admin', TRUE)`,
         [adminEmail, hashed]
       );
     }
 
-    res.send('<pre>✅ Database schema is up to date.</pre>');
+    res.send('<pre>✅ Database is synchronized. Users now have "Name" characteristic.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
@@ -131,6 +131,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ 
         success: true, 
         userId: user.id, 
+        name: user.name,
         role: user.role, 
         client_id: user.client_id, 
         email: user.email,
@@ -141,15 +142,31 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Create new user (Used by Admins)
 app.post('/api/admin/add-user', async (req, res) => {
-    const { email, password, role, client_id } = req.body;
+    const { name, email, password, role, client_id } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'Name, Email, and Password are required.' });
+    
     try {
         const hashed = await bcrypt.hash(password, 12);
         await pool.query(
-            `INSERT INTO users (email, password, role, client_id, must_change_password) VALUES ($1, $2, $3, $4, TRUE)`,
-            [email.toLowerCase().trim(), hashed, role, client_id || null]
+            `INSERT INTO users (name, email, password, role, client_id, must_change_password) VALUES ($1, $2, $3, $4, $5, TRUE)`,
+            [name, email.toLowerCase().trim(), hashed, role, client_id || null]
         );
         res.status(201).json({ success: true });
+    } catch (err) {
+        if (err.code === '23505') return res.status(409).json({ error: 'User email already exists.' });
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get assignable users (Admins and Creators) for Tasks
+app.get('/api/users/assignable', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            "SELECT id, name, email, role FROM users WHERE role IN ('user', 'admin') ORDER BY name ASC"
+        );
+        res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -170,7 +187,7 @@ app.post('/api/clients', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-//  POSTS API (Role-Based)
+//  POSTS API
 // ─────────────────────────────────────────────
 app.get('/api/posts', async (req, res) => {
     const { month, year, client_id, role } = req.query;
@@ -182,7 +199,7 @@ app.get('/api/posts', async (req, res) => {
         query += ` AND EXTRACT(YEAR FROM p.post_date) = $${params.length - 1} AND EXTRACT(MONTH FROM p.post_date) = $${params.length}`;
     }
 
-    if (client_id && (role === 'client_owner' || client_id !== 'null')) {
+    if (client_id && client_id !== 'null') {
         params.push(client_id);
         query += ` AND p.client_id = $${params.length}`;
     }
@@ -202,20 +219,19 @@ app.post('/api/posts', async (req, res) => {
     res.json(rows[0]);
 });
 
-app.post('/api/posts/:id/approve', async (req, res) => {
-    await pool.query('UPDATE posts SET is_approved = TRUE, status = $1 WHERE id = $2', ['scheduled', req.params.id]);
-    res.json({ success: true });
-});
-
 // ─────────────────────────────────────────────
 //  TASKS API
 // ─────────────────────────────────────────────
 app.get('/api/tasks', async (req, res) => {
     const { role, client_id, user_id } = req.query;
-    let query = `SELECT t.*, u.email as user_email FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id WHERE 1=1`;
+    let query = `SELECT t.*, u.name as assignee_name, c.name as client_name 
+                 FROM tasks t 
+                 LEFT JOIN users u ON t.assigned_to = u.id 
+                 LEFT JOIN clients c ON t.client_id = c.id
+                 WHERE 1=1`;
     const params = [];
 
-    if (role === 'client_owner') {
+    if (role === 'client_owner' && client_id) {
         params.push(client_id);
         query += ` AND t.client_id = $${params.length}`;
     } else if (role === 'user') {
