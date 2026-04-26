@@ -5,168 +5,291 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MEU Global | CRM Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f5f4f1;
-      --text-primary: #1a1916;
-      --text-secondary: #6b6a66;
-      --border: rgba(26,25,22,0.1);
-      --accent: #1a1916;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --sidebar-w: 64px;
-      --font: 'DM Sans', sans-serif;
-      --font-serif: 'DM Serif Display', serif;
+      --bg-primary:    #ffffff;
+      --bg-secondary:  #f5f4f1;
+      --text-primary:  #1a1916;
+      --text-secondary:#6b6a66;
+      --border:        rgba(26,25,22,0.1);
+      --accent:        #1a1916;
+      --danger:        #b45b3e;
+      --success:       #2d6a4f;
+      --radius-md:     8px;
+      --radius-lg:     12px;
+      --sidebar-w:     64px;
+      --font:          'DM Sans', sans-serif;
+      --font-serif:    'DM Serif Display', serif;
     }
 
     body { height: 100vh; font-family: var(--font); background: var(--bg-secondary); color: var(--text-primary); overflow: hidden; }
-    
-    /* AUTH OVERLAY */
+
+    /* ── AUTH OVERLAY ── */
     #login-overlay {
       position: fixed; inset: 0; background: var(--bg-secondary);
       z-index: 2000; display: flex; align-items: center; justify-content: center;
     }
     .login-card {
       background: white; padding: 40px; border-radius: var(--radius-lg);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border);
-      width: 100%; max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center;
+      border: 1px solid var(--border); width: 100%; max-width: 400px;
     }
     .form-group { margin-bottom: 16px; text-align: left; }
-    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: var(--font); }
-    .login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; }
-    
+    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); font-weight: 500; }
+    .form-group input {
+      width: 100%; padding: 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); font-family: var(--font); font-size: 14px;
+      outline: none; transition: border-color 0.15s;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%; padding: 12px; background: var(--accent); color: white;
+      border: none; border-radius: var(--radius-md); cursor: pointer;
+      font-weight: 600; font-size: 14px; font-family: var(--font);
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      background: #fef2f0; border: 1px solid #f5c6bb; color: var(--danger);
+      border-radius: var(--radius-md); padding: 10px 14px; font-size: 13px;
+      margin-bottom: 16px; text-align: left; display: none;
+    }
+
     #password-change-area { display: none; }
 
-    /* DASHBOARD LAYOUT */
+    /* ── DASHBOARD ── */
     .app { display: none; height: 100vh; }
-    
-    .sidebar { 
-      width: var(--sidebar-w); 
-      background: var(--bg-primary); 
-      border-right: 0.5px solid var(--border); 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: space-between; 
-      padding: 20px 0; 
+
+    .sidebar {
+      width: var(--sidebar-w); background: var(--bg-primary);
+      border-right: 0.5px solid var(--border); display: flex;
+      flex-direction: column; justify-content: space-between; padding: 20px 0;
     }
     .sidebar-top, .sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-    
-    .add-user-btn { 
-      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); 
+
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
       background: none; cursor: pointer; font-size: 18px; color: var(--text-secondary);
-      transition: all 0.2s;
+      transition: all 0.2s; display: flex; align-items: center; justify-content: center;
     }
-    .add-user-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
 
     .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-    .topbar { height: 52px; background: var(--bg-primary); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; }
-    
+    .topbar {
+      height: 52px; background: var(--bg-primary); border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 10;
+      justify-content: space-between;
+    }
+
     .content { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1200px; margin: 0 auto; width: 100%; }
-    
+
     .card { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
-    .card-label { font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+    .card-label { font-size: 11px; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
     .card-value { font-size: 32px; font-family: var(--font-serif); }
 
-    .client-form { grid-column: span 2; }
+    .full-width { grid-column: span 2; }
+
     .input-row { display: flex; gap: 12px; margin-top: 16px; }
-    .input-row input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); font-family: var(--font); }
+    .input-row input {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); font-family: var(--font); font-size: 14px;
+      outline: none; transition: border-color 0.15s;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+
+    .btn-sm {
+      padding: 0 20px; background: var(--accent); color: white;
+      border: none; border-radius: var(--radius-md); cursor: pointer;
+      font-weight: 600; font-size: 13px; font-family: var(--font);
+      white-space: nowrap; transition: opacity 0.15s;
+    }
+    .btn-sm:hover { opacity: 0.85; }
+
+    /* Client Table */
+    .client-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .client-table th {
+      font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);
+      font-weight: 600; text-transform: uppercase; text-align: left;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+    }
+    .client-table td {
+      padding: 12px; border-bottom: 0.5px solid var(--border);
+      font-size: 14px; vertical-align: middle;
+    }
+    .client-table tr:last-child td { border-bottom: none; }
+    .client-table tbody tr:hover { background: var(--bg-secondary); }
+
+    .status-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      background: #d8f3e8; color: var(--success);
+    }
+
+    .empty-state {
+      text-align: center; padding: 40px 24px; color: var(--text-secondary); font-size: 14px;
+    }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--accent); color: white; padding: 12px 20px;
+      border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
+      opacity: 0; transform: translateY(8px); transition: all 0.25s;
+      pointer-events: none; z-index: 9999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--danger); }
   </style>
 </head>
 <body>
 
+<!-- ── LOGIN OVERLAY ── -->
 <div id="login-overlay">
   <div class="login-card">
     <h1 style="font-family: var(--font-serif); font-size: 32px; margin-bottom: 4px;">MEU Global</h1>
-    
+
+    <!-- Login Form -->
     <div id="login-fields">
-      <p style="color: var(--text-secondary); margin-bottom: 24px;">CRM Dashboard Access</p>
+      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">CRM Dashboard Access</p>
+      <div class="error-msg" id="login-error"></div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="login-email" placeholder="name@meuglobal.com">
+        <input type="email" id="login-email" placeholder="name@meuglobal.com" autocomplete="email">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••">
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') handleLogin()">
       </div>
-      <button class="login-btn" onclick="handleLogin()">Sign In</button>
+      <button class="btn-primary" id="login-btn" onclick="handleLogin()">Sign In</button>
     </div>
 
+    <!-- Password Change Flow -->
     <div id="password-change-area">
-      <p style="color: #b45b3e; margin-bottom: 24px; font-weight: 500;">Security Update Required</p>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Please set a permanent password to continue.</p>
+      <p style="color: var(--danger); margin-bottom: 8px; font-weight: 600;">Security Update Required</p>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Please set a permanent password to continue.</p>
+      <div class="error-msg" id="pw-error"></div>
       <div class="form-group">
-        <label>New Password</label>
-        <input type="password" id="new-password" placeholder="Min. 8 characters">
+        <label>New Password <span style="color:var(--text-secondary)">(min. 8 characters)</span></label>
+        <input type="password" id="new-password" placeholder="Choose a strong password"
+               onkeydown="if(event.key==='Enter') submitNewPassword()">
       </div>
-      <button class="login-btn" onclick="submitNewPassword()">Update & Enter Dashboard</button>
+      <button class="btn-primary" id="pw-btn" onclick="submitNewPassword()">Update & Enter Dashboard</button>
     </div>
   </div>
 </div>
 
+<!-- ── DASHBOARD ── -->
 <div class="app" id="app-shell">
   <aside class="sidebar">
     <div class="sidebar-top">
-      <div style="width: 32px; height: 32px; background: var(--accent); border-radius: 6px;"></div>
+      <div style="width:32px;height:32px;background:var(--accent);border-radius:6px;"></div>
     </div>
     <div class="sidebar-bottom">
-      <button class="add-user-btn" title="Add Team Member" onclick="promptAddUser()">+</button>
+      <button class="icon-btn" title="Add Team Member" onclick="promptAddUser()">+</button>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <span style="font-weight: 500; font-size: 14px;">MEU Global CRM Engine</span>
+      <span style="font-weight:600;font-size:14px;">MEU Global CRM</span>
+      <span style="font-size:13px;color:var(--text-secondary)" id="current-user-email"></span>
     </header>
 
     <div class="content">
+      <!-- Stats -->
       <div class="card">
-        <div class="card-label">ACTIVE CLIENTS</div>
-        <div class="card-value" id="client-count">0</div>
+        <div class="card-label">Active Clients</div>
+        <div class="card-value" id="client-count">—</div>
       </div>
       <div class="card">
-        <div class="card-label">SYSTEM STATUS</div>
-        <div class="card-value" style="color: #2d6a4f;">Online</div>
+        <div class="card-label">System Status</div>
+        <div class="card-value" style="color:var(--success);">Online</div>
       </div>
 
-      <div class="card client-form">
-        <h3 style="font-family: var(--font-serif); font-size: 20px;">Register New Client</h3>
+      <!-- Add Client -->
+      <div class="card full-width">
+        <h3 style="font-family:var(--font-serif);font-size:20px;">Register New Client</h3>
         <div class="input-row">
-          <input type="text" id="client-name" placeholder="Client Name / Company">
+          <input type="text"  id="client-name"  placeholder="Client Name / Company">
           <input type="email" id="client-email" placeholder="Contact Email">
-          <button class="login-btn" style="width: auto; padding: 0 24px;" onclick="addClient()">Add Client</button>
+          <button class="btn-sm" onclick="addClient()">Add Client</button>
+        </div>
+      </div>
+
+      <!-- Client List -->
+      <div class="card full-width">
+        <div class="card-label">All Clients</div>
+        <div id="client-list-container">
+          <div class="empty-state">Loading clients…</div>
         </div>
       </div>
     </div>
   </main>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
+  // ── State ──
   let currentUserId = null;
 
-  /**
-   * AUTHENTICATION LOGIC
-   */
+  // ── Utilities ──
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearError(id) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.style.display = 'none';
+  }
+
+  let toastTimer;
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+  }
+
+  function setLoading(btnId, loading, label = 'Sign In') {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait…' : label;
+  }
+
+  // ── AUTH ──
   async function handleLogin() {
-    const email = document.getElementById('login-email').value;
+    clearError('login-error');
+    const email    = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
 
-    if (!email || !password) return alert("Please provide all credentials.");
+    if (!email || !password) {
+      return showError('login-error', 'Please enter your email and password.');
+    }
+
+    setLoading('login-btn', true);
 
     try {
-      const res = await fetch('/api/login', {
+      const res  = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         currentUserId = data.userId;
+        document.getElementById('current-user-email').textContent = email;
+
         if (data.mustChange) {
           document.getElementById('login-fields').style.display = 'none';
           document.getElementById('password-change-area').style.display = 'block';
@@ -174,29 +297,43 @@
           enterDashboard();
         }
       } else {
-        alert(data.error || "Login failed");
+        showError('login-error', data.error || 'Login failed. Check your credentials.');
       }
     } catch (err) {
       console.error(err);
-      alert("Server connection error.");
+      showError('login-error', 'Could not reach the server. Please try again.');
+    } finally {
+      setLoading('login-btn', false);
     }
   }
 
   async function submitNewPassword() {
+    clearError('pw-error');
     const newPassword = document.getElementById('new-password').value;
-    if (newPassword.length < 4) return alert("Password too short.");
+
+    if (newPassword.length < 8) {
+      return showError('pw-error', 'Password must be at least 8 characters.');
+    }
+
+    setLoading('pw-btn', true, 'Update & Enter Dashboard');
 
     try {
-      const res = await fetch('/api/update-password', {
+      const res  = await fetch('/api/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId, newPassword })
       });
-      
       const data = await res.json();
-      if (data.success) enterDashboard();
+
+      if (res.ok && data.success) {
+        enterDashboard();
+      } else {
+        showError('pw-error', data.error || 'Failed to update password.');
+      }
     } catch (err) {
-      alert("Failed to update password.");
+      showError('pw-error', 'Server error. Please try again.');
+    } finally {
+      setLoading('pw-btn', false, 'Update & Enter Dashboard');
     }
   }
 
@@ -204,63 +341,120 @@
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
     fetchStats();
+    fetchClients();
   }
 
-  /**
-   * CRM LOGIC
-   */
+  // ── CRM ──
   async function fetchStats() {
     try {
-      const res = await fetch('/api/stats');
+      const res  = await fetch('/api/stats');
       const data = await res.json();
-      document.getElementById('client-count').innerText = data.client_count;
-    } catch (err) {
-      console.log("Stats fetch failed");
+      document.getElementById('client-count').textContent = data.client_count ?? '—';
+    } catch {
+      document.getElementById('client-count').textContent = '—';
     }
+  }
+
+  async function fetchClients() {
+    try {
+      const res     = await fetch('/api/clients');
+      const clients = await res.json();
+      renderClients(clients);
+    } catch {
+      document.getElementById('client-list-container').innerHTML =
+        '<div class="empty-state">Failed to load clients.</div>';
+    }
+  }
+
+  function renderClients(clients) {
+    const container = document.getElementById('client-list-container');
+    if (!clients.length) {
+      container.innerHTML = '<div class="empty-state">No clients yet. Add your first one above.</div>';
+      return;
+    }
+
+    const rows = clients.map(c => `
+      <tr>
+        <td>${escapeHtml(c.name)}</td>
+        <td>${escapeHtml(c.email)}</td>
+        <td><span class="status-badge">${escapeHtml(c.status)}</span></td>
+        <td style="color:var(--text-secondary);font-size:13px;">${new Date(c.created_at).toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' })}</td>
+      </tr>
+    `).join('');
+
+    container.innerHTML = `
+      <table class="client-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Added</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
   }
 
   async function addClient() {
-    const name = document.getElementById('client-name').value;
-    const email = document.getElementById('client-email').value;
+    const name  = document.getElementById('client-name').value.trim();
+    const email = document.getElementById('client-email').value.trim();
 
-    if (!name || !email) return alert("Please fill in client details.");
+    if (!name || !email) return toast('Please fill in both client name and email.', 'error');
 
-    const res = await fetch('/api/clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email })
-    });
+    try {
+      const res  = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+      const data = await res.json();
 
-    if (res.ok) {
-      document.getElementById('client-name').value = '';
-      document.getElementById('client-email').value = '';
-      fetchStats();
+      if (res.ok) {
+        document.getElementById('client-name').value  = '';
+        document.getElementById('client-email').value = '';
+        toast('Client added successfully.');
+        fetchStats();
+        fetchClients();
+      } else {
+        toast(data.error || 'Could not add client.', 'error');
+      }
+    } catch {
+      toast('Network error. Please try again.', 'error');
     }
   }
 
-  /**
-   * ADMIN / USER MANAGEMENT
-   */
+  // ── ADMIN ──
   async function promptAddUser() {
-    const email = prompt("Enter new team member email:");
+    const email    = prompt('New team member email:');
     if (!email) return;
-    const password = prompt("Enter a temporary password:");
+    const password = prompt('Temporary password (they will be asked to change it):');
     if (!password) return;
 
     try {
-      const res = await fetch('/api/admin/add-user', {
+      const res  = await fetch('/api/admin/add-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      
-      if (res.ok) alert("User added. They will be prompted to change their password on first login.");
-      else alert("Error adding user (Email may already exist).");
-    } catch (err) {
-      alert("Network error.");
+      const data = await res.json();
+
+      if (res.ok) {
+        toast(`✓ ${email} added. They'll set a new password on first login.`);
+      } else {
+        toast(data.error || 'Error adding user.', 'error');
+      }
+    } catch {
+      toast('Network error.', 'error');
     }
   }
-</script>
 
+  // ── Helpers ──
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
 </body>
 </html>
