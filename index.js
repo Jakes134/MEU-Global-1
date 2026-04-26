@@ -7,51 +7,97 @@ const bcrypt  = require('bcryptjs');
 const app  = express();
 const port = process.env.PORT || 8080;
 
-// ── Trust DigitalOcean's proxy so express sees the real client IP ──
 app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ─────────────────────────────────────────────
+//  DATABASE
+// ─────────────────────────────────────────────
+if (!process.env.DATABASE_URL) {
+  console.error('❌ FATAL: DATABASE_URL environment variable is not set.');
+  console.error('   Go to DigitalOcean → App → Settings → Environment Variables');
+  console.error('   and add DATABASE_URL from your managed PostgreSQL cluster.');
+}
 
-// ─────────────────────────────────────────────
-//  DATABASE – DigitalOcean managed PostgreSQL
-//  Set DATABASE_URL in your DO App env vars.
-//  The connection string from DO already contains
-//  ?sslmode=require so we just honour it.
-// ─────────────────────────────────────────────
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL
-    ? { rejectUnauthorized: false }   // DO uses self-signed certs on private network
-    : false
+  ssl: { rejectUnauthorized: false }
 });
 
-// Quick connectivity check on startup
 pool.query('SELECT NOW()')
-  .then(() => console.log('✅  PostgreSQL connected'))
-  .catch(err => console.error('❌  PostgreSQL connection failed:', err.message));
+  .then(r  => console.log('✅ PostgreSQL connected at', r.rows[0].now))
+  .catch(e => console.error('❌ PostgreSQL connection FAILED:', e.message));
 
 
 // ─────────────────────────────────────────────
-//  /setup-db  – run ONCE after first deploy
-//  Creates tables + a seed admin if no users exist
+//  DIAGNOSTICS  –  GET /healthz
+// ─────────────────────────────────────────────
+app.get('/healthz', async (req, res) => {
+  const dbUrl = process.env.DATABASE_URL;
+  let dbStatus  = 'not connected';
+  let dbError   = null;
+  let userCount = null;
+
+  try {
+    await pool.query('SELECT NOW()');
+    dbStatus = 'connected';
+  } catch (e) {
+    dbError = e.message;
+  }
+
+  if (dbStatus === 'connected') {
+    try {
+      const r = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_name = 'users'
+        ) AS exists
+      `);
+      if (r.rows[0].exists) {
+        const c = await pool.query('SELECT COUNT(*) FROM users');
+        userCount = parseInt(c.rows[0].count);
+      } else {
+        dbError = 'users table does not exist — run /setup-db first';
+      }
+    } catch (e) {
+      dbError = e.message;
+    }
+  }
+
+  res.json({
+    status:    'running',
+    timestamp: new Date().toISOString(),
+    env: {
+      DATABASE_URL:        dbUrl ? 'set ✅ → ' + (dbUrl.split('@')[1] || 'masked') : 'NOT SET ❌',
+      SETUP_SECRET:        process.env.SETUP_SECRET        ? 'set ✅' : 'not set',
+      SEED_ADMIN_EMAIL:    process.env.SEED_ADMIN_EMAIL    || 'not set',
+      SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD ? '*** (set ✅)' : 'not set',
+      NODE_ENV:            process.env.NODE_ENV            || 'not set',
+      PORT:                process.env.PORT                || '8080 (default)',
+    },
+    database: { status: dbStatus, error: dbError, userCount }
+  });
+});
+
+
+// ─────────────────────────────────────────────
+//  SETUP  –  GET /setup-db?secret=YOUR_SECRET
 // ─────────────────────────────────────────────
 app.get('/setup-db', async (req, res) => {
-  // Protect with a setup secret so random visitors can't call this
-  const secret = req.query.secret;
-  if (secret !== process.env.SETUP_SECRET) {
+  if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) {
     return res.status(403).send('Forbidden – provide ?secret=YOUR_SETUP_SECRET');
   }
 
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id                  SERIAL PRIMARY KEY,
-        email               VARCHAR(100) UNIQUE NOT NULL,
-        password            TEXT NOT NULL,
+        id                   SERIAL PRIMARY KEY,
+        email                VARCHAR(100) UNIQUE NOT NULL,
+        password             TEXT NOT NULL,
         must_change_password BOOLEAN DEFAULT TRUE,
-        role                VARCHAR(20) DEFAULT 'member',
-        created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        role                 VARCHAR(20) DEFAULT 'member',
+        created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -65,7 +111,6 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // Seed a first admin only if no users exist yet
     const { rows } = await pool.query('SELECT COUNT(*) FROM users');
     if (parseInt(rows[0].count) === 0) {
       const adminEmail    = process.env.SEED_ADMIN_EMAIL    || 'admin@meuglobal.com';
@@ -73,31 +118,31 @@ app.get('/setup-db', async (req, res) => {
       const hashed        = await bcrypt.hash(adminPassword, 12);
 
       await pool.query(
-        `INSERT INTO users (email, password, must_change_password, role)
-         VALUES ($1, $2, TRUE, 'admin')`,
+        `INSERT INTO users (email, password, must_change_password, role) VALUES ($1, $2, TRUE, 'admin')`,
         [adminEmail, hashed]
       );
-      return res.send(`
-        ✅ Tables created.<br>
-        🔑 Seed admin created: <strong>${adminEmail}</strong> / <strong>${adminPassword}</strong><br>
-        ⚠️  Log in and change this password immediately.
-      `);
+
+      return res.send(`<pre>
+✅ Tables created.
+🔑 Admin created: ${adminEmail}
+🔒 Temp password: ${adminPassword}
+⚠️  Log in and change this password immediately.
+      </pre>`);
     }
 
-    res.send('✅ Tables already exist. No seed user created (users table not empty).');
+    res.send('<pre>✅ Tables already exist. No seed user created (users table not empty).</pre>');
   } catch (err) {
     console.error('setup-db error:', err);
-    res.status(500).send('❌ Setup failed: ' + err.message);
+    res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
   }
 });
 
 
 // ─────────────────────────────────────────────
-//  AUTH ROUTES
+//  AUTH
 // ─────────────────────────────────────────────
-
-// POST /api/login
 app.post('/api/login', async (req, res) => {
+  console.log('[login] attempt:', req.body?.email);
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -106,10 +151,12 @@ app.post('/api/login', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase().trim()]
     );
 
     if (rows.length === 0) {
+      console.log('[login] no user found:', email);
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
@@ -117,25 +164,18 @@ app.post('/api/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log('[login] wrong password:', email);
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    res.json({
-      success:    true,
-      mustChange: user.must_change_password,
-      userId:     user.id,
-      role:       user.role
-    });
+    console.log('[login] success:', email, '| mustChange:', user.must_change_password);
+    res.json({ success: true, mustChange: user.must_change_password, userId: user.id, role: user.role });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('[login] DB error:', err.message, '\n', err.stack);
     res.status(500).json({ error: 'Server error during login.' });
   }
 });
 
-
-// POST /api/update-password
-// Guards: userId must be supplied AND the matching temp-password flow must
-// still be active (must_change_password = true), so a random user ID won't work.
 app.post('/api/update-password', async (req, res) => {
   const { userId, newPassword } = req.body;
 
@@ -144,7 +184,6 @@ app.post('/api/update-password', async (req, res) => {
   }
 
   try {
-    // Only allow the update if the account is still in "must change" state
     const { rows } = await pool.query(
       'SELECT id FROM users WHERE id = $1 AND must_change_password = TRUE', [userId]
     );
@@ -157,75 +196,60 @@ app.post('/api/update-password', async (req, res) => {
       'UPDATE users SET password = $1, must_change_password = FALSE WHERE id = $2',
       [hashed, userId]
     );
+    console.log('[update-password] success, userId:', userId);
     res.json({ success: true });
   } catch (err) {
-    console.error('Update password error:', err);
+    console.error('[update-password] error:', err.message);
     res.status(500).json({ error: 'Failed to update password.' });
   }
 });
 
-
-// POST /api/admin/add-user
-// In production you'd gate this with a session/JWT; for now it trusts
-// that only logged-in admins can reach the button that calls it.
 app.post('/api/admin/add-user', async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password || password.length < 6) {
     return res.status(400).json({ error: 'Email and a password (min 6 chars) are required.' });
   }
-
   try {
     const hashed = await bcrypt.hash(password, 12);
     await pool.query(
-      `INSERT INTO users (email, password, must_change_password)
-       VALUES ($1, $2, TRUE)`,
+      `INSERT INTO users (email, password, must_change_password) VALUES ($1, $2, TRUE)`,
       [email.toLowerCase().trim(), hashed]
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    // Unique-constraint violation = email already exists
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'A user with that email already exists.' });
-    }
-    console.error('Add user error:', err);
+    if (err.code === '23505') return res.status(409).json({ error: 'User already exists.' });
+    console.error('[add-user] error:', err.message);
     res.status(500).json({ error: 'Server error.' });
   }
 });
 
 
 // ─────────────────────────────────────────────
-//  CRM ROUTES
+//  CRM
 // ─────────────────────────────────────────────
-
 app.get('/api/stats', async (req, res) => {
   try {
     const result = await pool.query('SELECT COUNT(*) FROM clients');
     res.json({ client_count: parseInt(result.rows[0].count) });
   } catch (err) {
-    console.error('Stats error:', err);
+    console.error('[stats] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch stats.' });
   }
 });
 
 app.get('/api/clients', async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT * FROM clients ORDER BY created_at DESC'
-    );
+    const { rows } = await pool.query('SELECT * FROM clients ORDER BY created_at DESC');
     res.json(rows);
   } catch (err) {
-    console.error('Clients fetch error:', err);
+    console.error('[clients] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch clients.' });
   }
 });
 
 app.post('/api/clients', async (req, res) => {
   const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required.' });
-  }
-
+  if (!name || !email) return res.status(400).json({ error: 'Name and email are required.' });
   try {
     const { rows } = await pool.query(
       'INSERT INTO clients (name, email) VALUES ($1, $2) RETURNING *',
@@ -233,17 +257,15 @@ app.post('/api/clients', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (err) {
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'A client with that email already exists.' });
-    }
-    console.error('Add client error:', err);
+    if (err.code === '23505') return res.status(409).json({ error: 'Client email already exists.' });
+    console.error('[add-client] error:', err.message);
     res.status(400).json({ error: 'Failed to register client.' });
   }
 });
 
 
 // ─────────────────────────────────────────────
-//  CATCH-ALL – serve the SPA
+//  FRONTEND
 // ─────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -259,5 +281,6 @@ app.listen(port, () => {
   ─────────────────────────
   Port:   ${port}
   Env:    ${process.env.NODE_ENV || 'development'}
+  DB URL: ${process.env.DATABASE_URL ? 'set ✅' : 'NOT SET ❌'}
   `);
 });
