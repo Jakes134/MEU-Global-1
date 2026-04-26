@@ -308,9 +308,9 @@ app.get('/api/users/assignable', async function(req, res) {
 });
 
 // ─── SPA ROUTING ─────────────────────────────
+// Change the last route in index.js to this:
 app.get('*', function(req, res) {
-  // If your index.html is inside public, use this:
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html')); 
 });
 
 app.listen(port, function() {
