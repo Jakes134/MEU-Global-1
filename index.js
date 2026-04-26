@@ -11,9 +11,6 @@ app.set(‘trust proxy’, 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, ‘public’)));
 
-// ─────────────────────────────────────────────
-//  DATABASE CONNECTION
-// ─────────────────────────────────────────────
 const dbUrl = process.env.DATABASE_URL
 ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, ‘’)
 : undefined;
@@ -24,26 +21,45 @@ ssl: { rejectUnauthorized: false }
 });
 
 pool.query(‘SELECT NOW()’)
-.then(r  => console.log(‘✅ PostgreSQL connected at’, r.rows[0].now))
-.catch(e => console.error(‘❌ PostgreSQL connection FAILED:’, e.message));
+.then(r  => console.log(‘PostgreSQL connected at’, r.rows[0].now))
+.catch(e => console.error(‘PostgreSQL connection FAILED:’, e.message));
 
-// ─────────────────────────────────────────────
-//  SYSTEM SETUP & MIGRATIONS
-// ─────────────────────────────────────────────
-app.get(’/setup-db’, async (req, res) => {
+// QUICK DB PATCH
+app.get(’/fix-db’, async (req, res) => {
 if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) {
-return res.status(403).send(‘Forbidden – provide ?secret=YOUR_SETUP_SECRET’);
+return res.status(403).send(‘Forbidden’);
 }
 try {
-// 1. Users Table
-await pool.query(`CREATE TABLE IF NOT EXISTS users ( id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE NOT NULL, password TEXT NOT NULL, role VARCHAR(20) DEFAULT 'user', client_id INTEGER, must_change_password BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP );`);
+const patches = [
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`,
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`,
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`,
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`,
+`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`,
+`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`,
+`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER`,
+`CREATE TABLE IF NOT EXISTS task_comments ( id SERIAL PRIMARY KEY, task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE, user_id INTEGER REFERENCES users(id), comment TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )`,
+];
+for (const sql of patches) await pool.query(sql);
+res.send(’<pre>All columns patched successfully.</pre>’);
+} catch (err) {
+res.status(500).send(’<pre>Patch failed: ’ + err.message + ‘</pre>’);
+}
+});
+
+// SETUP DB
+app.get(’/setup-db’, async (req, res) => {
+if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) {
+return res.status(403).send(‘Forbidden’);
+}
+try {
+await pool.query(`CREATE TABLE IF NOT EXISTS users ( id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE NOT NULL, password TEXT NOT NULL, role VARCHAR(20) DEFAULT 'user', client_id INTEGER, must_change_password BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
 ```
-// 2. Clients Table
 await pool.query(`
   CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
@@ -51,10 +67,9 @@ await pool.query(`
     email VARCHAR(100) UNIQUE NOT NULL,
     status VARCHAR(20) DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
+  )
 `);
 
-// 3. Posts Table
 await pool.query(`
   CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
@@ -69,12 +84,11 @@ await pool.query(`
     approval_status VARCHAR(20) DEFAULT 'pending',
     created_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
+  )
 `);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
 
-// 4. Tasks Table — now with task_comments for feedback
 await pool.query(`
   CREATE TABLE IF NOT EXISTS tasks (
     id SERIAL PRIMARY KEY,
@@ -85,11 +99,10 @@ await pool.query(`
     description TEXT,
     status VARCHAR(20) DEFAULT 'todo',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
+  )
 `);
-await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)`);
+await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER`);
 
-// 5. Task Comments Table (feedback from admins/users to client owners)
 await pool.query(`
   CREATE TABLE IF NOT EXISTS task_comments (
     id SERIAL PRIMARY KEY,
@@ -97,10 +110,9 @@ await pool.query(`
     user_id INTEGER REFERENCES users(id),
     comment TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
+  )
 `);
 
-// Seed Admin if needed
 const { rows } = await pool.query('SELECT COUNT(*) FROM users');
 if (parseInt(rows[0].count) === 0) {
   const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@meuglobal.com';
@@ -112,48 +124,39 @@ if (parseInt(rows[0].count) === 0) {
   );
 }
 
-res.send('<pre>✅ Database is synchronized with all features enabled.</pre>');
+res.send('<pre>Database synchronized successfully.</pre>');
 ```
 
 } catch (err) {
-console.error(‘Setup error:’, err);
-res.status(500).send(’<pre>❌ Setup failed:\n’ + err.message + ‘</pre>’);
+res.status(500).send(’<pre>Setup failed: ’ + err.message + ‘</pre>’);
 }
 });
 
-// ─────────────────────────────────────────────
-//  AUTH API
-// ─────────────────────────────────────────────
+// AUTH
 app.post(’/api/login’, async (req, res) => {
 const { email, password } = req.body;
 if (!email || !password) return res.status(400).json({ error: ‘Email and password required.’ });
 try {
 const { rows } = await pool.query(‘SELECT * FROM users WHERE email = $1’, [email.toLowerCase().trim()]);
 if (rows.length === 0) return res.status(401).json({ error: ‘Invalid credentials.’ });
-
-```
 const user = rows[0];
 const isMatch = await bcrypt.compare(password, user.password);
-if (!isMatch) return res.status(401).json({ error: 'Invalid credentials.' });
-
+if (!isMatch) return res.status(401).json({ error: ‘Invalid credentials.’ });
 res.json({
-  success: true,
-  userId: user.id,
-  name: user.name,
-  role: user.role,
-  client_id: user.client_id,
-  email: user.email,
-  mustChange: user.must_change_password
+success: true,
+userId: user.id,
+name: user.name,
+role: user.role,
+client_id: user.client_id,
+email: user.email,
+mustChange: user.must_change_password
 });
-```
-
 } catch (err) {
 console.error(‘Login error:’, err);
 res.status(500).json({ error: ‘Server error’ });
 }
 });
 
-// Change password
 app.post(’/api/change-password’, async (req, res) => {
 const { userId, newPassword } = req.body;
 if (!userId || !newPassword) return res.status(400).json({ error: ‘Missing fields.’ });
@@ -166,43 +169,12 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// ─────────────────────────────────────────────
-//  QUICK DB PATCH (run once if columns missing)
-// ─────────────────────────────────────────────
-app.get(’/fix-db’, async (req, res) => {
-if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) {
-return res.status(403).send(‘Forbidden – provide ?secret=YOUR_SETUP_SECRET’);
-}
-try {
-const patches = [
-`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`,
-`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`,
-`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`,
-`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`,
-`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`,
-`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`,
-`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)`,
-`CREATE TABLE IF NOT EXISTS task_comments ( id SERIAL PRIMARY KEY, task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE, user_id INTEGER REFERENCES users(id), comment TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )`,
-];
-for (const sql of patches) await pool.query(sql);
-res.send(’<pre>✅ All missing columns and tables have been patched successfully.</pre>’);
-} catch (err) {
-res.status(500).send(’<pre>❌ Patch failed:\n’ + err.message + ‘</pre>’);
-}
-});
-
-// ─────────────────────────────────────────────
-//  ADMIN USER MANAGEMENT
-// ─────────────────────────────────────────────
-
-// Create new user — FIXED: generates hashed password server-side
+// ADMIN USER MANAGEMENT
 app.post(’/api/admin/add-user’, async (req, res) => {
 const { name, email, role, client_id, password } = req.body;
 if (!name || !email) return res.status(400).json({ error: ‘Name and Email are required.’ });
-
 try {
-// Use provided password or default; always hash server-side
-const rawPassword = password && password.trim() ? password : ‘ChangeMe123!’;
+const rawPassword = (password && password.trim()) ? password : ‘ChangeMe123!’;
 const hashed = await bcrypt.hash(rawPassword, 12);
 const result = await pool.query(
 `INSERT INTO users (name, email, password, role, client_id, must_change_password) VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, name, email, role`,
@@ -216,7 +188,6 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// List all users (admin only)
 app.get(’/api/admin/users’, async (req, res) => {
 try {
 const { rows } = await pool.query(
@@ -228,7 +199,6 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// Delete user (admin only)
 app.delete(’/api/admin/users/:id’, async (req, res) => {
 try {
 await pool.query(‘DELETE FROM users WHERE id = $1’, [req.params.id]);
@@ -238,7 +208,6 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// Get assignable users for Tasks
 app.get(’/api/users/assignable’, async (req, res) => {
 try {
 const { rows } = await pool.query(
@@ -250,12 +219,14 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// ─────────────────────────────────────────────
-//  CLIENTS API
-// ─────────────────────────────────────────────
+// CLIENTS
 app.get(’/api/clients’, async (req, res) => {
+try {
 const { rows } = await pool.query(‘SELECT * FROM clients ORDER BY name ASC’);
 res.json(rows);
+} catch (err) {
+res.status(500).json({ error: err.message });
+}
 });
 
 app.post(’/api/clients’, async (req, res) => {
@@ -272,27 +243,26 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// ─────────────────────────────────────────────
-//  POSTS API
-// ─────────────────────────────────────────────
+// POSTS
 app.get(’/api/posts’, async (req, res) => {
 const { month, year, client_id } = req.query;
 let query = `SELECT p.*, c.name as client_name, u.name as creator_name FROM posts p LEFT JOIN clients c ON p.client_id = c.id LEFT JOIN users u ON p.created_by = u.id WHERE 1=1`;
 const params = [];
-
 if (month && year) {
 params.push(year, month);
 query += ` AND EXTRACT(YEAR FROM p.post_date) = $${params.length - 1} AND EXTRACT(MONTH FROM p.post_date) = $${params.length}`;
 }
-
 if (client_id && client_id !== ‘null’) {
 params.push(client_id);
 query += ` AND p.client_id = $${params.length}`;
 }
-
 query += ’ ORDER BY p.post_date ASC, p.post_time ASC’;
+try {
 const { rows } = await pool.query(query, params);
 res.json(rows);
+} catch (err) {
+res.status(500).json({ error: err.message });
+}
 });
 
 app.post(’/api/posts’, async (req, res) => {
@@ -309,22 +279,8 @@ res.status(500).json({ error: err.message });
 }
 });
 
-app.put(’/api/posts/:id’, async (req, res) => {
-const { title, caption, platforms, post_date, post_time, status } = req.body;
-try {
-const { rows } = await pool.query(
-`UPDATE posts SET title=$1, caption=$2, platforms=$3, post_date=$4, post_time=$5, status=$6 WHERE id=$7 RETURNING *`,
-[title, caption, platforms, post_date, post_time || null, status, req.params.id]
-);
-res.json(rows[0]);
-} catch (err) {
-res.status(500).json({ error: err.message });
-}
-});
-
-// Post approval by client owner
 app.put(’/api/posts/:id/approve’, async (req, res) => {
-const { approved } = req.body; // true = approve, false = reject
+const { approved } = req.body;
 const approvalStatus = approved ? ‘approved’ : ‘rejected’;
 try {
 const { rows } = await pool.query(
@@ -337,7 +293,6 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// Get posts pending approval for a client owner
 app.get(’/api/posts/pending-approval’, async (req, res) => {
 const { client_id } = req.query;
 try {
@@ -355,28 +310,25 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// ─────────────────────────────────────────────
-//  TASKS API
-// ─────────────────────────────────────────────
+// TASKS
 app.get(’/api/tasks’, async (req, res) => {
 const { role, client_id, user_id } = req.query;
-let query = `SELECT t.*,  u.name as assignee_name,  c.name as client_name, cb.name as creator_name FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN clients c ON t.client_id = c.id LEFT JOIN users cb ON t.created_by = cb.id WHERE 1=1`;
+let query = `SELECT t.*, u.name as assignee_name, c.name as client_name, cb.name as creator_name FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN clients c ON t.client_id = c.id LEFT JOIN users cb ON t.created_by = cb.id WHERE 1=1`;
 const params = [];
-
 if (role === ‘client_owner’ && client_id) {
-// Client owners see tasks they created
 params.push(client_id);
 query += ` AND t.client_id = $${params.length}`;
 } else if (role === ‘user’ && user_id) {
-// Users see tasks assigned to them
 params.push(user_id);
 query += ` AND t.assigned_to = $${params.length}`;
 }
-// Admins see all tasks (no filter)
-
 query += ’ ORDER BY t.created_at DESC’;
+try {
 const { rows } = await pool.query(query, params);
 res.json(rows);
+} catch (err) {
+res.status(500).json({ error: err.message });
+}
 });
 
 app.post(’/api/tasks’, async (req, res) => {
@@ -412,7 +364,6 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// Task Comments (feedback)
 app.get(’/api/tasks/:id/comments’, async (req, res) => {
 try {
 const { rows } = await pool.query(
@@ -439,13 +390,11 @@ res.status(500).json({ error: err.message });
 }
 });
 
-// ─────────────────────────────────────────────
-//  FRONTEND & SERVER
-// ─────────────────────────────────────────────
+// CATCH-ALL
 app.get(’*’, (req, res) => {
 res.sendFile(path.join(__dirname, ‘index.html’));
 });
 
 app.listen(port, () => {
-console.log(`🚀 MEU Global CRM Engine running on port ${port}`);
+console.log(’MEU Global CRM running on port ’ + port);
 });
