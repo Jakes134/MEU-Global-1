@@ -20,8 +20,15 @@ if (!process.env.DATABASE_URL) {
   console.error('   and add DATABASE_URL from your managed PostgreSQL cluster.');
 }
 
+// Strip ?sslmode=require from the URL so it doesn't conflict with our ssl config below.
+// DigitalOcean managed PostgreSQL uses a self-signed cert chain — we must set
+// rejectUnauthorized: false directly in the Pool config, not via the connection string.
+const dbUrl = process.env.DATABASE_URL
+  ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, '')
+  : undefined;
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: { rejectUnauthorized: false }
 });
 
