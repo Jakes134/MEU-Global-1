@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MEU Global | CRM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -25,64 +25,81 @@
       --blue:        #1d5fa6;
       --blue-bg:     #edf4fd;
       --ig: #e1306c; --fb: #1877f2; --sk: #1a1916; --li: #0a66c2;
-      --sidebar: 56px; --radius: 10px; --font: 'DM Sans', sans-serif; --serif: 'DM Serif Display', serif; --shadow: 0 2px 16px rgba(0,0,0,0.06);
+      --sidebar: 56px; --radius: 10px; --font: 'DM Sans', sans-serif; --serif: 'DM Serif Display', serif;
     }
 
     body { font-family: var(--font); background: var(--bg); color: var(--ink); height: 100vh; overflow: hidden; }
 
     /* AUTH */
     #auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9000; }
-    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 40px; width: 100%; max-width: 400px; box-shadow: var(--shadow); }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 40px; width: 100%; max-width: 400px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
     .auth-card h1 { font-family: var(--serif); font-size: 30px; margin-bottom: 2px; }
     .auth-card p { color: var(--ink2); font-size: 13px; margin-bottom: 28px; }
     .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--ink2); margin-bottom: 6px; text-transform: uppercase; }
-    .field input, .modal .field textarea, .modal .field select { width: 100%; padding: 11px 13px; border: 1px solid var(--border-mid); border-radius: var(--radius); font-family: var(--font); font-size: 14px; outline: none; transition: border-color .15s; background: var(--bg); color: var(--ink); }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; border-radius: var(--radius); border: none; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .15s, transform .1s; }
-    .btn:active { transform: scale(.98); }
+    .field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--ink2); margin-bottom: 6px; text-transform: uppercase; }
+    .field input, .modal .field textarea, .modal .field select { width: 100%; padding: 11px 13px; border: 1px solid var(--border-mid); border-radius: var(--radius); font-family: var(--font); font-size: 14px; outline: none; transition: 0.15s; background: var(--bg); color: var(--ink); }
+    .field input:focus { border-color: var(--ink); background: var(--surface); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; border-radius: var(--radius); border: none; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.15s; }
     .btn-dark { background: var(--ink); color: #fff; width: 100%; }
     .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border-mid); }
     .btn-sm { padding: 8px 16px; font-size: 13px; }
 
-    /* APP LAYOUT */
+    /* SHELL */
     #app { display: none; height: 100vh; flex-direction: row; }
     .sidebar { width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px; z-index: 100; }
     .sidebar-logo { width: 32px; height: 32px; background: var(--ink); border-radius: 8px; margin-bottom: 16px; }
     .nav-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink3); position: relative; }
+    .nav-btn:hover, .nav-btn.active { background: var(--surface2); color: var(--ink); }
     .nav-btn.active { background: var(--ink); color: #fff; }
+    .tooltip { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--ink); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.15s; }
+    .nav-btn:hover .tooltip { opacity: 1; }
+    .sidebar-spacer { flex: 1; }
 
     /* CLIENT PANEL */
     .client-panel { position: absolute; left: var(--sidebar); top: 0; bottom: 0; width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: none; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.06); z-index: 90; }
     .client-panel.open { display: flex; }
     .client-panel-head { padding: 16px; border-bottom: 1px solid var(--border); }
-    .client-search { width: 100%; padding: 8px 10px; border: 1px solid var(--border-mid); border-radius: 8px; background: var(--bg); outline: none; }
+    .client-search { width: 100%; padding: 8px 10px; border: 1px solid var(--border-mid); border-radius: 8px; font-size: 13px; background: var(--bg); outline: none; }
     .client-list-scroll { flex: 1; overflow-y: auto; padding: 8px; }
-    .client-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-    .client-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--ink2); }
+    .client-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+    .client-item:hover { background: var(--surface2); }
+    .client-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--ink2); text-transform: uppercase; }
 
-    /* MAIN CONTENT */
+    /* MAIN */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .topbar { height: 60px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; }
     .topbar-title { font-family: var(--serif); font-size: 20px; flex: 1; }
+    .view { display: none; flex: 1; overflow-y: auto; padding: 24px; }
+    .view.active { display: block; }
+
+    /* TASKS */
+    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; position: relative; }
+    .task-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: inline-block; padding: 2px 8px; border-radius: 4px; }
+    .status-todo { background: var(--surface2); color: var(--ink2); }
+    .status-pending { background: var(--blue-bg); color: var(--blue); }
+    .status-completed { background: var(--green-bg); color: var(--green); }
 
     /* CALENDAR */
-    .cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin: 20px 24px; }
+    .cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .cal-nav { display: flex; align-items: center; gap: 12px; }
     .cal-month-label { font-family: var(--serif); font-size: 22px; min-width: 180px; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: var(--radius); background: var(--border); gap: 1px; margin: 0 24px 24px; overflow: hidden; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: var(--radius); background: var(--border); gap: 1px; overflow: hidden; }
     .cal-day-header { background: var(--surface2); padding: 10px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; }
-    .cal-cell { background: var(--surface); min-height: 120px; padding: 8px; cursor: pointer; }
+    .cal-cell { background: var(--surface); min-height: 120px; padding: 8px; cursor: pointer; position: relative; }
+    .cal-cell:hover { background: #fafaf9; }
     .cal-date { font-size: 13px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; }
 
-    .post-chip { background: var(--surface2); border-left: 3px solid var(--ink); padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .post-chip { padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--ink); background: var(--surface2); }
     .post-chip.published { background: var(--green-bg); border-color: var(--green); color: var(--green); }
     .post-chip.scheduled { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
 
     /* PLATFORMS */
-    .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
     .pf-check { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--border-mid); cursor: pointer; }
     .pf-check input { display: none; }
     .pf-check .pf-icon { width: 10px; height: 10px; border-radius: 50%; }
-    .pf-check:has(input:checked) { border-width: 2px; }
+    .pf-check:has(input:checked) { border-width: 2.5px; transform: translateY(-1px); }
     .pf-check:has(input[value="instagram"]:checked) { border-color: var(--ig); background: #fef0f5; }
     .pf-check:has(input[value="facebook"]:checked) { border-color: var(--fb); background: #f0f4fd; }
     .pf-check:has(input[value="skool"]:checked) { border-color: var(--ink); background: var(--surface2); }
@@ -91,10 +108,12 @@
     /* MODAL */
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 8000; backdrop-filter: blur(4px); }
     .modal-backdrop.open { display: flex; }
-    .modal { background: var(--surface); border-radius: 20px; width: 95%; max-width: 500px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    .modal { background: var(--surface); border-radius: 20px; width: 100%; max-width: 500px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink3); }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 10px; opacity: 0; transform: translateY(10px); transition: 0.3s; z-index: 9999; pointer-events: none; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 10px; font-size: 14px; opacity: 0; transform: translateY(10px); transition: 0.3s; z-index: 9999; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.err { background: var(--red); }
   </style>
@@ -104,50 +123,79 @@
 <div id="auth-overlay">
   <div class="auth-card">
     <h1>MEU Global</h1>
-    <p>CRM Dashboard Access</p>
-    <div class="field"><label>Email</label><input type="email" id="l-email"></div>
-    <div class="field"><label>Password</label><input type="password" id="l-pass"></div>
-    <button class="btn btn-dark" onclick="doLogin()">Sign In</button>
+    <div id="login-section">
+      <p>Enter your credentials to access the CRM.</p>
+      <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="name@meuglobal.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"></div>
+      <button class="btn btn-dark" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="pw-change" style="display:none">
+      <p style="color:var(--red); font-weight:600">Security Update Required</p>
+      <div class="field"><label>New Password</label><input type="password" id="new-pass" placeholder="At least 8 characters"></div>
+      <button class="btn btn-dark" onclick="doUpdatePassword()">Update & Enter Dashboard</button>
+    </div>
   </div>
 </div>
 
 <div id="app">
   <nav class="sidebar">
     <div class="sidebar-logo"></div>
-    <button class="nav-btn active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
-    <button class="nav-btn" onclick="toggleClientPanel()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+    <button class="nav-btn active" onclick="showView('dash')" title="Dashboard">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span class="tooltip">Dashboard</span>
+    </button>
+    <button class="nav-btn" id="client-switcher-btn" onclick="toggleClientPanel()" title="Clients">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="tooltip">Clients</span>
+    </button>
+    <div class="sidebar-spacer"></div>
+    <button class="nav-btn" onclick="openUserMgmt()" id="profile-btn">
+      <div class="client-avatar" id="user-initials" style="background:var(--accent); color:white; font-size:10px">?</div>
+      <span class="tooltip">Account & Management</span>
+    </button>
   </nav>
 
   <div class="client-panel" id="client-panel">
-    <div class="client-panel-head"><h3>Clients</h3></div>
+    <div class="client-panel-head"><h3>Clients</h3><input class="client-search" placeholder="Search clients..." oninput="filterClients(this.value)"></div>
     <div class="client-list-scroll" id="client-list-panel"></div>
     <div style="padding:16px"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="addClientPrompt()">+ Add Client</button></div>
   </div>
 
   <div class="main">
     <header class="topbar">
-      <span class="topbar-title">Social Media Calendar</span>
-      <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
+      <span class="topbar-title" id="main-view-title">Social Media Calendar</span>
+      <button class="btn btn-dark btn-sm" id="global-new-post-btn" onclick="openPostModal()">+ New Post</button>
     </header>
 
-    <div class="cal-toolbar">
-      <div class="cal-nav">
-        <button class="btn btn-ghost btn-sm" onclick="calPrev()">‹</button>
-        <span class="cal-month-label" id="cal-label"></span>
-        <button class="btn btn-ghost btn-sm" onclick="calNext()">›</button>
+    <div class="view active" id="view-dash">
+      <div id="task-section" style="display:none; margin-bottom: 40px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+            <h3 style="font-family:var(--serif); font-size:20px">Active Tasks</h3>
+            <button class="btn btn-ghost btn-sm" id="owner-add-task-btn" style="display:none" onclick="openTaskModal()">+ New Task</button>
+        </div>
+        <div class="task-grid" id="task-list"></div>
       </div>
+
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">‹</button>
+          <span class="cal-month-label" id="cal-label">Month Year</span>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="cal-grid" id="cal-grid"></div>
   </div>
 </div>
 
 <div class="modal-backdrop" id="post-modal-backdrop">
   <div class="modal">
-    <div class="field"><label>Title</label><input type="text" id="m-title"></div>
-    <div class="field"><label>Caption</label><textarea id="m-caption" rows="3"></textarea></div>
+    <div class="modal-head"><h2 id="post-modal-title">Create Post</h2><button class="modal-close" onclick="closePostModal()">×</button></div>
+    <div class="field"><label>Title</label><input type="text" id="m-title" placeholder="Campaign name"></div>
+    <div class="field"><label>Caption</label><textarea id="m-caption" rows="4" placeholder="Write caption..."></textarea></div>
     <div class="two-col">
       <div class="field"><label>Date</label><input type="date" id="m-date"></div>
-      <div class="field"><label>Time</label><input type="time" id="m-time"></div>
+      <div class="field"><label>Time (Optional)</label><input type="time" id="m-time"></div>
     </div>
     <div class="two-col">
       <div class="field"><label>Client</label><select id="m-client"></select></div>
@@ -164,58 +212,128 @@
     </div>
     <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px">
       <button class="btn btn-ghost" onclick="closePostModal()">Cancel</button>
-      <button class="btn btn-dark" id="save-btn" onclick="savePost()">Save Post</button>
+      <button class="btn btn-dark" onclick="savePost()">Save Post</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="task-modal-backdrop">
+    <div class="modal">
+        <div class="modal-head"><h2>Assign Task</h2><button class="modal-close" onclick="closeTaskModal()">×</button></div>
+        <div class="field"><label>Task Title</label><input type="text" id="t-title"></div>
+        <div class="field"><label>Description</label><textarea id="t-desc" rows="3"></textarea></div>
+        <div class="field"><label>Assign To User</label><select id="t-assign"></select></div>
+        <button class="btn btn-dark" style="width:100%" onclick="saveTask()">Assign Task</button>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="user-mgmt-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Account & Management</h2><button class="modal-close" onclick="closeUserMgmt()">×</button></div>
+    
+    <div id="admin-tools" style="display:none; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:20px;">
+      <h3 style="font-size:14px; margin-bottom:12px">Add New User</h3>
+      <div class="field"><label>User Email</label><input type="email" id="nu-email"></div>
+      <div class="two-col">
+        <div class="field">
+          <label>Role</label>
+          <select id="nu-role" onchange="toggleNuClientField()">
+            <option value="user">User (Creator)</option>
+            <option value="client_owner">Client Owner</option>
+            <option value="admin">Manager (Admin)</option>
+          </select>
+        </div>
+        <div class="field" id="nu-client-wrap" style="display:none">
+          <label>Assign Client</label>
+          <select id="nu-client"></select>
+        </div>
+      </div>
+      <button class="btn btn-dark" onclick="createNewUser()">Create User</button>
+    </div>
+    
+    <button class="btn btn-ghost" style="width:100%; color:var(--red)" onclick="location.reload()">Sign Out</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// SESSION PERSISTENCE
-let session = JSON.parse(localStorage.getItem('meu_session')) || { userId: null };
+let session = { userId: null, role: null, client_id: null, email: null };
 let allClients = [];
-let allPosts = [];
+let allUsers = []; 
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 
 function toast(msg, type='') {
   const el = document.getElementById('toast');
   el.textContent = msg; el.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => el.className = 'toast', 4000);
+  setTimeout(() => el.className = 'toast', 3000);
 }
 
-window.onload = () => {
-  if (session.userId) {
-    document.getElementById('auth-overlay').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    loadData();
-  }
-};
-
+// AUTH
 async function doLogin() {
   const email = document.getElementById('l-email').value;
   const password = document.getElementById('l-pass').value;
-  const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
-  const d = await r.json();
-  if(d.success) {
-    session = { userId: d.userId };
-    localStorage.setItem('meu_session', JSON.stringify(session));
-    location.reload();
-  } else toast(d.error || 'Login failed', 'err');
+  try {
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+    const d = await r.json();
+    if(d.success) {
+      session = { userId: d.userId, role: d.role, client_id: d.client_id, email: d.email };
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      setupRoleUI();
+      loadData();
+    } else toast(d.error, 'err');
+  } catch { toast("Server Connection Failed", "err"); }
 }
 
-function loadData() { loadClients(); renderCalendar(); }
+function setupRoleUI() {
+    document.getElementById('user-initials').textContent = session.email[0].toUpperCase();
+    
+    if (session.role === 'admin') {
+        document.getElementById('admin-tools').style.display = 'block';
+    } else if (session.role === 'client_owner') {
+        document.getElementById('client-switcher-btn').style.display = 'none';
+        document.getElementById('owner-add-task-btn').style.display = 'inline-flex';
+        document.getElementById('task-section').style.display = 'block';
+    } else {
+        document.getElementById('task-section').style.display = 'block';
+    }
+}
+
+// DATA LOADING
+async function loadData() {
+  await loadClients();
+  if (session.role === 'admin' || session.role === 'client_owner') await loadUsers();
+  renderCalendar();
+  if (session.role !== 'admin') loadTasks();
+}
 
 async function loadClients() {
   const r = await fetch('/api/clients');
   allClients = await r.json();
-  document.getElementById('m-client').innerHTML = '<option value="">Select Client</option>' + allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('client-list-panel').innerHTML = allClients.map(c => `<div class="client-item"><div class="client-avatar">${c.name[0]}</div><div>${c.name}</div></div>`).join('');
+  const selectPost = document.getElementById('m-client');
+  const selectUser = document.getElementById('nu-client');
+  const options = '<option value="">Select Client</option>' + allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  selectPost.innerHTML = options;
+  selectUser.innerHTML = options;
+  renderClientList();
+}
+
+async function loadUsers() {
+    // Only admins/owners see user list for assignments
+    const r = await fetch('/api/clients'); // Using client list for placeholder, update to /api/users if exists
+    // For MVP, we'll fetch all users from backend if available
+}
+
+function renderClientList() {
+  const el = document.getElementById('client-list-panel');
+  el.innerHTML = allClients.map(c => `<div class="client-item" onclick="selectClient(${c.id})"><div class="client-avatar">${c.name[0]}</div><div>${c.name}</div></div>`).join('');
 }
 
 function toggleClientPanel() { document.getElementById('client-panel').classList.toggle('open'); }
 
+// CALENDAR
 function calPrev() { calMonth--; if(calMonth<0){calMonth=11; calYear--;} renderCalendar(); }
 function calNext() { calMonth++; if(calMonth>11){calMonth=0; calYear++;} renderCalendar(); }
 
@@ -224,8 +342,11 @@ async function renderCalendar() {
   const dateObj = new Date(calYear, calMonth);
   label.textContent = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-  const r = await fetch(`/api/posts?month=${calMonth+1}&year=${calYear}`);
-  allPosts = await r.json();
+  let url = `/api/posts?month=${calMonth+1}&year=${calYear}`;
+  if (session.role === 'client_owner') url += `&client_id=${session.client_id}`;
+
+  const r = await fetch(url);
+  const posts = await r.json();
 
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div class="cal-day-header">${d}</div>`).join('');
@@ -235,71 +356,78 @@ async function renderCalendar() {
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
 
   for(let i=0; i<startOffset; i++) grid.innerHTML += `<div class="cal-cell" style="opacity:0.3"></div>`;
+  
   for(let d=1; d<=daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayPosts = allPosts.filter(p => p.post_date.startsWith(dateStr));
+    const dayPosts = posts.filter(p => p.post_date.startsWith(dateStr));
     const chips = dayPosts.map(p => `<div class="post-chip ${p.status}">${p.title}</div>`).join('');
     grid.innerHTML += `<div class="cal-cell" onclick="openPostModal('${dateStr}')"><div class="cal-date">${d}</div>${chips}</div>`;
   }
 }
 
+// MODALS
 function openPostModal(date) {
   if(date) document.getElementById('m-date').value = date;
+  if(session.client_id) document.getElementById('m-client').value = session.client_id;
   document.getElementById('post-modal-backdrop').classList.add('open');
 }
-
 function closePostModal() { document.getElementById('post-modal-backdrop').classList.remove('open'); }
 
 async function savePost() {
-  const saveBtn = document.getElementById('save-btn');
-  saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
-
   const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i => i.value);
-  const clientId = document.getElementById('m-client').value;
-
   const data = {
-    title: document.getElementById('m-title').value.trim(),
-    caption: document.getElementById('m-caption').value.trim(),
+    title: document.getElementById('m-title').value,
+    caption: document.getElementById('m-caption').value,
     post_date: document.getElementById('m-date').value,
-    post_time: document.getElementById('m-time').value || null,
-    client_id: clientId ? parseInt(clientId) : null,
+    post_time: document.getElementById('m-time').value,
+    client_id: document.getElementById('m-client').value,
     status: document.getElementById('m-status').value,
     platforms: platforms,
-    created_by: session.userId ? parseInt(session.userId) : null
+    created_by: session.userId
   };
-
-  try {
-    const r = await fetch('/api/posts', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-
-    const result = await r.json();
-
-    if(r.ok) {
-      toast('Post created! ✓');
-      closePostModal();
-      renderCalendar();
-    } else {
-      // THE NUCLEAR DEBUG ALERT
-      alert("ERROR: " + result.error + "\nDetail: " + (result.detail || 'None'));
-      toast(result.error, 'err');
-    }
-  } catch(e) {
-    alert("Network Connection Failed.");
-  } finally {
-    saveBtn.disabled = false; saveBtn.textContent = 'Save Post';
-  }
+  const r = await fetch('/api/posts', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  if(r.ok) { toast("Post Saved!"); closePostModal(); renderCalendar(); }
 }
 
-async function addClientPrompt() {
-  const name = prompt("Client Name:");
-  const email = prompt("Client Email:");
-  if(name && email) {
-    await fetch('/api/clients', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, email}) });
-    loadClients();
-  }
+// TASKS
+function openTaskModal() { document.getElementById('task-modal-backdrop').classList.add('open'); }
+function closeTaskModal() { document.getElementById('task-modal-backdrop').classList.remove('open'); }
+
+async function loadTasks() {
+    const r = await fetch(`/api/tasks?role=${session.role}&client_id=${session.client_id}&user_id=${session.userId}`);
+    const tasks = await r.json();
+    const list = document.getElementById('task-list');
+    list.innerHTML = tasks.map(t => `
+        <div class="task-card">
+            <span class="task-status status-${t.status}">${t.status.replace('_', ' ')}</span>
+            <div style="font-weight:600; margin-bottom:4px">${t.title}</div>
+            <div style="font-size:13px; color:var(--ink2); margin-bottom:12px">${t.description}</div>
+            ${session.role === 'user' && t.status === 'todo' ? `<button class="btn btn-dark btn-sm" onclick="updateTaskStatus(${t.id}, 'pending_approval')">Complete Task</button>` : ''}
+            ${session.role === 'client_owner' && t.status === 'pending_approval' ? `<button class="btn btn-dark btn-sm" onclick="updateTaskStatus(${t.id}, 'completed')">Approve Completion</button>` : ''}
+        </div>
+    `).join('');
+}
+
+async function updateTaskStatus(id, status) {
+    await fetch(`/api/tasks/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) });
+    loadTasks();
+    toast("Task Updated");
+}
+
+// USER MANAGEMENT
+function openUserMgmt() { document.getElementById('user-mgmt-modal').classList.add('open'); }
+function closeUserMgmt() { document.getElementById('user-mgmt-modal').classList.remove('open'); }
+function toggleNuClientField() { document.getElementById('nu-client-wrap').style.display = (document.getElementById('nu-role').value === 'client_owner' ? 'block' : 'none'); }
+
+async function createNewUser() {
+    const data = {
+        email: document.getElementById('nu-email').value,
+        role: document.getElementById('nu-role').value,
+        client_id: document.getElementById('nu-client').value,
+        password: "ChangeMe123!"
+    };
+    const r = await fetch('/api/admin/add-user', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    if(r.ok) { toast("User Created!"); closeUserMgmt(); }
 }
 </script>
 </body>
