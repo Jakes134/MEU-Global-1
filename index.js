@@ -170,7 +170,7 @@ app.post('/api/tasks/:id/comments', async (req, res) => {
 // ─── SERVE FRONTEND ───
 app.get('*', (req, res) => {
   // Use path.join(__dirname, 'index.html') if the file is NOT in a 'public' folder
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname,'index.html'));
 });
 
 app.listen(port, () => console.log('CRM active on ' + port));
