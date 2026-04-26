@@ -1,460 +1,1045 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MEU Global | CRM Dashboard</title>
+  <title>MEU Global | CRM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg-primary:    #ffffff;
-      --bg-secondary:  #f5f4f1;
-      --text-primary:  #1a1916;
-      --text-secondary:#6b6a66;
-      --border:        rgba(26,25,22,0.1);
-      --accent:        #1a1916;
-      --danger:        #b45b3e;
-      --success:       #2d6a4f;
-      --radius-md:     8px;
-      --radius-lg:     12px;
-      --sidebar-w:     64px;
-      --font:          'DM Sans', sans-serif;
-      --font-serif:    'DM Serif Display', serif;
+      --bg:          #f7f6f3;
+      --surface:     #ffffff;
+      --surface2:    #f0efe9;
+      --border:      rgba(26,25,22,0.09);
+      --border-mid:  rgba(26,25,22,0.15);
+      --ink:         #1a1916;
+      --ink2:        #6b6a64;
+      --ink3:        #a8a7a0;
+      --accent:      #1a1916;
+      --green:       #2a6049;
+      --green-bg:    #eaf4ef;
+      --red:         #b84c3a;
+      --red-bg:      #fdf0ee;
+      --amber:       #9a6b00;
+      --amber-bg:    #fef8e7;
+      --blue:        #1d5fa6;
+      --blue-bg:     #edf4fd;
+
+      /* platform colours */
+      --ig:   #e1306c;
+      --fb:   #1877f2;
+      --sk:   #1a1916;
+      --li:   #0a66c2;
+
+      --sidebar: 56px;
+      --radius:  10px;
+      --font:    'DM Sans', sans-serif;
+      --serif:   'DM Serif Display', serif;
+      --shadow:  0 2px 16px rgba(0,0,0,0.06);
     }
 
-    body { height: 100vh; font-family: var(--font); background: var(--bg-secondary); color: var(--text-primary); overflow: hidden; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); height: 100vh; overflow: hidden; }
 
-    /* ── AUTH OVERLAY ── */
-    #login-overlay {
-      position: fixed; inset: 0; background: var(--bg-secondary);
-      z-index: 2000; display: flex; align-items: center; justify-content: center;
+    /* ══════════════════════════════════
+       AUTH
+    ══════════════════════════════════ */
+    #auth-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 9000;
     }
-    .login-card {
-      background: white; padding: 40px; border-radius: var(--radius-lg);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center;
-      border: 1px solid var(--border); width: 100%; max-width: 400px;
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 44px 40px;
+      width: 100%; max-width: 400px; box-shadow: var(--shadow);
     }
-    .form-group { margin-bottom: 16px; text-align: left; }
-    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); font-weight: 500; }
-    .form-group input {
-      width: 100%; padding: 12px; border: 1px solid var(--border);
-      border-radius: var(--radius-md); font-family: var(--font); font-size: 14px;
-      outline: none; transition: border-color 0.15s;
+    .auth-card h1 { font-family: var(--serif); font-size: 30px; margin-bottom: 2px; }
+    .auth-card p  { color: var(--ink2); font-size: 13px; margin-bottom: 28px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--ink2); margin-bottom: 6px; text-transform: uppercase; }
+    .field input {
+      width: 100%; padding: 11px 13px; border: 1px solid var(--border-mid);
+      border-radius: var(--radius); font-family: var(--font); font-size: 14px;
+      outline: none; transition: border-color .15s; background: var(--bg);
     }
-    .form-group input:focus { border-color: var(--accent); }
-
-    .btn-primary {
-      width: 100%; padding: 12px; background: var(--accent); color: white;
-      border: none; border-radius: var(--radius-md); cursor: pointer;
-      font-weight: 600; font-size: 14px; font-family: var(--font);
-      transition: opacity 0.15s;
+    .field input:focus { border-color: var(--ink); background: var(--surface); }
+    .err-box {
+      background: var(--red-bg); border: 1px solid #f5c6bb; color: var(--red);
+      border-radius: var(--radius); padding: 10px 13px; font-size: 13px;
+      margin-bottom: 14px; display: none;
     }
-    .btn-primary:hover { opacity: 0.85; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .error-msg {
-      background: #fef2f0; border: 1px solid #f5c6bb; color: var(--danger);
-      border-radius: var(--radius-md); padding: 10px 14px; font-size: 13px;
-      margin-bottom: 16px; text-align: left; display: none;
+    .btn { 
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 11px 20px; border-radius: var(--radius); border: none;
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s, transform .1s;
     }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-dark  { background: var(--ink); color: #fff; width: 100%; }
+    .btn-dark:hover:not(:disabled) { opacity: .85; }
+    .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border-mid); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--ink); }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    #pw-change { display: none; }
 
-    #password-change-area { display: none; }
+    /* ══════════════════════════════════
+       SHELL
+    ══════════════════════════════════ */
+    #app { display: none; height: 100vh; flex-direction: row; }
 
-    /* ── DASHBOARD ── */
-    .app { display: none; height: 100vh; }
-
+    /* ── SIDEBAR ── */
     .sidebar {
-      width: var(--sidebar-w); background: var(--bg-primary);
-      border-right: 0.5px solid var(--border); display: flex;
-      flex-direction: column; justify-content: space-between; padding: 20px 0;
+      width: var(--sidebar); background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; padding: 14px 0; gap: 4px;
+      position: relative; z-index: 100;
     }
-    .sidebar-top, .sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-
-    .icon-btn {
-      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
-      background: none; cursor: pointer; font-size: 18px; color: var(--text-secondary);
-      transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    .sidebar-logo {
+      width: 32px; height: 32px; background: var(--ink);
+      border-radius: 8px; margin-bottom: 16px; flex-shrink: 0;
     }
-    .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .nav-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: none; background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink3); transition: all .15s; position: relative;
+    }
+    .nav-btn svg { width: 18px; height: 18px; }
+    .nav-btn:hover { background: var(--surface2); color: var(--ink); }
+    .nav-btn.active { background: var(--ink); color: #fff; }
+    .nav-btn .tooltip {
+      position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+      background: var(--ink); color: #fff; font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 6px; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .15s;
+    }
+    .nav-btn:hover .tooltip { opacity: 1; }
+    .sidebar-spacer { flex: 1; }
 
-    .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    /* Client switcher panel */
+    .client-panel {
+      position: absolute; left: calc(var(--sidebar) + 8px); top: 0; bottom: 0;
+      width: 240px; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: none; flex-direction: column;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.06);
+      z-index: 90;
+    }
+    .client-panel.open { display: flex; }
+    .client-panel-head {
+      padding: 16px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .client-panel-head h3 { font-family: var(--serif); font-size: 16px; margin-bottom: 10px; }
+    .client-search {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--border-mid);
+      border-radius: 8px; font-family: var(--font); font-size: 13px;
+      background: var(--bg); outline: none;
+    }
+    .client-search:focus { border-color: var(--ink); }
+    .client-list-scroll { flex: 1; overflow-y: auto; padding: 8px; }
+    .client-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; cursor: pointer;
+      transition: background .12s;
+    }
+    .client-item:hover { background: var(--surface2); }
+    .client-item.selected { background: var(--ink); color: #fff; }
+    .client-item.selected .ci-email { color: rgba(255,255,255,.6); }
+    .client-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+      text-transform: uppercase; color: var(--ink2);
+    }
+    .client-item.selected .client-avatar { background: rgba(255,255,255,.15); color: #fff; border-color: transparent; }
+    .ci-name  { font-size: 13px; font-weight: 500; line-height: 1.2; }
+    .ci-email { font-size: 11px; color: var(--ink3); }
+    .client-panel-foot { padding: 10px 8px; border-top: 1px solid var(--border); }
+    .add-client-form { display: none; padding: 10px 8px; border-top: 1px solid var(--border); }
+    .add-client-form input {
+      width: 100%; padding: 8px 10px; margin-bottom: 6px;
+      border: 1px solid var(--border-mid); border-radius: 8px;
+      font-family: var(--font); font-size: 13px; background: var(--bg); outline: none;
+    }
+    .add-client-form input:focus { border-color: var(--ink); }
+    .form-row { display: flex; gap: 6px; }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      transition: margin-left .2s;
+    }
     .topbar {
-      height: 52px; background: var(--bg-primary); border-bottom: 0.5px solid var(--border);
-      display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 10;
-      justify-content: space-between;
+      height: 50px; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+      position: sticky; top: 0; z-index: 50; flex-shrink: 0;
+    }
+    .topbar-title { font-family: var(--serif); font-size: 17px; flex: 1; }
+    .topbar-client {
+      font-size: 12px; font-weight: 600; padding: 4px 12px;
+      background: var(--surface2); border-radius: 20px; color: var(--ink2);
     }
 
-    .content { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1200px; margin: 0 auto; width: 100%; }
+    .view { display: none; flex: 1; overflow-y: auto; padding: 24px; }
+    .view.active { display: block; }
 
-    .card { background: var(--bg-primary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
-    .card-label { font-size: 11px; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
-    .card-value { font-size: 32px; font-family: var(--font-serif); }
+    /* ══════════════════════════════════
+       DASHBOARD VIEW
+    ══════════════════════════════════ */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
+    .stat-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; }
+    .stat-value { font-family: var(--serif); font-size: 36px; line-height: 1; }
+    .stat-sub   { font-size: 12px; color: var(--ink3); margin-top: 4px; }
 
-    .full-width { grid-column: span 2; }
+    .section-title { font-family: var(--serif); font-size: 20px; margin-bottom: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
 
-    .input-row { display: flex; gap: 12px; margin-top: 16px; }
-    .input-row input {
-      flex: 1; padding: 10px 12px; border: 1px solid var(--border);
-      border-radius: var(--radius-md); font-family: var(--font); font-size: 14px;
-      outline: none; transition: border-color 0.15s;
-    }
-    .input-row input:focus { border-color: var(--accent); }
-
-    .btn-sm {
-      padding: 0 20px; background: var(--accent); color: white;
-      border: none; border-radius: var(--radius-md); cursor: pointer;
-      font-weight: 600; font-size: 13px; font-family: var(--font);
-      white-space: nowrap; transition: opacity 0.15s;
-    }
-    .btn-sm:hover { opacity: 0.85; }
-
-    /* Client Table */
-    .client-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    .client-table th {
-      font-size: 11px; letter-spacing: 0.05em; color: var(--text-secondary);
-      font-weight: 600; text-transform: uppercase; text-align: left;
-      padding: 8px 12px; border-bottom: 1px solid var(--border);
-    }
-    .client-table td {
-      padding: 12px; border-bottom: 0.5px solid var(--border);
-      font-size: 14px; vertical-align: middle;
-    }
-    .client-table tr:last-child td { border-bottom: none; }
-    .client-table tbody tr:hover { background: var(--bg-secondary); }
-
-    .status-badge {
+    /* client table */
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg); }
+    .badge {
       display: inline-block; padding: 2px 10px; border-radius: 20px;
       font-size: 11px; font-weight: 600;
-      background: #d8f3e8; color: var(--success);
+    }
+    .badge-green  { background: var(--green-bg); color: var(--green); }
+    .badge-amber  { background: var(--amber-bg); color: var(--amber); }
+    .badge-blue   { background: var(--blue-bg);  color: var(--blue);  }
+    .badge-red    { background: var(--red-bg);   color: var(--red);   }
+
+    .empty { text-align: center; padding: 40px; color: var(--ink3); font-size: 14px; }
+
+    .icon-action { 
+      background: none; border: none; cursor: pointer; color: var(--ink3);
+      padding: 4px 6px; border-radius: 6px; transition: all .12s;
+    }
+    .icon-action:hover { background: var(--red-bg); color: var(--red); }
+
+    /* ══════════════════════════════════
+       CALENDAR VIEW
+    ══════════════════════════════════ */
+    .cal-toolbar {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .cal-nav { display: flex; align-items: center; gap: 8px; }
+    .cal-nav button {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-mid);
+      background: var(--surface); cursor: pointer; font-size: 16px; color: var(--ink2);
+      display: flex; align-items: center; justify-content: center; transition: all .12s;
+    }
+    .cal-nav button:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .cal-month-label { font-family: var(--serif); font-size: 20px; min-width: 160px; }
+    .cal-toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .cal-filter-client {
+      padding: 8px 12px; border: 1px solid var(--border-mid); border-radius: 8px;
+      font-family: var(--font); font-size: 13px; background: var(--surface);
+      outline: none; cursor: pointer; color: var(--ink);
     }
 
-    .empty-state {
-      text-align: center; padding: 40px 24px; color: var(--text-secondary); font-size: 14px;
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; background: var(--border);
+      gap: 1px;
     }
+    .cal-day-header {
+      background: var(--surface2); padding: 8px 6px; text-align: center;
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--ink3);
+    }
+    .cal-cell {
+      background: var(--surface); min-height: 110px; padding: 8px;
+      cursor: pointer; transition: background .1s; position: relative;
+    }
+    .cal-cell:hover { background: #fafaf8; }
+    .cal-cell.other-month { background: var(--bg); }
+    .cal-cell.today { background: #fdfdf8; }
+    .cal-cell.today .cal-date { 
+      background: var(--ink); color: #fff; width: 24px; height: 24px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+    }
+    .cal-date { font-size: 13px; font-weight: 500; color: var(--ink2); margin-bottom: 4px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .cal-cell.other-month .cal-date { color: var(--ink3); }
 
+    .post-chip {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 3px;
+      padding: 3px 7px; border-radius: 6px; font-size: 11px; font-weight: 500;
+      cursor: pointer; overflow: hidden; transition: opacity .1s;
+      background: var(--surface2); color: var(--ink);
+      border-left: 3px solid var(--ink);
+    }
+    .post-chip:hover { opacity: .8; }
+    .post-chip.draft     { background: var(--surface2); border-color: var(--ink3); color: var(--ink2); }
+    .post-chip.scheduled { background: var(--blue-bg);  border-color: var(--blue); color: var(--blue); }
+    .post-chip.published { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+    .post-chip-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .post-chip-icons { display: flex; gap: 2px; flex-shrink: 0; }
+    .pf-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pf-ig { background: var(--ig); }
+    .pf-fb { background: var(--fb); }
+    .pf-sk { background: var(--sk); border: 1px solid #ccc; }
+    .pf-li { background: var(--li); }
+
+    .more-chip { font-size: 10px; color: var(--ink3); padding: 2px 4px; }
+
+    /* ── POST MODAL ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      display: none; align-items: center; justify-content: center; z-index: 8000;
+      backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 16px;
+      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      animation: modalIn .2s ease;
+    }
+    @keyframes modalIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-head h2 { font-family: var(--serif); font-size: 20px; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink3); line-height: 1; padding: 4px 8px; border-radius: 6px; }
+    .modal-close:hover { background: var(--surface2); color: var(--ink); }
+    .modal .field { margin-bottom: 16px; }
+    .modal .field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 6px; }
+    .modal .field input,
+    .modal .field textarea,
+    .modal .field select {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border-mid);
+      border-radius: var(--radius); font-family: var(--font); font-size: 14px;
+      background: var(--bg); outline: none; transition: border-color .15s; color: var(--ink);
+    }
+    .modal .field input:focus,
+    .modal .field textarea:focus,
+    .modal .field select:focus { border-color: var(--ink); background: var(--surface); }
+    .modal .field textarea { resize: vertical; min-height: 80px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* platform checkboxes */
+    .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pf-check {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border-mid);
+      cursor: pointer; transition: all .12s; user-select: none;
+    }
+    .pf-check input { display: none; }
+    .pf-check .pf-icon { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+    .pf-check span { font-size: 13px; font-weight: 500; }
+    .pf-check.checked-ig { border-color: var(--ig); background: #fef0f5; }
+    .pf-check.checked-fb { border-color: var(--fb); background: #f0f4fd; }
+    .pf-check.checked-sk { border-color: #555; background: var(--surface2); }
+    .pf-check.checked-li { border-color: var(--li); background: #f0f7fd; }
+
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+    /* post detail panel */
+    .detail-platforms { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    .pf-badge {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .pf-badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pf-ig-badge { background: #fef0f5; color: var(--ig); }
+    .pf-fb-badge { background: #f0f4fd; color: var(--fb); }
+    .pf-sk-badge { background: var(--surface2); color: var(--ink); }
+    .pf-li-badge { background: #f0f7fd; color: var(--li); }
+
+    /* toast */
     .toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: var(--accent); color: white; padding: 12px 20px;
-      border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
-      opacity: 0; transform: translateY(8px); transition: all 0.25s;
+      background: var(--ink); color: #fff; padding: 12px 20px;
+      border-radius: var(--radius); font-size: 13px; font-weight: 500;
+      opacity: 0; transform: translateY(8px); transition: all .25s;
       pointer-events: none; z-index: 9999;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--danger); }
+    .toast.err  { background: var(--red); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 10px; }
   </style>
 </head>
 <body>
 
-<!-- ── LOGIN OVERLAY ── -->
-<div id="login-overlay">
-  <div class="login-card">
-    <h1 style="font-family: var(--font-serif); font-size: 32px; margin-bottom: 4px;">MEU Global</h1>
+<!-- ═══════════════════════════════
+     AUTH
+═══════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <h1>MEU Global</h1>
 
-    <!-- Login Form -->
-    <div id="login-fields">
-      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">CRM Dashboard Access</p>
-      <div class="error-msg" id="login-error"></div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="name@meuglobal.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
-               onkeydown="if(event.key==='Enter') handleLogin()">
-      </div>
-      <button class="btn-primary" id="login-btn" onclick="handleLogin()">Sign In</button>
+    <div id="login-section">
+      <p>CRM Dashboard Access</p>
+      <div class="err-box" id="login-err"></div>
+      <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="name@meuglobal.com" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-dark" id="login-btn" onclick="doLogin()">Sign In</button>
     </div>
 
-    <!-- Password Change Flow -->
-    <div id="password-change-area">
-      <p style="color: var(--danger); margin-bottom: 8px; font-weight: 600;">Security Update Required</p>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Please set a permanent password to continue.</p>
-      <div class="error-msg" id="pw-error"></div>
-      <div class="form-group">
-        <label>New Password <span style="color:var(--text-secondary)">(min. 8 characters)</span></label>
-        <input type="password" id="new-password" placeholder="Choose a strong password"
-               onkeydown="if(event.key==='Enter') submitNewPassword()">
-      </div>
-      <button class="btn-primary" id="pw-btn" onclick="submitNewPassword()">Update & Enter Dashboard</button>
+    <div id="pw-change">
+      <p style="color:var(--red);font-weight:600;margin-bottom:6px;">Security Update Required</p>
+      <p>Set a permanent password to continue.</p>
+      <div class="err-box" id="pw-err"></div>
+      <div class="field"><label>New Password <span style="font-weight:400;text-transform:none">(min. 8 chars)</span></label><input type="password" id="new-pass" placeholder="Choose a strong password" onkeydown="if(event.key==='Enter')doUpdatePassword()"></div>
+      <button class="btn btn-dark" id="pw-btn" onclick="doUpdatePassword()">Update & Enter Dashboard</button>
     </div>
   </div>
 </div>
 
-<!-- ── DASHBOARD ── -->
-<div class="app" id="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-top">
-      <div style="width:32px;height:32px;background:var(--accent);border-radius:6px;"></div>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="icon-btn" title="Add Team Member" onclick="promptAddUser()">+</button>
-    </div>
-  </aside>
 
-  <main class="main">
+<!-- ═══════════════════════════════
+     APP SHELL
+═══════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo"></div>
+
+    <!-- Clients toggle -->
+    <button class="nav-btn" id="nav-clients" onclick="toggleClientPanel()" title="Clients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span class="tooltip">Clients</span>
+    </button>
+
+    <!-- Dashboard -->
+    <button class="nav-btn active" id="nav-dash" onclick="showView('dash')" title="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span class="tooltip">Dashboard</span>
+    </button>
+
+    <!-- Calendar -->
+    <button class="nav-btn" id="nav-cal" onclick="showView('cal')" title="Content Calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="tooltip">Content Calendar</span>
+    </button>
+
+    <div class="sidebar-spacer"></div>
+
+    <!-- Add team member -->
+    <button class="nav-btn" onclick="promptAddUser()" title="Add Team Member">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+      </svg>
+      <span class="tooltip">Add Team Member</span>
+    </button>
+  </nav>
+
+  <!-- CLIENT PANEL -->
+  <div class="client-panel" id="client-panel">
+    <div class="client-panel-head">
+      <h3>Clients</h3>
+      <input class="client-search" id="client-search" placeholder="Search clients…" oninput="filterClients(this.value)">
+    </div>
+    <div class="client-list-scroll" id="client-list-panel"></div>
+    <div class="client-panel-foot">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="toggleAddClientForm()">+ Add Client</button>
+    </div>
+    <div class="add-client-form" id="add-client-form">
+      <input id="nc-name"  placeholder="Company / Client Name" style="margin-bottom:6px">
+      <input id="nc-email" type="email" placeholder="Contact Email" style="margin-bottom:8px">
+      <div class="form-row">
+        <button class="btn btn-ghost btn-sm" onclick="toggleAddClientForm()">Cancel</button>
+        <button class="btn btn-dark btn-sm" onclick="addClient()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
     <header class="topbar">
-      <span style="font-weight:600;font-size:14px;">MEU Global CRM</span>
-      <span style="font-size:13px;color:var(--text-secondary)" id="current-user-email"></span>
+      <span class="topbar-title" id="view-title">Dashboard</span>
+      <span class="topbar-client" id="topbar-client" style="display:none"></span>
     </header>
 
-    <div class="content">
-      <!-- Stats -->
-      <div class="card">
-        <div class="card-label">Active Clients</div>
-        <div class="card-value" id="client-count">—</div>
-      </div>
-      <div class="card">
-        <div class="card-label">System Status</div>
-        <div class="card-value" style="color:var(--success);">Online</div>
-      </div>
-
-      <!-- Add Client -->
-      <div class="card full-width">
-        <h3 style="font-family:var(--font-serif);font-size:20px;">Register New Client</h3>
-        <div class="input-row">
-          <input type="text"  id="client-name"  placeholder="Client Name / Company">
-          <input type="email" id="client-email" placeholder="Contact Email">
-          <button class="btn-sm" onclick="addClient()">Add Client</button>
+    <!-- DASHBOARD VIEW -->
+    <div class="view active" id="view-dash">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Active Clients</div>
+          <div class="stat-value" id="stat-clients">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Posts This Month</div>
+          <div class="stat-value" id="stat-posts">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">System Status</div>
+          <div class="stat-value" style="color:var(--green);font-size:22px;padding-top:6px;">● Online</div>
         </div>
       </div>
-
-      <!-- Client List -->
-      <div class="card full-width">
-        <div class="card-label">All Clients</div>
-        <div id="client-list-container">
-          <div class="empty-state">Loading clients…</div>
-        </div>
+      <h2 class="section-title">All Clients</h2>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="clients-table-wrap"><div class="empty">Loading…</div></div>
       </div>
     </div>
-  </main>
+
+    <!-- CALENDAR VIEW -->
+    <div class="view" id="view-cal">
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button onclick="calPrev()">&#8249;</button>
+          <span class="cal-month-label" id="cal-label"></span>
+          <button onclick="calNext()">&#8250;</button>
+        </div>
+        <div class="cal-toolbar-right">
+          <select class="cal-filter-client" id="cal-filter-client" onchange="renderCalendar()">
+            <option value="">All Clients</option>
+          </select>
+          <button class="btn btn-dark btn-sm" onclick="openPostModal(null, null)">+ New Post</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
 </div>
 
-<!-- Toast -->
+<!-- ═══════════════════════════════
+     POST MODAL
+═══════════════════════════════ -->
+<div class="modal-backdrop" id="post-modal-backdrop" onclick="closePostModal(event)">
+  <div class="modal" id="post-modal">
+    <div class="modal-head">
+      <h2 id="modal-title">New Post</h2>
+      <button class="modal-close" onclick="closePostModal()">×</button>
+    </div>
+
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="m-title" placeholder="Post title / campaign name">
+    </div>
+    <div class="field">
+      <label>Caption / Copy</label>
+      <textarea id="m-caption" placeholder="Write your caption here…"></textarea>
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="m-date">
+      </div>
+      <div class="field">
+        <label>Time (optional)</label>
+        <input type="time" id="m-time">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label>Client</label>
+        <select id="m-client">
+          <option value="">No specific client</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="m-status">
+          <option value="draft">Draft</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="published">Published</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Platforms</label>
+      <div class="platform-grid">
+        <label class="pf-check" id="pf-ig" onclick="togglePlatform('ig')">
+          <input type="checkbox" value="instagram">
+          <div class="pf-icon" style="background:var(--ig)"></div>
+          <span>Instagram</span>
+        </label>
+        <label class="pf-check" id="pf-fb" onclick="togglePlatform('fb')">
+          <input type="checkbox" value="facebook">
+          <div class="pf-icon" style="background:var(--fb)"></div>
+          <span>Facebook</span>
+        </label>
+        <label class="pf-check" id="pf-sk" onclick="togglePlatform('sk')">
+          <input type="checkbox" value="skool">
+          <div class="pf-icon" style="background:var(--sk);border:1px solid #ccc"></div>
+          <span>Skool</span>
+        </label>
+        <label class="pf-check" id="pf-li" onclick="togglePlatform('li')">
+          <input type="checkbox" value="linkedin">
+          <div class="pf-icon" style="background:var(--li)"></div>
+          <span>LinkedIn</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="modal-delete-btn" onclick="deletePost()" style="display:none;color:var(--red);border-color:var(--red)">Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="closePostModal()">Cancel</button>
+      <button class="btn btn-dark btn-sm" onclick="savePost()">Save Post</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── State ──
-  let currentUserId = null;
+// ════════════════════════════════════
+//  STATE
+// ════════════════════════════════════
+let session = { userId: null, role: null, email: null };
+let allClients = [];
+let allPosts   = [];
+let calYear    = new Date().getFullYear();
+let calMonth   = new Date().getMonth(); // 0-based
+let editingPostId = null;
+let clientPanelOpen = false;
 
-  // ── Utilities ──
-  function showError(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-  function clearError(id) {
-    const el = document.getElementById(id);
-    el.textContent = '';
-    el.style.display = 'none';
-  }
+// ════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 3200);
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function setBtn(id, loading, label) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = loading;
+  b.textContent = loading ? 'Please wait…' : label;
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function clearErr(id) {
+  const el = document.getElementById(id);
+  el.textContent = ''; el.style.display = 'none';
+}
+function pfClass(key) { return { ig:'pf-ig-badge', fb:'pf-fb-badge', sk:'pf-sk-badge', li:'pf-li-badge' }[key] || ''; }
+function pfDot(key)   { return { ig:'pf-ig', fb:'pf-fb', sk:'pf-sk', li:'pf-li' }[key] || ''; }
+function pfName(key)  { return { instagram:'IG', facebook:'FB', skool:'SK', linkedin:'LI', ig:'IG', fb:'FB', sk:'SK', li:'LI' }[key] || key; }
+function pfColor(key) { return { instagram: 'var(--ig)', facebook: 'var(--fb)', skool: 'var(--sk)', linkedin: 'var(--li)' }[key] || '#999'; }
+function platformKey(raw) { return { instagram:'ig', facebook:'fb', skool:'sk', linkedin:'li' }[raw] || raw; }
 
-  let toastTimer;
-  function toast(msg, type = '') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'toast show' + (type ? ' ' + type : '');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
-  }
+// ════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════
+async function doLogin() {
+  clearErr('login-err');
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!email || !pass) return showErr('login-err', 'Please enter email and password.');
+  setBtn('login-btn', true, 'Sign In');
+  try {
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pass }) });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      session = { userId: d.userId, role: d.role, email: d.email };
+      if (d.mustChange) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('pw-change').style.display = 'block';
+      } else { enterDashboard(); }
+    } else { showErr('login-err', d.error || 'Login failed.'); }
+  } catch { showErr('login-err', 'Could not reach server.'); }
+  finally { setBtn('login-btn', false, 'Sign In'); }
+}
 
-  function setLoading(btnId, loading, label = 'Sign In') {
-    const btn = document.getElementById(btnId);
-    btn.disabled = loading;
-    btn.textContent = loading ? 'Please wait…' : label;
-  }
+async function doUpdatePassword() {
+  clearErr('pw-err');
+  const np = document.getElementById('new-pass').value;
+  if (np.length < 8) return showErr('pw-err', 'Password must be at least 8 characters.');
+  setBtn('pw-btn', true, 'Update & Enter Dashboard');
+  try {
+    const r = await fetch('/api/update-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: session.userId, newPassword: np }) });
+    const d = await r.json();
+    if (r.ok && d.success) { enterDashboard(); }
+    else { showErr('pw-err', d.error || 'Failed.'); }
+  } catch { showErr('pw-err', 'Server error.'); }
+  finally { setBtn('pw-btn', false, 'Update & Enter Dashboard'); }
+}
 
-  // ── AUTH ──
-  async function handleLogin() {
-    clearError('login-error');
-    const email    = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
+function enterDashboard() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadClients();
+  loadStats();
+}
 
-    if (!email || !password) {
-      return showError('login-error', 'Please enter your email and password.');
-    }
+// ════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════
+function showView(v) {
+  // close client panel when switching views
+  if (v !== 'clients') setClientPanel(false);
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn[id^=nav-]').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.getElementById('nav-' + v)?.classList.add('active');
+  const titles = { dash: 'Dashboard', cal: 'Content Calendar' };
+  document.getElementById('view-title').textContent = titles[v] || '';
+  if (v === 'cal') { renderCalendar(); }
+}
 
-    setLoading('login-btn', true);
+// ════════════════════════════════════
+//  CLIENT PANEL
+// ════════════════════════════════════
+function toggleClientPanel() {
+  setClientPanel(!clientPanelOpen);
+}
+function setClientPanel(open) {
+  clientPanelOpen = open;
+  const panel = document.getElementById('client-panel');
+  const btn   = document.getElementById('nav-clients');
+  panel.classList.toggle('open', open);
+  btn.classList.toggle('active', open);
+}
 
-    try {
-      const res  = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
+function toggleAddClientForm() {
+  const f = document.getElementById('add-client-form');
+  f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  if (f.style.display === 'block') document.getElementById('nc-name').focus();
+}
 
-      if (res.ok && data.success) {
-        currentUserId = data.userId;
-        document.getElementById('current-user-email').textContent = email;
+function filterClients(q) {
+  renderClientPanel(q);
+}
 
-        if (data.mustChange) {
-          document.getElementById('login-fields').style.display = 'none';
-          document.getElementById('password-change-area').style.display = 'block';
-        } else {
-          enterDashboard();
-        }
-      } else {
-        showError('login-error', data.error || 'Login failed. Check your credentials.');
-      }
-    } catch (err) {
-      console.error(err);
-      showError('login-error', 'Could not reach the server. Please try again.');
-    } finally {
-      setLoading('login-btn', false);
-    }
-  }
+function renderClientPanel(q = '') {
+  const el = document.getElementById('client-list-panel');
+  let list  = allClients;
+  if (q) list = list.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.email.toLowerCase().includes(q.toLowerCase()));
+  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink3);font-size:13px;">No clients found</div>'; return; }
+  el.innerHTML = list.map(c => `
+    <div class="client-item" onclick="selectClient(${c.id})" id="cp-${c.id}">
+      <div class="client-avatar">${esc(c.name.charAt(0))}</div>
+      <div>
+        <div class="ci-name">${esc(c.name)}</div>
+        <div class="ci-email">${esc(c.email)}</div>
+      </div>
+    </div>`).join('');
+}
 
-  async function submitNewPassword() {
-    clearError('pw-error');
-    const newPassword = document.getElementById('new-password').value;
+function selectClient(id) {
+  const c = allClients.find(x => x.id === id);
+  if (!c) return;
+  // update topbar
+  const tb = document.getElementById('topbar-client');
+  tb.textContent = c.name;
+  tb.style.display = 'inline-block';
+  // highlight
+  document.querySelectorAll('.client-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('cp-' + id)?.classList.add('selected');
+  // update cal filter to match
+  document.getElementById('cal-filter-client').value = id;
+  renderCalendar();
+}
 
-    if (newPassword.length < 8) {
-      return showError('pw-error', 'Password must be at least 8 characters.');
-    }
+// ════════════════════════════════════
+//  CLIENTS DATA
+// ════════════════════════════════════
+async function loadClients() {
+  try {
+    const r = await fetch('/api/clients');
+    allClients = await r.json();
+    renderClientPanel();
+    renderClientsTable();
+    populateClientDropdowns();
+  } catch { toast('Failed to load clients', 'err'); }
+}
 
-    setLoading('pw-btn', true, 'Update & Enter Dashboard');
+async function addClient() {
+  const name  = document.getElementById('nc-name').value.trim();
+  const email = document.getElementById('nc-email').value.trim();
+  if (!name || !email) return toast('Name and email required', 'err');
+  try {
+    const r = await fetch('/api/clients', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email }) });
+    const d = await r.json();
+    if (r.ok) {
+      document.getElementById('nc-name').value = '';
+      document.getElementById('nc-email').value = '';
+      document.getElementById('add-client-form').style.display = 'none';
+      toast('Client added ✓');
+      await loadClients();
+      loadStats();
+    } else { toast(d.error || 'Failed to add client', 'err'); }
+  } catch { toast('Network error', 'err'); }
+}
 
-    try {
-      const res  = await fetch('/api/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, newPassword })
-      });
-      const data = await res.json();
+async function deleteClientById(id) {
+  if (!confirm('Delete this client? This will also remove their posts.')) return;
+  try {
+    const r = await fetch('/api/clients/' + id, { method: 'DELETE' });
+    if (r.ok) { toast('Client removed'); await loadClients(); loadStats(); }
+    else { toast('Failed to delete', 'err'); }
+  } catch { toast('Network error', 'err'); }
+}
 
-      if (res.ok && data.success) {
-        enterDashboard();
-      } else {
-        showError('pw-error', data.error || 'Failed to update password.');
-      }
-    } catch (err) {
-      showError('pw-error', 'Server error. Please try again.');
-    } finally {
-      setLoading('pw-btn', false, 'Update & Enter Dashboard');
-    }
-  }
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    document.getElementById('stat-clients').textContent = d.client_count ?? '—';
+  } catch {}
 
-  function enterDashboard() {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-shell').style.display = 'flex';
-    fetchStats();
-    fetchClients();
-  }
+  // posts this month
+  try {
+    const now = new Date();
+    const r = await fetch(`/api/posts?month=${now.getMonth()+1}&year=${now.getFullYear()}`);
+    const d = await r.json();
+    document.getElementById('stat-posts').textContent = d.length ?? '—';
+  } catch {}
+}
 
-  // ── CRM ──
-  async function fetchStats() {
-    try {
-      const res  = await fetch('/api/stats');
-      const data = await res.json();
-      document.getElementById('client-count').textContent = data.client_count ?? '—';
-    } catch {
-      document.getElementById('client-count').textContent = '—';
-    }
-  }
-
-  async function fetchClients() {
-    try {
-      const res     = await fetch('/api/clients');
-      const clients = await res.json();
-      renderClients(clients);
-    } catch {
-      document.getElementById('client-list-container').innerHTML =
-        '<div class="empty-state">Failed to load clients.</div>';
-    }
-  }
-
-  function renderClients(clients) {
-    const container = document.getElementById('client-list-container');
-    if (!clients.length) {
-      container.innerHTML = '<div class="empty-state">No clients yet. Add your first one above.</div>';
-      return;
-    }
-
-    const rows = clients.map(c => `
+function renderClientsTable() {
+  const wrap = document.getElementById('clients-table-wrap');
+  if (!allClients.length) { wrap.innerHTML = '<div class="empty">No clients yet. Use the sidebar to add one.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Added</th><th></th></tr></thead>
+    <tbody>${allClients.map(c => `
       <tr>
-        <td>${escapeHtml(c.name)}</td>
-        <td>${escapeHtml(c.email)}</td>
-        <td><span class="status-badge">${escapeHtml(c.status)}</span></td>
-        <td style="color:var(--text-secondary);font-size:13px;">${new Date(c.created_at).toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' })}</td>
-      </tr>
-    `).join('');
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="color:var(--ink2)">${esc(c.email)}</td>
+        <td><span class="badge badge-green">${esc(c.status)}</span></td>
+        <td style="color:var(--ink3);font-size:13px">${new Date(c.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td><button class="icon-action" onclick="deleteClientById(${c.id})" title="Remove">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
 
-    container.innerHTML = `
-      <table class="client-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Added</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+function populateClientDropdowns() {
+  const opts = allClients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('m-client').innerHTML = '<option value="">No specific client</option>' + opts;
+  document.getElementById('cal-filter-client').innerHTML = '<option value="">All Clients</option>' + opts;
+}
+
+// ════════════════════════════════════
+//  CALENDAR
+// ════════════════════════════════════
+function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+async function renderCalendar() {
+  const label = document.getElementById('cal-label');
+  label.textContent = new Date(calYear, calMonth, 1).toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
+
+  const clientFilter = document.getElementById('cal-filter-client').value;
+
+  try {
+    const params = new URLSearchParams({ month: calMonth + 1, year: calYear });
+    if (clientFilter) params.set('client_id', clientFilter);
+    const r = await fetch('/api/posts?' + params);
+    allPosts = await r.json();
+  } catch { allPosts = []; }
+
+  const grid  = document.getElementById('cal-grid');
+  const days  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let html = days.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // convert to Mon=0
+
+  const daysInMonth  = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInPrev   = new Date(calYear, calMonth, 0).getDate();
+
+  // prev month padding
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = daysInPrev - i;
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
   }
 
-  async function addClient() {
-    const name  = document.getElementById('client-name').value.trim();
-    const email = document.getElementById('client-email').value.trim();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const thisDate = new Date(calYear, calMonth, d);
+    const isToday  = thisDate.getTime() === today.getTime();
+    const dateStr  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayPosts = allPosts.filter(p => p.post_date && p.post_date.startsWith(dateStr));
 
-    if (!name || !email) return toast('Please fill in both client name and email.', 'error');
+    const chips = dayPosts.slice(0, 3).map(p => {
+      const platforms = Array.isArray(p.platforms) ? p.platforms : [];
+      const dots = platforms.slice(0,3).map(pf => `<div class="pf-dot ${pfDot(platformKey(pf))}"></div>`).join('');
+      return `<div class="post-chip ${esc(p.status)}" onclick="event.stopPropagation();editPost(${p.id})" title="${esc(p.title)}">
+        <div class="post-chip-icons">${dots}</div>
+        <div class="post-chip-title">${esc(p.title)}</div>
+      </div>`;
+    }).join('');
+    const more = dayPosts.length > 3 ? `<div class="more-chip">+${dayPosts.length - 3} more</div>` : '';
 
-    try {
-      const res  = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email })
-      });
-      const data = await res.json();
+    html += `<div class="cal-cell${isToday?' today':''}" onclick="openPostModal('${dateStr}', null)">
+      <div class="cal-date">${d}</div>
+      ${chips}${more}
+    </div>`;
+  }
 
-      if (res.ok) {
-        document.getElementById('client-name').value  = '';
-        document.getElementById('client-email').value = '';
-        toast('Client added successfully.');
-        fetchStats();
-        fetchClients();
-      } else {
-        toast(data.error || 'Could not add client.', 'error');
-      }
-    } catch {
-      toast('Network error. Please try again.', 'error');
+  // next month padding
+  const totalCells = startDow + daysInMonth;
+  const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+// ════════════════════════════════════
+//  POST MODAL
+// ════════════════════════════════════
+const PF_KEYS = ['ig','fb','sk','li'];
+
+function togglePlatform(key) {
+  const el = document.getElementById('pf-' + key);
+  el.classList.toggle('checked-' + key);
+  el.querySelector('input').checked = el.classList.contains('checked-' + key);
+}
+
+function setPlatforms(platforms) {
+  PF_KEYS.forEach(k => {
+    const el = document.getElementById('pf-' + k);
+    el.className = 'pf-check';
+    el.querySelector('input').checked = false;
+  });
+  if (!platforms) return;
+  platforms.forEach(p => {
+    const k = platformKey(p);
+    const el = document.getElementById('pf-' + k);
+    if (el) { el.classList.add('checked-' + k); el.querySelector('input').checked = true; }
+  });
+}
+
+function getSelectedPlatforms() {
+  return PF_KEYS
+    .filter(k => document.getElementById('pf-' + k)?.querySelector('input').checked)
+    .map(k => ({ ig:'instagram', fb:'facebook', sk:'skool', li:'linkedin' }[k]));
+}
+
+function openPostModal(date, postId) {
+  editingPostId = postId || null;
+  document.getElementById('modal-title').textContent = postId ? 'Edit Post' : 'New Post';
+  document.getElementById('modal-delete-btn').style.display = postId ? 'inline-flex' : 'none';
+
+  if (postId) {
+    const p = allPosts.find(x => x.id === postId);
+    if (p) {
+      document.getElementById('m-title').value   = p.title || '';
+      document.getElementById('m-caption').value = p.caption || '';
+      document.getElementById('m-date').value    = p.post_date ? p.post_date.substring(0,10) : '';
+      document.getElementById('m-time').value    = p.post_time ? p.post_time.substring(0,5) : '';
+      document.getElementById('m-client').value  = p.client_id || '';
+      document.getElementById('m-status').value  = p.status || 'draft';
+      setPlatforms(p.platforms);
     }
+  } else {
+    document.getElementById('m-title').value   = '';
+    document.getElementById('m-caption').value = '';
+    document.getElementById('m-date').value    = date || '';
+    document.getElementById('m-time').value    = '';
+    document.getElementById('m-client').value  = document.getElementById('cal-filter-client').value || '';
+    document.getElementById('m-status').value  = 'draft';
+    setPlatforms([]);
   }
 
-  // ── ADMIN ──
-  async function promptAddUser() {
-    const email    = prompt('New team member email:');
-    if (!email) return;
-    const password = prompt('Temporary password (they will be asked to change it):');
-    if (!password) return;
+  document.getElementById('post-modal-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('m-title').focus(), 100);
+}
 
-    try {
-      const res  = await fetch('/api/admin/add-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
+function closePostModal(e) {
+  if (e && e.target !== document.getElementById('post-modal-backdrop')) return;
+  document.getElementById('post-modal-backdrop').classList.remove('open');
+  editingPostId = null;
+}
 
-      if (res.ok) {
-        toast(`✓ ${email} added. They'll set a new password on first login.`);
-      } else {
-        toast(data.error || 'Error adding user.', 'error');
-      }
-    } catch {
-      toast('Network error.', 'error');
+async function savePost() {
+  const title    = document.getElementById('m-title').value.trim();
+  const caption  = document.getElementById('m-caption').value.trim();
+  const date     = document.getElementById('m-date').value;
+  const time     = document.getElementById('m-time').value;
+  const clientId = document.getElementById('m-client').value;
+  const status   = document.getElementById('m-status').value;
+  const platforms = getSelectedPlatforms();
+
+  if (!title) return toast('Title is required', 'err');
+  if (!date)  return toast('Date is required', 'err');
+
+  const body = { title, caption, post_date: date, post_time: time || null, client_id: clientId || null, status, platforms, created_by: session.userId };
+
+  try {
+    let r;
+    if (editingPostId) {
+      r = await fetch('/api/posts/' + editingPostId, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    } else {
+      r = await fetch('/api/posts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     }
-  }
+    if (r.ok) {
+      toast(editingPostId ? 'Post updated ✓' : 'Post created ✓');
+      document.getElementById('post-modal-backdrop').classList.remove('open');
+      editingPostId = null;
+      renderCalendar();
+      loadStats();
+    } else {
+      const d = await r.json();
+      toast(d.error || 'Failed to save', 'err');
+    }
+  } catch { toast('Network error', 'err'); }
+}
 
-  // ── Helpers ──
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+async function deletePost() {
+  if (!editingPostId) return;
+  if (!confirm('Delete this post?')) return;
+  try {
+    const r = await fetch('/api/posts/' + editingPostId, { method: 'DELETE' });
+    if (r.ok) {
+      toast('Post deleted');
+      document.getElementById('post-modal-backdrop').classList.remove('open');
+      editingPostId = null;
+      renderCalendar();
+      loadStats();
+    }
+  } catch { toast('Network error', 'err'); }
+}
+
+function editPost(id) {
+  openPostModal(null, id);
+}
+
+// ════════════════════════════════════
+//  ADMIN
+// ════════════════════════════════════
+async function promptAddUser() {
+  const email = prompt('New team member email:');
+  if (!email) return;
+  const pass = prompt('Temporary password (min 6 chars):');
+  if (!pass) return;
+  try {
+    const r = await fetch('/api/admin/add-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pass }) });
+    const d = await r.json();
+    if (r.ok) toast('Team member added ✓ — they will set a new password on first login.');
+    else toast(d.error || 'Error adding user', 'err');
+  } catch { toast('Network error', 'err'); }
+}
 </script>
 </body>
 </html>
