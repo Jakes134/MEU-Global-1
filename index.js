@@ -1,8 +1,8 @@
-require(‘dotenv’).config();
-const express = require(‘express’);
-const path    = require(‘path’);
-const { Pool } = require(‘pg’);
-const bcrypt  = require(‘bcryptjs’);
+require('dotenv').config();
+const express = require('express');
+const path    = require('path');
+const { Pool } = require('pg');
+const bcrypt  = require('bcryptjs');
 
 const app  = express();
 const port = process.env.PORT || 8080;
