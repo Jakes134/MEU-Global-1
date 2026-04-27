@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -6,362 +7,676 @@
   <title>MEU Global | CRM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:         #f7f6f3;
-      --surface:    #ffffff;
-      --surface2:   #f0efe9;
-      --border:     rgba(26,25,22,0.09);
-      --border-mid: rgba(26,25,22,0.15);
-      --ink:        #1a1916;
-      --ink2:       #6b6a64;
-      --ink3:       #a8a7a0;
-      --green:      #2a6049;
-      --green-bg:   #eaf4ef;
+      --bg:         #e9e4d8;
+      --bg2:        #ddd8cc;
+      --surface:    #f8f6f1;
+      --surface2:   #f0ece3;
+      --border:     rgba(60,50,30,0.10);
+      --border-mid: rgba(60,50,30,0.18);
+      --ink:        #1c1a14;
+      --ink2:       #5c5848;
+      --ink3:       #9c9888;
+      --sidebar-bg: #1c1a14;
+      --sidebar-ic: #8a8678;
+      --sidebar-ic-active: #ffffff;
+      --green:      #2d6b50;
+      --green-bg:   #e8f4ed;
       --red:        #b84c3a;
       --red-bg:     #fdf0ee;
-      --blue:       #1d5fa6;
-      --blue-bg:    #edf4fd;
-      --amber:      #92600a;
+      --blue:       #2054a0;
+      --blue-bg:    #edf2fc;
+      --amber:      #96620c;
       --amber-bg:   #fef8ec;
-      --ig: #e1306c; --fb: #1877f2; --sk: #1a1916; --li: #0a66c2;
-      --sidebar: 56px; --radius: 10px;
+      --ig: #e1306c; --fb: #1877f2; --sk: #1c1a14; --li: #0a66c2;
+      --sidebar-w: 62px; --radius: 12px; --radius-sm: 8px;
       --font: 'DM Sans', sans-serif; --serif: 'DM Serif Display', serif;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
     }
 
-    body { font-family: var(--font); background: var(--bg); color: var(--ink); height: 100vh; overflow: hidden; }
+```
+body { font-family: var(--font); background: var(--bg); color: var(--ink); height: 100vh; overflow: hidden; }
 
-    /* ── AUTH ── */
-    #auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9000; }
-    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 40px; width: 100%; max-width: 400px; box-shadow: 0 2px 24px rgba(0,0,0,0.07); }
-    .auth-logo { width: 36px; height: 36px; background: var(--ink); border-radius: 8px; margin-bottom: 20px; }
-    .auth-card h1 { font-family: var(--serif); font-size: 28px; margin-bottom: 4px; }
-    .auth-card .sub { color: var(--ink2); font-size: 13px; margin-bottom: 28px; }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
 
-    /* ── FIELDS ── */
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--ink2); margin-bottom: 6px; text-transform: uppercase; }
-    .field input, .field textarea, .field select {
-      width: 100%; padding: 10px 13px; border: 1px solid var(--border-mid);
-      border-radius: var(--radius); font-family: var(--font); font-size: 14px;
-      outline: none; transition: border 0.15s, background 0.15s;
-      background: var(--bg); color: var(--ink);
-    }
-    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); background: var(--surface); }
-    .field textarea { resize: vertical; min-height: 80px; }
+/* ── AUTH ── */
+#auth-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(45,107,80,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(32,84,160,0.06) 0%, transparent 50%);
+  display: flex; align-items: center; justify-content: center; z-index: 9000;
+}
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 48px 44px; width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-md);
+}
+.auth-logo {
+  width: 40px; height: 40px; background: var(--ink); border-radius: 10px;
+  margin-bottom: 24px; display: flex; align-items: center; justify-content: center;
+}
+.auth-logo svg { width: 22px; height: 22px; color: #fff; fill: none; stroke: currentColor; stroke-width: 2; }
+.auth-card h1 { font-family: var(--serif); font-size: 30px; margin-bottom: 6px; }
+.auth-card .sub { color: var(--ink3); font-size: 13px; margin-bottom: 32px; }
+.auth-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
-    /* ── BUTTONS ── */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius); border: none; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-dark { background: var(--ink); color: #fff; }
-    .btn-dark:hover { opacity: 0.88; }
-    .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border-mid); }
-    .btn-ghost:hover { background: var(--surface2); }
-    .btn-green { background: var(--green); color: #fff; }
-    .btn-red { background: var(--red); color: #fff; }
-    .btn-sm { padding: 7px 14px; font-size: 12px; }
-    .btn-xs { padding: 5px 10px; font-size: 11px; }
-    .btn-full { width: 100%; }
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--ink3); margin-bottom: 7px; text-transform: uppercase; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius-sm); font-family: var(--font); font-size: 14px;
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  background: var(--bg); color: var(--ink);
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--ink); box-shadow: 0 0 0 3px rgba(28,26,20,0.07);
+  background: var(--surface);
+}
+.field textarea { resize: vertical; min-height: 80px; }
+.field-hint { font-size: 11px; color: var(--ink3); margin-top: 5px; }
 
-    /* ── SHELL ── */
-    #app { display: none; height: 100vh; flex-direction: row; }
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 18px; border-radius: var(--radius-sm); border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-dark { background: var(--ink); color: #fff; }
+.btn-dark:hover { background: #333027; }
+.btn-ghost { background: transparent; color: var(--ink2); border: 1.5px solid var(--border-mid); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { opacity: 0.9; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { opacity: 0.9; }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-xs { padding: 5px 10px; font-size: 11px; }
+.btn-full { width: 100%; }
+.btn-loading { opacity: 0.7; pointer-events: none; }
 
-    /* ── SIDEBAR ── */
-    .sidebar { width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px; z-index: 100; flex-shrink: 0; }
-    .sidebar-logo { width: 32px; height: 32px; background: var(--ink); border-radius: 8px; margin-bottom: 16px; }
-    .nav-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink3); position: relative; transition: background 0.15s, color 0.15s; }
-    .nav-btn:hover { background: var(--surface2); color: var(--ink); }
-    .nav-btn.active { background: var(--ink); color: #fff; }
-    .tooltip { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--ink); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-    .nav-btn:hover .tooltip { opacity: 1; }
-    .sidebar-spacer { flex: 1; }
-    .badge-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1.5px solid var(--surface); }
+/* ── SHELL ── */
+#app { display: none; height: 100vh; flex-direction: row; }
 
-    /* ── CLIENT PANEL ── */
-    .client-panel { position: absolute; left: var(--sidebar); top: 0; bottom: 0; width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: none; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.06); z-index: 90; }
-    .client-panel.open { display: flex; }
-    .client-panel-head { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .client-search { width: 100%; padding: 8px 10px; border: 1px solid var(--border-mid); border-radius: 8px; font-size: 13px; background: var(--bg); outline: none; margin-top: 10px; font-family: var(--font); }
-    .client-list-scroll { flex: 1; overflow-y: auto; padding: 8px; }
-    .client-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; transition: background 0.12s; }
-    .client-item:hover, .client-item.selected { background: var(--surface2); }
-    .client-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--ink2); text-transform: uppercase; flex-shrink: 0; }
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); background: var(--sidebar-bg);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0 20px; z-index: 100; flex-shrink: 0;
+}
+.sidebar-logo {
+  width: 34px; height: 34px; background: rgba(255,255,255,0.12);
+  border-radius: 9px; margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-logo svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; }
 
-    /* ── MAIN ── */
-    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-    .topbar { height: 58px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
-    .topbar-title { font-family: var(--serif); font-size: 20px; flex: 1; }
-    .topbar-sub { font-size: 12px; color: var(--ink3); }
+.nav-btn {
+  width: 40px; height: 40px; border-radius: 10px; border: none;
+  background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--sidebar-ic); position: relative; transition: all 0.15s;
+  margin-bottom: 4px;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+.nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
+.nav-btn svg { width: 19px; height: 19px; }
 
-    /* ── VIEWS ── */
-    .view { display: none; flex: 1; overflow-y: auto; padding: 24px; }
-    .view.active { display: block; }
+.tooltip {
+  position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+  background: var(--ink); color: #fff; font-size: 11px; font-weight: 600;
+  padding: 5px 11px; border-radius: 7px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 200;
+}
+.nav-btn:hover .tooltip { opacity: 1; }
 
-    /* ── SECTION HEADER ── */
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .section-title { font-family: var(--serif); font-size: 20px; }
+.sidebar-spacer { flex: 1; }
 
-    /* ── STATUS BADGES ── */
-    .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; display: inline-block; white-space: nowrap; }
-    .badge-todo      { background: var(--surface2); color: var(--ink2); }
-    .badge-progress  { background: var(--blue-bg); color: var(--blue); }
-    .badge-pending   { background: var(--amber-bg); color: var(--amber); }
-    .badge-approved  { background: var(--green-bg); color: var(--green); }
-    .badge-rejected  { background: var(--red-bg); color: var(--red); }
-    .badge-done      { background: var(--green-bg); color: var(--green); }
-    .badge-draft     { background: var(--surface2); color: var(--ink2); }
-    .badge-scheduled { background: var(--blue-bg); color: var(--blue); }
-    .badge-published { background: var(--green-bg); color: var(--green); }
+.sidebar-user {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; padding: 10px 0; border-radius: 10px;
+  transition: background 0.15s; width: 52px;
+}
+.sidebar-user:hover { background: rgba(255,255,255,0.08); }
+.sidebar-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase;
+}
+.sidebar-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 0.04em; text-transform: uppercase; text-align: center; }
+.sidebar-status { display: flex; align-items: center; gap: 3px; font-size: 9px; color: #6fcf97; font-weight: 600; }
+.sidebar-status::before { content: ''; width: 5px; height: 5px; background: #6fcf97; border-radius: 50%; display: inline-block; }
 
-    /* ── TASK CARDS ── */
-    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 32px; }
-    .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
-    .task-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-    .task-title { font-weight: 600; font-size: 14px; line-height: 1.4; }
-    .task-meta { font-size: 12px; color: var(--ink3); margin-bottom: 6px; }
-    .task-desc { font-size: 13px; color: var(--ink2); margin-bottom: 12px; line-height: 1.5; }
-    .task-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .task-comments-toggle { font-size: 12px; color: var(--blue); cursor: pointer; margin-top: 10px; border: none; background: none; font-family: var(--font); padding: 0; }
-    .task-comments-area { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; display: none; }
-    .task-comments-area.open { display: block; }
-    .comment-item { padding: 8px 10px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; }
-    .comment-author { font-size: 11px; font-weight: 700; color: var(--ink2); margin-bottom: 3px; }
-    .comment-text { font-size: 13px; color: var(--ink); }
-    .comment-input-row { display: flex; gap: 8px; margin-top: 8px; }
-    .comment-input-row input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-mid); border-radius: 8px; font-family: var(--font); font-size: 13px; outline: none; background: var(--surface); }
-    .comment-input-row input:focus { border-color: var(--ink); }
+.nav-badge {
+  position: absolute; top: 5px; right: 5px; width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%; border: 1.5px solid var(--sidebar-bg);
+}
 
-    /* ── CALENDAR ── */
-    .cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .cal-nav { display: flex; align-items: center; gap: 12px; }
-    .cal-month-label { font-family: var(--serif); font-size: 22px; min-width: 180px; }
-    .cal-filter { display: flex; align-items: center; gap: 8px; }
-    .cal-filter select { padding: 7px 12px; border: 1px solid var(--border-mid); border-radius: 8px; font-family: var(--font); font-size: 13px; outline: none; background: var(--surface); color: var(--ink); }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: var(--radius); background: var(--border); gap: 1px; overflow: hidden; }
-    .cal-day-header { background: var(--surface2); padding: 10px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; }
-    .cal-cell { background: var(--surface); min-height: 110px; padding: 8px; cursor: pointer; position: relative; transition: background 0.1s; }
-    .cal-cell:hover { background: #fafaf9; }
-    .cal-cell.today { background: #fffef9; }
-    .cal-cell.today .cal-date { color: var(--ink); font-weight: 700; }
-    .cal-date { font-size: 13px; font-weight: 500; color: var(--ink2); margin-bottom: 5px; }
-    .post-chip { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid var(--ink); background: var(--surface2); color: var(--ink2); display: flex; align-items: center; gap: 4px; cursor: pointer; }
-    .post-chip.published { background: var(--green-bg); border-color: var(--green); color: var(--green); }
-    .post-chip.scheduled { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
-    .post-chip.draft { background: var(--surface2); border-color: var(--ink3); color: var(--ink2); }
-    .chip-approval { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: 700; }
-    .chip-approval.pending { background: var(--amber-bg); color: var(--amber); }
-    .chip-approval.approved { background: var(--green-bg); color: var(--green); }
-    .chip-approval.rejected { background: var(--red-bg); color: var(--red); }
+.sidebar-gear {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: transparent; cursor: pointer; color: var(--sidebar-ic);
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  margin-top: 6px;
+}
+.sidebar-gear:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.sidebar-gear svg { width: 15px; height: 15px; }
 
-    /* ── APPROVAL INBOX ── */
-    .approval-section { margin-bottom: 36px; }
-    .approval-list { display: flex; flex-direction: column; gap: 10px; }
-    .approval-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-    .approval-card-info { flex: 1; min-width: 0; }
-    .approval-card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    .approval-card-meta { font-size: 12px; color: var(--ink3); }
-    .approval-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+/* ── CLIENT PANEL ── */
+.client-panel {
+  position: absolute; left: var(--sidebar-w); top: 0; bottom: 0; width: 256px;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: none; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.08); z-index: 90;
+}
+.client-panel.open { display: flex; }
+.client-panel-head { padding: 18px 16px 10px; border-bottom: 1px solid var(--border); }
+.client-panel-head h3 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.client-panel-head p { font-size: 11px; color: var(--ink3); }
+.client-search {
+  margin: 10px 12px 0; padding: 8px 11px; border: 1.5px solid var(--border-mid);
+  border-radius: 8px; font-size: 13px; background: var(--bg);
+  outline: none; font-family: var(--font); color: var(--ink); width: calc(100% - 24px);
+}
+.client-search:focus { border-color: var(--ink); }
+.client-list-scroll { flex: 1; overflow-y: auto; padding: 8px; }
+.client-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer; transition: background 0.1s;
+}
+.client-item:hover, .client-item.selected { background: var(--surface2); }
+.client-avatar {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--surface2);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--ink2); flex-shrink: 0;
+}
 
-    /* ── PLATFORMS ── */
-    .platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-    .pf-check { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--border-mid); cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.15s; user-select: none; }
-    .pf-check input { display: none; }
-    .pf-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .pf-check:has(input:checked) { border-width: 2px; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .pf-check:has(input[value="instagram"]:checked) { border-color: var(--ig); background: #fef0f5; }
-    .pf-check:has(input[value="facebook"]:checked)  { border-color: var(--fb); background: #f0f4fd; }
-    .pf-check:has(input[value="skool"]:checked)     { border-color: var(--ink); background: var(--surface2); }
-    .pf-check:has(input[value="linkedin"]:checked)  { border-color: var(--li); background: #f0f7fd; }
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
-    /* ── USER TABLE ── */
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink3); padding: 10px 12px; border-bottom: 1px solid var(--border); }
-    .data-table td { padding: 12px 12px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink); vertical-align: middle; }
-    .data-table tr:last-child td { border-bottom: none; }
-    .data-table tr:hover td { background: var(--bg); }
-    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 16px; }
+/* ── VIEWS ── */
+.view { display: none; flex: 1; overflow-y: auto; padding: 20px 24px; }
+.view.active { display: block; }
 
-    /* ── MODAL ── */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.38); display: none; align-items: center; justify-content: center; z-index: 8000; backdrop-filter: blur(3px); }
-    .modal-backdrop.open { display: flex; }
-    .modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); max-height: 90vh; overflow-y: auto; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-    .modal-head h2 { font-family: var(--serif); font-size: 22px; }
-    .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ink3); line-height: 1; padding: 4px; border-radius: 6px; transition: background 0.12s; }
-    .modal-close:hover { background: var(--surface2); }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .modal-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+/* ── DASHBOARD STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
-    /* ── POST DETAIL MODAL ── */
-    .post-detail-platforms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .pf-tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .pf-ig  { background: #fef0f5; color: var(--ig); }
-    .pf-fb  { background: #f0f4fd; color: var(--fb); }
-    .pf-sk  { background: var(--surface2); color: var(--ink); }
-    .pf-li  { background: #f0f7fd; color: var(--li); }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.stat-card-title {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--ink3); margin-bottom: 16px;
+}
 
-    /* ── TOAST ── */
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; z-index: 9999; pointer-events: none; max-width: 320px; }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.err { background: var(--red); }
-    .toast.ok  { background: var(--green); }
+/* Client Sign-up Stages card */
+.stages-list { display: flex; flex-direction: column; gap: 10px; }
+.stage-row { display: flex; align-items: center; gap: 10px; }
+.stage-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.stage-dot.dot-dark { background: var(--ink); }
+.stage-dot.dot-mid  { background: var(--ink3); }
+.stage-dot.dot-light{ background: var(--bg2); border: 1.5px solid var(--ink3); }
+.stage-label { font-size: 12px; color: var(--ink2); flex: 1; }
+.stage-count { font-size: 13px; font-weight: 700; color: var(--ink); min-width: 20px; text-align: right; }
+.stage-bar-wrap { width: 80px; height: 4px; background: var(--bg2); border-radius: 2px; overflow: hidden; }
+.stage-bar { height: 100%; border-radius: 2px; background: var(--ink); }
 
-    /* ── EMPTY STATE ── */
-    .empty-state { text-align: center; padding: 48px 24px; color: var(--ink3); }
-    .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
-    .empty-state p { font-size: 14px; }
+.mini-chart-wrap { position: absolute; right: 16px; top: 48px; bottom: 16px; width: 110px; opacity: 0.7; }
+.mini-chart-wrap canvas { width: 100% !important; height: 100% !important; }
 
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+/* Top products card */
+.products-chart-wrap { height: 110px; position: relative; }
+.products-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+/* Your Tasks card */
+.task-tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.task-tab {
+  font-size: 11px; font-weight: 700; padding: 0 0 8px; margin-right: 16px;
+  color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: all 0.15s; letter-spacing: 0.03em;
+}
+.task-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+.task-count { font-size: 10px; font-weight: 700; color: var(--ink3); margin-left: 4px; }
+.task-tab.active .task-count { color: var(--ink2); }
+
+.task-mini-list { display: flex; flex-direction: column; gap: 7px; overflow: hidden; max-height: 108px; }
+.task-mini-item { display: flex; align-items: flex-start; gap: 8px; }
+.task-mini-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.task-mini-dot.new      { background: #e05c4a; }
+.task-mini-dot.pending  { background: var(--amber); }
+.task-mini-dot.done     { background: var(--green); }
+.task-mini-body { flex: 1; min-width: 0; }
+.task-mini-title { font-size: 12px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.task-mini-due { font-size: 10px; color: var(--ink3); margin-top: 1px; }
+.task-mini-new { font-size: 9px; font-weight: 800; color: var(--red); text-transform: uppercase; }
+
+/* ── CALENDAR ── */
+.cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.cal-nav { display: flex; align-items: center; gap: 10px; }
+.cal-nav-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--border-mid);
+  background: var(--surface); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 16px; color: var(--ink2); transition: all 0.15s; line-height: 1;
+}
+.cal-nav-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+.cal-month-label { font-family: var(--serif); font-size: 22px; color: var(--ink); }
+.cal-right { display: flex; align-items: center; gap: 10px; }
+.cal-client-select {
+  padding: 7px 12px; border: 1.5px solid var(--border-mid); border-radius: 8px;
+  font-family: var(--font); font-size: 13px; outline: none;
+  background: var(--surface); color: var(--ink);
+}
+
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg2); gap: 1px; overflow: hidden;
+}
+.cal-day-header {
+  background: var(--surface2); padding: 10px 10px 8px;
+  font-size: 10px; font-weight: 700; color: var(--ink3);
+  text-transform: uppercase; letter-spacing: 0.06em; text-align: center;
+}
+.cal-cell {
+  background: var(--surface); min-height: 108px; padding: 8px;
+  cursor: pointer; transition: background 0.1s; position: relative;
+}
+.cal-cell:hover { background: #fafaf7; }
+.cal-cell.weekend { background: var(--surface2); }
+.cal-cell.weekend:hover { background: #eceae4; }
+.cal-cell.today { background: #fffef9; }
+.cal-cell.other-month { background: var(--bg2); opacity: 0.5; cursor: default; }
+.cal-date { font-size: 12px; font-weight: 500; color: var(--ink3); margin-bottom: 5px; }
+.cal-cell.today .cal-date { color: var(--ink); font-weight: 700; }
+
+.post-chip {
+  padding: 3px 7px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-left: 3px solid; display: flex; align-items: center; gap: 4px; cursor: pointer;
+}
+.post-chip.draft     { background: var(--surface2); border-color: var(--ink3); color: var(--ink2); }
+.post-chip.scheduled { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.post-chip.published { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.chip-approval { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: 800; flex-shrink: 0; }
+.chip-approval.pending  { background: var(--amber-bg); color: var(--amber); }
+.chip-approval.approved { background: var(--green-bg); color: var(--green); }
+.chip-approval.rejected { background: var(--red-bg); color: var(--red); }
+
+/* ── SECTION HEADER ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.section-title { font-family: var(--serif); font-size: 22px; }
+
+/* ── STATUS BADGES ── */
+.badge {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 3px 8px; border-radius: 5px;
+  display: inline-block; white-space: nowrap;
+}
+.badge-todo      { background: var(--surface2); color: var(--ink2); }
+.badge-progress  { background: var(--blue-bg); color: var(--blue); }
+.badge-pending   { background: var(--amber-bg); color: var(--amber); }
+.badge-approved  { background: var(--green-bg); color: var(--green); }
+.badge-rejected  { background: var(--red-bg); color: var(--red); }
+.badge-done      { background: var(--green-bg); color: var(--green); }
+.badge-draft     { background: var(--surface2); color: var(--ink2); }
+.badge-scheduled { background: var(--blue-bg); color: var(--blue); }
+.badge-published { background: var(--green-bg); color: var(--green); }
+.badge-completed { background: var(--green-bg); color: var(--green); }
+.badge-pending_approval { background: var(--amber-bg); color: var(--amber); }
+
+/* ── TASK CARDS ── */
+.task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.task-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+}
+.task-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.task-title { font-weight: 600; font-size: 14px; line-height: 1.4; }
+.task-meta { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
+.task-desc { font-size: 13px; color: var(--ink2); margin-bottom: 12px; line-height: 1.5; }
+.task-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.task-comments-toggle {
+  font-size: 12px; color: var(--blue); cursor: pointer; margin-top: 10px;
+  border: none; background: none; font-family: var(--font); padding: 0;
+}
+.task-comments-area { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; display: none; }
+.task-comments-area.open { display: block; }
+.comment-item { padding: 8px 10px; background: var(--bg); border-radius: 8px; margin-bottom: 8px; }
+.comment-author { font-size: 11px; font-weight: 700; color: var(--ink2); margin-bottom: 3px; }
+.comment-text { font-size: 13px; }
+.comment-input-row { display: flex; gap: 8px; margin-top: 8px; }
+.comment-input-row input {
+  flex: 1; padding: 8px 12px; border: 1.5px solid var(--border-mid);
+  border-radius: 8px; font-family: var(--font); font-size: 13px; outline: none; background: var(--surface);
+}
+.comment-input-row input:focus { border-color: var(--ink); }
+
+/* ── APPROVALS ── */
+.approval-list { display: flex; flex-direction: column; gap: 10px; }
+.approval-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  box-shadow: var(--shadow);
+}
+.approval-card-info { flex: 1; min-width: 0; }
+.approval-card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.approval-card-meta { font-size: 12px; color: var(--ink3); }
+.approval-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── PLATFORMS ── */
+.platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+.pf-check {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 10px; border: 1.5px solid var(--border-mid); cursor: pointer;
+  transition: all 0.2s; user-select: none;
+}
+.pf-check input { display: none; }
+.pf-icon { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pf-check:has(input:checked) { border-width: 2px; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.pf-check:has(input[value="instagram"]:checked) { border-color: var(--ig); background: #fef0f5; }
+.pf-check:has(input[value="facebook"]:checked)  { border-color: var(--fb); background: #f0f4fd; }
+.pf-check:has(input[value="skool"]:checked)     { border-color: var(--ink); background: var(--surface2); }
+.pf-check:has(input[value="linkedin"]:checked)  { border-color: var(--li); background: #f0f7fd; }
+
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink3); padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  font-size: 13px; color: var(--ink); vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--bg); }
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-top: 14px; box-shadow: var(--shadow);
+}
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.40);
+  display: none; align-items: center; justify-content: center;
+  z-index: 8000; backdrop-filter: blur(4px);
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 18px; width: 100%; max-width: 520px;
+  padding: 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.20); max-height: 90vh; overflow-y: auto;
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.modal-head h2 { font-family: var(--serif); font-size: 22px; }
+.modal-close {
+  background: var(--surface2); border: none; width: 30px; height: 30px;
+  border-radius: 8px; cursor: pointer; font-size: 18px; color: var(--ink3);
+  display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+}
+.modal-close:hover { background: var(--bg2); color: var(--ink); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modal-divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+/* ── POST DETAIL ── */
+.post-detail-platforms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pf-tag { padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.pf-ig  { background: #fef0f5; color: var(--ig); }
+.pf-fb  { background: #f0f4fd; color: var(--fb); }
+.pf-sk  { background: var(--surface2); color: var(--ink); }
+.pf-li  { background: #f0f7fd; color: var(--li); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+  padding: 13px 22px; border-radius: 11px; font-size: 14px; font-weight: 500;
+  opacity: 0; transform: translateY(10px); transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999; pointer-events: none; max-width: 320px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.err { background: var(--red); }
+.toast.ok  { background: var(--green); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--ink3); }
+.empty-state p { font-size: 14px; }
+
+/* ── LOADING ── */
+.skeleton { background: linear-gradient(90deg, var(--surface2) 25%, var(--bg) 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── CHANGE PW OVERLAY ── */
+#change-pw-overlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: none; align-items: center; justify-content: center; z-index: 8500;
+}
+```
+
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     AUTH OVERLAY
-══════════════════════════════════════════ -->
+<!-- ══════════════ AUTH ══════════════ -->
+
 <div id="auth-overlay">
   <div class="auth-card">
-    <div class="auth-logo"></div>
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
     <h1>MEU Global</h1>
-    <p class="sub">Sign in to access your workspace.</p>
-    <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="name@meuglobal.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-dark btn-full" onclick="doLogin()">Sign In</button>
-    <div id="auth-error" style="margin-top:12px; color:var(--red); font-size:13px; display:none"></div>
+    <p class="sub">Sign in to your workspace.</p>
+    <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="name@meuglobal.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-dark btn-full" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div id="auth-error" style="margin-top:12px; color:var(--red); font-size:13px; display:none; padding:10px 12px; background:var(--red-bg); border-radius:8px;"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     CHANGE PASSWORD OVERLAY
-══════════════════════════════════════════ -->
-<div id="change-pw-overlay" style="position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:8500;">
+<!-- ══════════════ CHANGE PW ══════════════ -->
+
+<div id="change-pw-overlay">
   <div class="auth-card">
-    <div class="auth-logo"></div>
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
     <h1>Set New Password</h1>
-    <p class="sub">Please set a new password before continuing.</p>
-    <div class="field"><label>New Password</label><input type="password" id="cp-new" placeholder="Min. 8 characters"></div>
+    <p class="sub">Please create a new password before continuing.</p>
+    <div class="field"><label>New Password</label><input type="password" id="cp-new" placeholder="At least 8 characters"></div>
     <div class="field"><label>Confirm Password</label><input type="password" id="cp-confirm" placeholder="Repeat password"></div>
-    <button class="btn btn-dark btn-full" onclick="doChangePassword()">Update Password</button>
+    <button class="btn btn-dark btn-full" onclick="doChangePassword()">Update Password & Continue</button>
+    <div id="cp-error" style="margin-top:12px; color:var(--red); font-size:13px; display:none; padding:10px 12px; background:var(--red-bg); border-radius:8px;"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     MAIN APP
-══════════════════════════════════════════ -->
+<!-- ══════════════ MAIN APP ══════════════ -->
+
 <div id="app">
+
   <!-- Sidebar -->
+
   <nav class="sidebar">
-    <div class="sidebar-logo"></div>
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
 
-    <button class="nav-btn active" id="nav-dash" onclick="showView('dash')" title="Calendar">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span class="tooltip">Calendar</span>
-    </button>
+```
+<button class="nav-btn active" id="nav-dash" onclick="showView('dash')">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+  <span class="tooltip">Dashboard</span>
+</button>
 
-    <button class="nav-btn" id="nav-tasks" onclick="showView('tasks')" title="Tasks">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      <span class="tooltip">Tasks</span>
-      <span class="badge-dot" id="task-badge" style="display:none"></span>
-    </button>
+<button class="nav-btn" id="nav-calendar" onclick="showView('calendar')">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  <span class="tooltip">Calendar</span>
+</button>
 
-    <button class="nav-btn" id="nav-approvals" onclick="showView('approvals')" style="display:none" title="Post Approvals">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      <span class="tooltip">Post Approvals</span>
-      <span class="badge-dot" id="approval-badge" style="display:none"></span>
-    </button>
+<button class="nav-btn" id="nav-tasks" onclick="showView('tasks')">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+  <span class="tooltip">Tasks</span>
+  <span class="nav-badge" id="task-badge" style="display:none"></span>
+</button>
 
-    <button class="nav-btn" id="nav-clients" onclick="toggleClientPanel()" title="Clients" style="display:none">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span class="tooltip">Switch Client</span>
-    </button>
+<button class="nav-btn" id="nav-approvals" onclick="showView('approvals')" style="display:none">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  <span class="tooltip">Approvals</span>
+  <span class="nav-badge" id="approval-badge" style="display:none"></span>
+</button>
 
-    <div class="sidebar-spacer"></div>
+<button class="nav-btn" id="nav-clients" onclick="toggleClientPanel()" style="display:none">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <span class="tooltip">Switch Client</span>
+</button>
 
-    <button class="nav-btn" onclick="openUserMgmt()">
-      <div class="client-avatar" id="user-initials" style="background:var(--ink); color:#fff; font-size:10px; width:28px; height:28px; border-radius:50%;">?</div>
-      <span class="tooltip">Account & Settings</span>
-    </button>
+<div class="sidebar-spacer"></div>
+
+<div class="sidebar-user" onclick="openUserMgmt()">
+  <div class="sidebar-avatar" id="user-initials">?</div>
+  <div class="sidebar-name" id="sidebar-name-label">USER</div>
+  <div class="sidebar-status">Active</div>
+</div>
+<button class="sidebar-gear" onclick="openUserMgmt()">
+  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+```
+
   </nav>
 
-  <!-- Client switcher panel (admin only) -->
+  <!-- Client panel -->
+
   <div class="client-panel" id="client-panel">
     <div class="client-panel-head">
-      <div>
-        <div style="font-weight:600; font-size:14px">Clients</div>
-        <div style="font-size:11px; color:var(--ink3); margin-top:1px">Filter calendar by client</div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="selectClient(null)">All</button>
+      <h3>Clients</h3>
+      <p>Filter by client</p>
     </div>
     <input class="client-search" placeholder="Search clients…" oninput="filterClients(this.value)">
     <div class="client-list-scroll" id="client-list-panel"></div>
-    <div style="padding:12px; border-top:1px solid var(--border)">
-      <button class="btn btn-ghost btn-sm btn-full" onclick="addClientPrompt()">+ Add Client</button>
+    <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px">
+      <button class="btn btn-ghost btn-sm btn-full" onclick="selectClient(null)">All Clients</button>
+      <button class="btn btn-dark btn-sm btn-full" onclick="addClientPrompt()">+ Add</button>
     </div>
   </div>
 
-  <!-- Main content -->
+  <!-- Main -->
+
   <div class="main">
-    <header class="topbar">
-      <span class="topbar-title" id="topbar-title">Social Media Calendar</span>
-      <span class="topbar-sub" id="topbar-client-label"></span>
-      <div id="topbar-actions"></div>
-    </header>
 
-    <!-- ── CALENDAR VIEW ── -->
-    <div class="view active" id="view-dash">
-      <div class="cal-toolbar">
-        <div class="cal-nav">
-          <button class="btn btn-ghost btn-sm" onclick="calPrev()">‹</button>
-          <span class="cal-month-label" id="cal-label">Month Year</span>
-          <button class="btn btn-ghost btn-sm" onclick="calNext()">›</button>
-        </div>
-        <div class="cal-filter">
-          <select id="cal-client-filter" onchange="renderCalendar()" style="display:none">
-            <option value="">All Clients</option>
-          </select>
-          <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
-        </div>
+```
+<!-- ── DASHBOARD VIEW ── -->
+<div class="view active" id="view-dash">
+  <!-- Stats row -->
+  <div class="stats-row" id="stats-row">
+    <!-- Client Sign-up Stages -->
+    <div class="stat-card" id="stages-card">
+      <div class="stat-card-title">Client Sign-Up Stages</div>
+      <div class="stages-list" id="stages-list">
+        <div class="stage-row"><div class="stage-dot dot-dark"></div><div class="stage-label">Contract Review</div><div class="stage-bar-wrap"><div class="stage-bar" style="width:75%"></div></div><div class="stage-count">—</div></div>
+        <div class="stage-row"><div class="stage-dot dot-mid"></div><div class="stage-label">Onboarding</div><div class="stage-bar-wrap"><div class="stage-bar" style="width:94%"></div></div><div class="stage-count">—</div></div>
+        <div class="stage-row"><div class="stage-dot dot-light"></div><div class="stage-label">Implementation</div><div class="stage-bar-wrap"><div class="stage-bar" style="width:44%"></div></div><div class="stage-count">—</div></div>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
+      <div class="mini-chart-wrap"><canvas id="mini-line-chart"></canvas></div>
     </div>
 
-    <!-- ── TASKS VIEW ── -->
-    <div class="view" id="view-tasks">
-      <div class="section-header">
-        <span class="section-title">Tasks</span>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" id="task-filter-my" onclick="setTaskFilter('mine')" style="display:none">My Tasks</button>
-          <button class="btn btn-ghost btn-sm" id="task-filter-all" onclick="setTaskFilter('all')" style="display:none">All Tasks</button>
-          <button class="btn btn-dark btn-sm" id="add-task-btn" onclick="openTaskModal()" style="display:none">+ New Task</button>
-        </div>
-      </div>
-      <div class="task-grid" id="task-list"></div>
+    <!-- Top Products -->
+    <div class="stat-card">
+      <div class="stat-card-title">Top Sign-Up Products</div>
+      <div class="products-chart-wrap"><canvas id="products-chart"></canvas></div>
     </div>
 
-    <!-- ── APPROVALS VIEW (client owners) ── -->
-    <div class="view" id="view-approvals">
-      <div class="section-header">
-        <span class="section-title">Post Approvals</span>
+    <!-- Your Tasks -->
+    <div class="stat-card">
+      <div class="stat-card-title">Your Tasks</div>
+      <div class="task-tabs" id="dash-task-tabs">
+        <div class="task-tab active" onclick="setDashTab('new', this)">NEW <span class="task-count" id="dash-tab-new-count">(0)</span></div>
+        <div class="task-tab" onclick="setDashTab('pending', this)">PENDING <span class="task-count" id="dash-tab-pending-count">(0)</span></div>
+        <div class="task-tab" onclick="setDashTab('completed', this)">COMPLETED <span class="task-count" id="dash-tab-completed-count">(0)</span></div>
       </div>
-      <div id="approvals-list"></div>
+      <div class="task-mini-list" id="dash-task-list">
+        <div style="font-size:13px; color:var(--ink3)">Loading tasks…</div>
+      </div>
     </div>
+  </div>
+
+  <!-- Calendar -->
+  <div>
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+        <span class="cal-month-label" id="cal-label-dash">Month Year</span>
+        <button class="cal-nav-btn" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-right">
+        <select class="cal-client-select" id="cal-client-filter" onchange="renderCalendar()" style="display:none">
+          <option value="">All Clients</option>
+        </select>
+        <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     POST CREATE / EDIT MODAL
-══════════════════════════════════════════ -->
+<!-- ── CALENDAR VIEW (full) ── -->
+<div class="view" id="view-calendar">
+  <div class="section-header">
+    <span class="section-title">Social Media Calendar</span>
+    <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
+  </div>
+  <div class="cal-toolbar">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+      <span class="cal-month-label" id="cal-label-full">Month Year</span>
+      <button class="cal-nav-btn" onclick="calNext()">›</button>
+    </div>
+  </div>
+  <div class="cal-grid" id="cal-grid-full"></div>
+</div>
+
+<!-- ── TASKS VIEW ── -->
+<div class="view" id="view-tasks">
+  <div class="section-header">
+    <span class="section-title">Tasks</span>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn btn-ghost btn-sm" id="task-filter-mine" onclick="setTaskFilter('mine')" style="display:none">My Tasks</button>
+      <button class="btn btn-ghost btn-sm" id="task-filter-all" onclick="setTaskFilter('all')" style="display:none">All Tasks</button>
+      <button class="btn btn-dark btn-sm" id="add-task-btn" onclick="openTaskModal()" style="display:none">+ New Task</button>
+    </div>
+  </div>
+  <div class="task-grid" id="task-list"></div>
+</div>
+
+<!-- ── APPROVALS VIEW ── -->
+<div class="view" id="view-approvals">
+  <div class="section-header">
+    <span class="section-title">Post Approvals</span>
+  </div>
+  <div id="approvals-list"></div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ══════════════ POST MODAL ══════════════ -->
+
 <div class="modal-backdrop" id="post-modal-backdrop">
   <div class="modal">
     <div class="modal-head">
       <h2 id="post-modal-title">Create Post</h2>
       <button class="modal-close" onclick="closePostModal()">×</button>
     </div>
-    <div class="field"><label>Title / Campaign Name</label><input type="text" id="m-title" placeholder="e.g. Summer Launch"></div>
+    <div class="field"><label>Title / Campaign Name</label><input type="text" id="m-title" placeholder="e.g. Summer Launch Campaign"></div>
     <div class="field"><label>Caption / Copy</label><textarea id="m-caption" rows="4" placeholder="Write your post copy here…"></textarea></div>
     <div class="two-col">
       <div class="field"><label>Date</label><input type="date" id="m-date"></div>
@@ -380,50 +695,57 @@
     <div class="field">
       <label>Platforms</label>
       <div class="platform-grid">
-        <label class="pf-check"><input type="checkbox" name="platform" value="instagram"><div class="pf-icon" style="background:var(--ig)"></div><span>Instagram</span></label>
-        <label class="pf-check"><input type="checkbox" name="platform" value="facebook"><div class="pf-icon" style="background:var(--fb)"></div><span>Facebook</span></label>
-        <label class="pf-check"><input type="checkbox" name="platform" value="skool"><div class="pf-icon" style="background:var(--sk)"></div><span>Skool</span></label>
-        <label class="pf-check"><input type="checkbox" name="platform" value="linkedin"><div class="pf-icon" style="background:var(--li)"></div><span>LinkedIn</span></label>
+        <label class="pf-check"><input type="checkbox" name="platform" value="instagram"><div class="pf-icon" style="background:var(--ig)"></div><span style="font-size:13px">Instagram</span></label>
+        <label class="pf-check"><input type="checkbox" name="platform" value="facebook"><div class="pf-icon" style="background:var(--fb)"></div><span style="font-size:13px">Facebook</span></label>
+        <label class="pf-check"><input type="checkbox" name="platform" value="skool"><div class="pf-icon" style="background:var(--sk)"></div><span style="font-size:13px">Skool</span></label>
+        <label class="pf-check"><input type="checkbox" name="platform" value="linkedin"><div class="pf-icon" style="background:var(--li)"></div><span style="font-size:13px">LinkedIn</span></label>
       </div>
     </div>
     <button class="btn btn-dark btn-full" style="margin-top:20px" onclick="savePost()">Save Post</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     POST DETAIL MODAL (view / approve)
-══════════════════════════════════════════ -->
+<!-- ══════════════ POST DETAIL ══════════════ -->
+
 <div class="modal-backdrop" id="post-detail-backdrop">
   <div class="modal">
     <div class="modal-head">
       <h2 id="pd-title">Post Details</h2>
       <button class="modal-close" onclick="closePostDetail()">×</button>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px">
       <span id="pd-status-badge" class="badge"></span>
       <span id="pd-approval-badge" class="badge"></span>
     </div>
-    <div class="field"><label>Caption</label><div id="pd-caption" style="font-size:14px; color:var(--ink2); line-height:1.6; padding:10px; background:var(--bg); border-radius:8px; min-height:60px"></div></div>
-    <div class="two-col" style="margin-bottom:14px">
-      <div><label style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em">Date</label><div id="pd-date" style="font-size:14px;margin-top:4px"></div></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em">Client</label><div id="pd-client" style="font-size:14px;margin-top:4px"></div></div>
+    <div class="field">
+      <label>Caption</label>
+      <div id="pd-caption" style="font-size:14px; color:var(--ink2); line-height:1.6; padding:12px; background:var(--bg); border-radius:8px; min-height:60px"></div>
     </div>
-    <div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em">Platforms</label><div class="post-detail-platforms" id="pd-platforms"></div></div>
-    <div id="pd-creator" style="font-size:12px;color:var(--ink3); margin-bottom:16px"></div>
-    <div id="pd-approve-actions" style="display:none; display:flex; gap:10px; padding-top:16px; border-top:1px solid var(--border)">
+    <div class="two-col" style="margin-bottom:16px">
+      <div><label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Date</label><div id="pd-date" style="font-size:14px"></div></div>
+      <div><label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Client</label><div id="pd-client" style="font-size:14px"></div></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Platforms</label>
+      <div class="post-detail-platforms" id="pd-platforms"></div>
+    </div>
+    <div id="pd-creator" style="font-size:12px;color:var(--ink3);margin-bottom:16px"></div>
+    <div id="pd-approve-actions" style="display:none; gap:10px; padding-top:16px; border-top:1px solid var(--border)">
       <button class="btn btn-green btn-sm" onclick="approvePost(true)">✓ Approve</button>
       <button class="btn btn-red btn-sm" onclick="approvePost(false)">✕ Reject</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     TASK MODAL
-══════════════════════════════════════════ -->
+<!-- ══════════════ TASK MODAL ══════════════ -->
+
 <div class="modal-backdrop" id="task-modal-backdrop">
   <div class="modal">
-    <div class="modal-head"><h2>New Task</h2><button class="modal-close" onclick="closeTaskModal()">×</button></div>
-    <div class="field"><label>Task Title</label><input type="text" id="t-title" placeholder="e.g. Write blog post captions"></div>
+    <div class="modal-head">
+      <h2>New Task</h2>
+      <button class="modal-close" onclick="closeTaskModal()">×</button>
+    </div>
+    <div class="field"><label>Task Title</label><input type="text" id="t-title" placeholder="e.g. Write captions for Q2 campaign"></div>
     <div class="field"><label>Description</label><textarea id="t-desc" rows="3" placeholder="Details about this task…"></textarea></div>
     <div class="two-col">
       <div class="field"><label>Assign To</label><select id="t-assign"><option value="">Unassigned</option></select></div>
@@ -433,83 +755,110 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ACCOUNT & MANAGEMENT MODAL
-══════════════════════════════════════════ -->
+<!-- ══════════════ ACCOUNT MODAL ══════════════ -->
+
 <div class="modal-backdrop" id="user-mgmt-modal">
   <div class="modal">
-    <div class="modal-head"><h2>Account & Settings</h2><button class="modal-close" onclick="closeUserMgmt()">×</button></div>
-    <div id="session-info" style="padding:12px 14px; background:var(--bg); border-radius:8px; margin-bottom:20px; font-size:13px; color:var(--ink2)"></div>
-
-    <!-- Admin: Create User -->
-    <div id="admin-tools" style="display:none">
-      <h3 style="font-family:var(--serif); font-size:18px; margin-bottom:16px">User Management</h3>
-
-      <!-- User list table -->
-      <div id="user-list-wrap"></div>
-
-      <hr class="modal-divider">
-      <h4 style="font-size:13px; font-weight:700; margin-bottom:14px; color:var(--ink2); text-transform:uppercase; letter-spacing:0.04em">Add New User</h4>
-      <div class="field"><label>Full Name</label><input type="text" id="nu-name" placeholder="e.g. Linda Paige"></div>
-      <div class="field"><label>Email Address</label><input type="email" id="nu-email" placeholder="name@meuglobal.com"></div>
-      <div class="field">
-        <label>Temporary Password</label>
-        <input type="text" id="nu-password" placeholder="Default: ChangeMe123!" value="ChangeMe123!">
-        <div style="font-size:11px; color:var(--ink3); margin-top:4px">User will be prompted to change on first login.</div>
-      </div>
-      <div class="two-col">
-        <div class="field">
-          <label>Role</label>
-          <select id="nu-role" onchange="toggleNuClientField()">
-            <option value="user">Creator (User)</option>
-            <option value="client_owner">Client Owner</option>
-            <option value="admin">Manager (Admin)</option>
-          </select>
-        </div>
-        <div class="field" id="nu-client-wrap" style="display:none">
-          <label>Assign Client</label>
-          <select id="nu-client"></select>
-        </div>
-      </div>
-      <button class="btn btn-dark btn-full" onclick="createNewUser()">Create User</button>
+    <div class="modal-head">
+      <h2>Account & Settings</h2>
+      <button class="modal-close" onclick="closeUserMgmt()">×</button>
     </div>
 
-    <hr class="modal-divider">
-    <button class="btn btn-ghost btn-full" style="color:var(--red)" onclick="doSignOut()">Sign Out</button>
+```
+<!-- Session info -->
+<div id="session-info" style="padding:14px 16px; background:var(--bg); border-radius:10px; margin-bottom:22px; font-size:13px; color:var(--ink2)"></div>
+
+<!-- Change own password -->
+<details style="margin-bottom:20px">
+  <summary style="font-size:13px; font-weight:600; cursor:pointer; color:var(--ink2); padding:8px 0;">Change My Password</summary>
+  <div style="margin-top:14px">
+    <div class="field"><label>Current Password</label><input type="password" id="my-current-pw" placeholder="Current password"></div>
+    <div class="field"><label>New Password</label><input type="password" id="my-new-pw" placeholder="At least 8 characters"></div>
+    <button class="btn btn-dark btn-sm" onclick="changeMyPassword()">Update Password</button>
+  </div>
+</details>
+
+<!-- Admin section -->
+<div id="admin-tools" style="display:none">
+  <hr class="modal-divider" style="margin-top:0">
+  <h3 style="font-family:var(--serif); font-size:18px; margin-bottom:16px">User Management</h3>
+  <div id="user-list-wrap"></div>
+  <hr class="modal-divider">
+  <h4 style="font-size:11px; font-weight:800; margin-bottom:16px; color:var(--ink3); text-transform:uppercase; letter-spacing:0.06em">Add New User</h4>
+  <div class="field"><label>Full Name</label><input type="text" id="nu-name" placeholder="e.g. Linda Paige"></div>
+  <div class="field"><label>Email Address</label><input type="email" id="nu-email" placeholder="name@meuglobal.com"></div>
+  <div class="field">
+    <label>Temporary Password</label>
+    <input type="text" id="nu-password" value="ChangeMe123!">
+    <div class="field-hint">User will be prompted to change on first login.</div>
+  </div>
+  <div class="two-col">
+    <div class="field">
+      <label>Role</label>
+      <select id="nu-role" onchange="toggleNuClientField()">
+        <option value="user">Creator (User)</option>
+        <option value="client_owner">Client Owner</option>
+        <option value="admin">Manager (Admin)</option>
+      </select>
+    </div>
+    <div class="field" id="nu-client-wrap" style="display:none">
+      <label>Assign Client</label>
+      <select id="nu-client"></select>
+    </div>
+  </div>
+  <button class="btn btn-dark btn-full" onclick="createNewUser()">Create User</button>
+</div>
+
+<hr class="modal-divider">
+<button class="btn btn-ghost btn-full" style="color:var(--red)" onclick="doSignOut()">Sign Out</button>
+```
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════ -->
 <script>
-// ─── STATE ───────────────────────────────────
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
 let session = { userId: null, name: null, role: null, client_id: null, email: null };
 let allClients = [];
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 let activeClientFilter = null;
 let currentPostDetail  = null;
-let taskFilterMode     = 'all';
+let currentTaskFilter  = 'all';
+let dashTaskTab        = 'new';
+let allTasksCache      = [];
+let miniLineChart      = null;
+let productsChart      = null;
 
-// ─── TOAST ───────────────────────────────────
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => el.className = 'toast', 3200);
+  setTimeout(() => el.className = 'toast', 3400);
 }
 
-// ─── AUTH ─────────────────────────────────────
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
 async function doLogin() {
   const email = document.getElementById('l-email').value.trim();
   const pass  = document.getElementById('l-pass').value;
   const errEl = document.getElementById('auth-error');
+  const btn   = document.getElementById('login-btn');
   errEl.style.display = 'none';
 
-  if (!email || !pass) { errEl.textContent = 'Enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!email) { errEl.textContent = 'Please enter your email address.'; errEl.style.display = 'block'; return; }
+  if (!pass)  { errEl.textContent = 'Please enter your password.'; errEl.style.display = 'block'; return; }
+
+  btn.textContent = 'Signing in…';
+  btn.classList.add('btn-loading');
 
   try {
     const r = await fetch('/api/login', {
@@ -518,6 +867,9 @@ async function doLogin() {
       body: JSON.stringify({ email, password: pass })
     });
     const d = await r.json();
+    btn.textContent = 'Sign In';
+    btn.classList.remove('btn-loading');
+
     if (d.success) {
       session = { userId: d.userId, name: d.name, role: d.role, client_id: d.client_id, email: d.email };
       document.getElementById('auth-overlay').style.display = 'none';
@@ -527,20 +879,26 @@ async function doLogin() {
         launchApp();
       }
     } else {
-      errEl.textContent = d.error || 'Login failed.';
+      errEl.textContent = d.error || 'Invalid email or password. Please try again.';
       errEl.style.display = 'block';
     }
   } catch (e) {
-    errEl.textContent = 'Network error. Please try again.';
+    btn.textContent = 'Sign In';
+    btn.classList.remove('btn-loading');
+    errEl.textContent = 'Connection error. Is the server running?';
     errEl.style.display = 'block';
   }
 }
 
 async function doChangePassword() {
-  const np = document.getElementById('cp-new').value;
-  const cp = document.getElementById('cp-confirm').value;
-  if (np.length < 8) return toast('Password must be at least 8 characters.', 'err');
-  if (np !== cp) return toast('Passwords do not match.', 'err');
+  const np  = document.getElementById('cp-new').value;
+  const cp  = document.getElementById('cp-confirm').value;
+  const err = document.getElementById('cp-error');
+  err.style.display = 'none';
+
+  if (np.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+  if (np !== cp) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+
   const r = await fetch('/api/change-password', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: session.userId, newPassword: np })
@@ -548,13 +906,43 @@ async function doChangePassword() {
   if (r.ok) {
     document.getElementById('change-pw-overlay').style.display = 'none';
     launchApp();
-    toast('Password updated!', 'ok');
-  } else toast('Failed to update password.', 'err');
+    toast('Password updated successfully!', 'ok');
+  } else {
+    err.textContent = 'Failed to update password. Please try again.';
+    err.style.display = 'block';
+  }
+}
+
+async function changeMyPassword() {
+  const cur = document.getElementById('my-current-pw').value;
+  const np  = document.getElementById('my-new-pw').value;
+  if (!cur) return toast('Enter your current password.', 'err');
+  if (np.length < 8) return toast('New password must be at least 8 characters.', 'err');
+
+  // Verify current by re-logging in, then change
+  const verify = await fetch('/api/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: session.email, password: cur })
+  }).then(r => r.json());
+
+  if (!verify.success) return toast('Current password is incorrect.', 'err');
+
+  const r = await fetch('/api/change-password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: session.userId, newPassword: np })
+  });
+  if (r.ok) {
+    document.getElementById('my-current-pw').value = '';
+    document.getElementById('my-new-pw').value = '';
+    toast('Password changed!', 'ok');
+  } else toast('Failed to change password.', 'err');
 }
 
 function doSignOut() { location.reload(); }
 
-// ─── APP LAUNCH ──────────────────────────────
+// ═══════════════════════════════════════════
+//  APP LAUNCH
+// ═══════════════════════════════════════════
 function launchApp() {
   document.getElementById('app').style.display = 'flex';
   setupRoleUI();
@@ -562,10 +950,15 @@ function launchApp() {
 }
 
 function setupRoleUI() {
-  const displayName = session.name || session.email || '?';
-  document.getElementById('user-initials').textContent = displayName[0].toUpperCase();
+  const name = session.name || session.email || '?';
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('user-initials').textContent = initials;
+  document.getElementById('sidebar-name-label').textContent = (session.name || '').split(' ')[0].toUpperCase() || 'USER';
+
   document.getElementById('session-info').innerHTML =
-    `<strong>${displayName}</strong> · ${session.email}<br><span style="color:var(--ink3)">${roleLabel(session.role)}</span>`;
+    `<div style="font-weight:700;font-size:14px;color:var(--ink);margin-bottom:3px">${name}</div>
+     <div style="color:var(--ink3)">${session.email}</div>
+     <div style="margin-top:6px"><span class="badge badge-${session.role === 'admin' ? 'scheduled' : session.role === 'client_owner' ? 'pending' : 'todo'}">${roleLabel(session.role)}</span></div>`;
 
   if (session.role === 'admin') {
     document.getElementById('admin-tools').style.display = 'block';
@@ -573,56 +966,46 @@ function setupRoleUI() {
     document.getElementById('cal-client-filter').style.display = 'block';
     document.getElementById('add-task-btn').style.display = 'inline-flex';
     document.getElementById('t-client-wrap').style.display = 'block';
-    document.getElementById('task-filter-my').style.display = 'inline-flex';
+    document.getElementById('task-filter-mine').style.display = 'inline-flex';
     document.getElementById('task-filter-all').style.display = 'inline-flex';
   } else if (session.role === 'client_owner') {
     document.getElementById('nav-approvals').style.display = 'flex';
     document.getElementById('add-task-btn').style.display = 'inline-flex';
-    document.getElementById('topbar-actions').innerHTML =
-      `<button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>`;
-  } else {
-    // Regular user/creator
-    document.getElementById('add-task-btn').style.display = 'none';
   }
-
-  // All roles see calendar new post btn (except pure client_owner it's in topbar)
-  if (session.role !== 'client_owner') {
-    document.getElementById('topbar-actions').innerHTML =
-      `<button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>`;
-  }
+  // Users (creators): only see tasks assigned to them, no add btn
 }
 
 function roleLabel(r) {
   return { admin: 'Manager / Admin', client_owner: 'Client Owner', user: 'Creator' }[r] || r;
 }
 
-// ─── DATA LOADING ────────────────────────────
+// ═══════════════════════════════════════════
+//  DATA LOADING
+// ═══════════════════════════════════════════
 async function loadInitialData() {
   await loadClients();
   renderCalendar();
-  loadTasks();
+  await loadTasks();
+  initDashboardCharts();
+  updateDashStats();
   if (session.role === 'client_owner') loadPendingApprovals();
   if (session.role === 'admin') loadAdminUsers();
 }
 
 async function loadClients() {
-  const r = await fetch('/api/clients');
-  allClients = await r.json();
+  try {
+    const r = await fetch('/api/clients');
+    allClients = await r.json();
+  } catch(e) { allClients = []; }
 
-  // Post modal client select
-  document.getElementById('m-client').innerHTML =
-    '<option value="">No specific client</option>' +
+  const mkOptions = (incl = false) =>
+    (incl ? '<option value="">No specific client</option>' : '') +
     allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 
-  // Task modal client select
-  document.getElementById('t-client').innerHTML =
-    allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('m-client').innerHTML  = mkOptions(true);
+  document.getElementById('t-client').innerHTML  = mkOptions(false);
+  document.getElementById('nu-client').innerHTML = mkOptions(false);
 
-  // Admin: create user client select
-  document.getElementById('nu-client').innerHTML =
-    allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-
-  // Calendar client filter (admin)
   const cf = document.getElementById('cal-client-filter');
   cf.innerHTML = '<option value="">All Clients</option>' +
     allClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
@@ -631,22 +1014,21 @@ async function loadClients() {
 }
 
 function renderClientList(filter = '') {
-  const el = document.getElementById('client-list-panel');
+  const el   = document.getElementById('client-list-panel');
   const list = filter ? allClients.filter(c => c.name.toLowerCase().includes(filter.toLowerCase())) : allClients;
-  el.innerHTML = list.length ? list.map(c => `
-    <div class="client-item ${activeClientFilter == c.id ? 'selected' : ''}" onclick="selectClient(${c.id})">
-      <div class="client-avatar">${c.name[0]}</div>
-      <div style="font-size:13px; font-weight:500">${c.name}</div>
-    </div>`).join('') :
-    '<div style="padding:16px; font-size:13px; color:var(--ink3)">No clients found.</div>';
+  el.innerHTML = list.length
+    ? list.map(c => `
+        <div class="client-item ${activeClientFilter == c.id ? 'selected' : ''}" onclick="selectClient(${c.id})">
+          <div class="client-avatar">${c.name[0]}</div>
+          <div style="font-size:13px; font-weight:500">${c.name}</div>
+        </div>`).join('')
+    : '<div style="padding:16px; font-size:13px; color:var(--ink3)">No clients found.</div>';
 }
 
 function filterClients(v) { renderClientList(v); }
 
 function selectClient(id) {
   activeClientFilter = id;
-  const client = id ? allClients.find(c => c.id == id) : null;
-  document.getElementById('topbar-client-label').textContent = client ? `· ${client.name}` : '';
   renderClientList();
   renderCalendar();
   document.getElementById('client-panel').classList.remove('open');
@@ -656,7 +1038,9 @@ function toggleClientPanel() {
   document.getElementById('client-panel').classList.toggle('open');
 }
 
-// ─── VIEWS ───────────────────────────────────
+// ═══════════════════════════════════════════
+//  VIEWS
+// ═══════════════════════════════════════════
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -664,21 +1048,169 @@ function showView(v) {
   const navEl = document.getElementById('nav-' + v);
   if (navEl) navEl.classList.add('active');
 
-  const titles = { dash: 'Social Media Calendar', tasks: 'Tasks', approvals: 'Post Approvals' };
-  document.getElementById('topbar-title').textContent = titles[v] || 'MEU Global';
-
-  if (v === 'tasks') loadTasks();
+  if (v === 'tasks')    loadTasks();
   if (v === 'approvals') loadPendingApprovals();
-  if (v === 'dash') renderCalendar();
+  if (v === 'calendar' || v === 'dash') renderCalendar();
+  if (v === 'dash') { updateDashStats(); initDashboardCharts(); }
 }
 
-// ─── CALENDAR ────────────────────────────────
+// ═══════════════════════════════════════════
+//  DASHBOARD CHARTS
+// ═══════════════════════════════════════════
+function initDashboardCharts() {
+  // Mini line chart (client stages trend)
+  const lineCtx = document.getElementById('mini-line-chart');
+  if (lineCtx && !miniLineChart) {
+    miniLineChart = new Chart(lineCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets: [{
+          data: [8, 12, 10, 18, 15, 22],
+          borderColor: 'rgba(28,26,20,0.6)',
+          backgroundColor: 'rgba(28,26,20,0.06)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0
+        },{
+          data: [5, 9, 14, 11, 19, 16],
+          borderColor: 'rgba(28,26,20,0.3)',
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        animation: { duration: 600 }
+      }
+    });
+  }
+
+  // Products bar chart
+  const barCtx = document.getElementById('products-chart');
+  if (barCtx && !productsChart) {
+    productsChart = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Apex Elite', 'Standard Plan', 'Advanced\nToolset', 'Ahax Elite\nP/T'],
+        datasets: [{
+          data: [15, 10, 9, 6],
+          backgroundColor: ['#8a9ea8','#a0a898','#b8b4a8','#ccc8be'],
+          borderRadius: 4,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => ` ${ctx.parsed.y} sign-ups` }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 10, family: "'DM Sans'" }, color: '#9c9888', maxRotation: 0 }
+          },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { font: { size: 10 }, color: '#9c9888' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+}
+
+function updateDashStats() {
+  const all = allTasksCache;
+  const myTasks   = all.filter(t => t.assigned_to == session.userId);
+  const newTasks  = myTasks.filter(t => t.status === 'todo');
+  const pending   = myTasks.filter(t => t.status === 'pending_approval');
+  const completed = myTasks.filter(t => t.status === 'completed');
+
+  document.getElementById('dash-tab-new-count').textContent      = `(${newTasks.length})`;
+  document.getElementById('dash-tab-pending-count').textContent  = `(${pending.length})`;
+  document.getElementById('dash-tab-completed-count').textContent= `(${completed.length})`;
+
+  // Client stages from all clients
+  const total = allClients.length;
+  const review  = Math.max(1, Math.floor(total * 0.35));
+  const onboard = Math.max(1, Math.floor(total * 0.45));
+  const impl    = total - review - onboard;
+
+  const maxVal = Math.max(review, onboard, impl, 1);
+  const stageRows = document.querySelectorAll('#stages-list .stage-row');
+  if (stageRows.length >= 3) {
+    const vals = [review, onboard, impl];
+    stageRows.forEach((row, i) => {
+      row.querySelector('.stage-count').textContent = vals[i];
+      row.querySelector('.stage-bar').style.width = `${(vals[i]/maxVal)*100}%`;
+    });
+  }
+
+  renderDashTasks(dashTaskTab);
+}
+
+function setDashTab(tab, el) {
+  dashTaskTab = tab;
+  document.querySelectorAll('.task-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDashTasks(tab);
+}
+
+function renderDashTasks(tab) {
+  const myTasks = allTasksCache.filter(t => t.assigned_to == session.userId);
+  let filtered;
+  if (tab === 'new')       filtered = myTasks.filter(t => t.status === 'todo');
+  else if (tab === 'pending') filtered = myTasks.filter(t => t.status === 'pending_approval');
+  else                     filtered = myTasks.filter(t => t.status === 'completed');
+
+  const el = document.getElementById('dash-task-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div style="font-size:12px; color:var(--ink3); padding:8px 0">No ${tab} tasks.</div>`;
+    return;
+  }
+
+  const dotClass = { new: 'new', pending: 'pending', completed: 'done' };
+  el.innerHTML = filtered.slice(0, 4).map(t => `
+    <div class="task-mini-item">
+      <div class="task-mini-dot ${dotClass[tab] || 'new'}"></div>
+      <div class="task-mini-body">
+        <div class="task-mini-title">
+          ${t.status === 'todo' ? '<span class="task-mini-new">NEW</span>: ' : ''}${t.title}
+          ${t.client_name ? ` - ${t.client_name}` : ''}
+        </div>
+        <div class="task-mini-due">${t.created_at ? 'Due ' + formatDate(t.created_at) : ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function formatDate(str) {
+  const d = new Date(str);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
 function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
 function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
 
 async function renderCalendar() {
-  document.getElementById('cal-label').textContent =
-    new Date(calYear, calMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+  const label = new Date(calYear, calMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+  const lDash = document.getElementById('cal-label-dash');
+  const lFull = document.getElementById('cal-label-full');
+  if (lDash) lDash.textContent = label;
+  if (lFull) lFull.textContent = label;
 
   const clientId = session.role === 'client_owner'
     ? session.client_id
@@ -687,40 +1219,67 @@ async function renderCalendar() {
   let url = `/api/posts?month=${calMonth + 1}&year=${calYear}`;
   if (clientId) url += `&client_id=${clientId}`;
 
-  const posts = await fetch(url).then(r => r.json());
-  const today = new Date();
+  let posts = [];
+  try { posts = await fetch(url).then(r => r.json()); } catch(e) {}
 
-  const grid = document.getElementById('cal-grid');
-  grid.innerHTML = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    .map(d => `<div class="cal-day-header">${d}</div>`).join('');
+  ['cal-grid', 'cal-grid-full'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
 
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
-  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    grid.innerHTML = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      .map(d => `<div class="cal-day-header">${d}</div>`).join('');
 
-  for (let i = 0; i < startOffset; i++) grid.innerHTML += `<div class="cal-cell" style="opacity:0.3;cursor:default"></div>`;
+    const firstDay    = new Date(calYear, calMonth, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const today       = new Date();
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const isToday = today.getDate() === d && today.getMonth() === calMonth && today.getFullYear() === calYear;
-    const dayPosts = posts.filter(p => p.post_date && p.post_date.startsWith(dateStr));
+    for (let i = 0; i < startOffset; i++) {
+      grid.innerHTML += `<div class="cal-cell other-month"></div>`;
+    }
 
-    const chips = dayPosts.map(p => {
-      const approvalHtml = p.approval_status ?
-        `<span class="chip-approval ${p.approval_status}">${p.approval_status === 'pending' ? '⏳' : p.approval_status === 'approved' ? '✓' : '✕'}</span>` : '';
-      return `<div class="post-chip ${p.status}" onclick="event.stopPropagation(); openPostDetail(${JSON.stringify(JSON.stringify(p))})">${p.title}${approvalHtml}</div>`;
-    }).join('');
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday  = today.getDate()===d && today.getMonth()===calMonth && today.getFullYear()===calYear;
+      const dow      = new Date(calYear, calMonth, d).getDay();
+      const isWknd   = dow === 0 || dow === 6;
+      const dayPosts = posts.filter(p => p.post_date && p.post_date.startsWith(dateStr));
 
-    grid.innerHTML += `<div class="cal-cell${isToday ? ' today' : ''}" onclick="openPostModal('${dateStr}')">
-      <div class="cal-date">${d}</div>${chips}
-    </div>`;
-  }
+      const chips = dayPosts.map(p => {
+        const approvalHtml = p.approval_status ?
+          `<span class="chip-approval ${p.approval_status}">${p.approval_status==='pending'?'⏳':p.approval_status==='approved'?'✓':'✕'}</span>` : '';
+        return `<div class="post-chip ${p.status}" onclick="event.stopPropagation(); openPostDetail(${JSON.stringify(JSON.stringify(p))})">
+          <span style="overflow:hidden;text-overflow:ellipsis;flex:1">${p.title}</span>${approvalHtml}
+        </div>`;
+      }).join('');
+
+      let cellClass = 'cal-cell';
+      if (isToday) cellClass += ' today';
+      else if (isWknd) cellClass += ' weekend';
+
+      grid.innerHTML += `<div class="${cellClass}" onclick="openPostModal('${dateStr}')">
+        <div class="cal-date">${d}</div>${chips}
+      </div>`;
+    }
+
+    // Fill trailing cells
+    const totalCells = startOffset + daysInMonth;
+    const remainder  = totalCells % 7;
+    if (remainder > 0) {
+      for (let i = 0; i < 7 - remainder; i++) {
+        grid.innerHTML += `<div class="cal-cell other-month"></div>`;
+      }
+    }
+  });
 }
 
-// ─── POST MODAL (create) ─────────────────────
+// ═══════════════════════════════════════════
+//  POST MODAL
+// ═══════════════════════════════════════════
 function openPostModal(date) {
   document.getElementById('post-modal-title').textContent = 'Create Post';
   if (date) document.getElementById('m-date').value = date;
+  else document.getElementById('m-date').value = '';
   if (session.client_id) document.getElementById('m-client').value = session.client_id;
   document.getElementById('post-modal-backdrop').classList.add('open');
 }
@@ -734,64 +1293,64 @@ async function savePost() {
 
   const data = {
     title,
-    caption:   document.getElementById('m-caption').value,
-    post_date: date,
-    post_time: document.getElementById('m-time').value || null,
-    client_id: document.getElementById('m-client').value || null,
-    status:    document.getElementById('m-status').value,
-    platforms: Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i => i.value),
+    caption:    document.getElementById('m-caption').value,
+    post_date:  date,
+    post_time:  document.getElementById('m-time').value || null,
+    client_id:  document.getElementById('m-client').value || null,
+    status:     document.getElementById('m-status').value,
+    platforms:  Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i => i.value),
     created_by: session.userId
   };
 
-  const r = await fetch('/api/posts', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-  });
-  if (r.ok) {
-    toast('Post saved!', 'ok');
-    closePostModal();
-    renderCalendar();
-    // Reset form
-    ['m-title','m-caption','m-time'].forEach(id => document.getElementById(id).value = '');
-    document.querySelectorAll('input[name="platform"]').forEach(cb => cb.checked = false);
-  } else {
-    const e = await r.json();
-    toast(e.error || 'Failed to save post.', 'err');
-  }
+  try {
+    const r = await fetch('/api/posts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      toast('Post saved!', 'ok');
+      closePostModal();
+      renderCalendar();
+      ['m-title','m-caption','m-time'].forEach(id => document.getElementById(id).value = '');
+      document.querySelectorAll('input[name="platform"]').forEach(cb => cb.checked = false);
+      document.getElementById('m-status').value = 'draft';
+    } else {
+      const e = await r.json();
+      toast(e.error || 'Failed to save post.', 'err');
+    }
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
-// ─── POST DETAIL (view + approve) ────────────
+// ═══════════════════════════════════════════
+//  POST DETAIL
+// ═══════════════════════════════════════════
 function openPostDetail(jsonStr) {
   const p = JSON.parse(jsonStr);
   currentPostDetail = p;
 
-  document.getElementById('pd-title').textContent = p.title;
-  document.getElementById('pd-caption').textContent = p.caption || '(No caption)';
-  document.getElementById('pd-date').textContent = p.post_date ? p.post_date.substring(0, 10) : '—';
-  document.getElementById('pd-client').textContent = p.client_name || '—';
-  document.getElementById('pd-creator').textContent = `Created by: ${p.creator_name || 'Unknown'}`;
+  document.getElementById('pd-title').textContent    = p.title;
+  document.getElementById('pd-caption').textContent  = p.caption || '(No caption)';
+  document.getElementById('pd-date').textContent     = p.post_date ? p.post_date.substring(0,10) : '—';
+  document.getElementById('pd-client').textContent   = p.client_name || '—';
+  document.getElementById('pd-creator').textContent  = `Created by: ${p.creator_name || 'Unknown'}`;
 
-  const statusBadge   = document.getElementById('pd-status-badge');
-  const approvalBadge = document.getElementById('pd-approval-badge');
-  statusBadge.textContent  = p.status;
-  statusBadge.className    = `badge badge-${p.status}`;
-  approvalBadge.textContent = p.approval_status || 'pending';
-  approvalBadge.className   = `badge badge-${p.approval_status || 'pending'}`;
+  const sB = document.getElementById('pd-status-badge');
+  const aB = document.getElementById('pd-approval-badge');
+  sB.textContent = p.status; sB.className = `badge badge-${p.status}`;
+  aB.textContent = p.approval_status || 'pending'; aB.className = `badge badge-${p.approval_status || 'pending'}`;
 
-  const pfMap = { instagram: ['ig','Instagram'], facebook: ['fb','Facebook'], skool: ['sk','Skool'], linkedin: ['li','LinkedIn'] };
-  const pfContainer = document.getElementById('pd-platforms');
-  pfContainer.innerHTML = (p.platforms || []).map(pf => {
-    const [cls, label] = pfMap[pf] || ['sk', pf];
-    return `<span class="pf-tag pf-${cls}">${label}</span>`;
-  }).join('') || '<span style="color:var(--ink3);font-size:13px">None selected</span>';
+  const pfMap = { instagram:['ig','Instagram'], facebook:['fb','Facebook'], skool:['sk','Skool'], linkedin:['li','LinkedIn'] };
+  document.getElementById('pd-platforms').innerHTML =
+    (p.platforms||[]).map(pf => {
+      const [cls,lbl] = pfMap[pf] || ['sk', pf];
+      return `<span class="pf-tag pf-${cls}">${lbl}</span>`;
+    }).join('') || '<span style="color:var(--ink3);font-size:13px">None selected</span>';
 
-  // Show approve/reject only for client owners if post is pending
-  const approveActions = document.getElementById('pd-approve-actions');
+  const acts = document.getElementById('pd-approve-actions');
   if (session.role === 'client_owner' && p.approval_status === 'pending' && p.client_id == session.client_id) {
-    approveActions.style.display = 'flex';
+    acts.style.display = 'flex';
   } else {
-    approveActions.style.display = 'none';
+    acts.style.display = 'none';
   }
-
   document.getElementById('post-detail-backdrop').classList.add('open');
 }
 function closePostDetail() { document.getElementById('post-detail-backdrop').classList.remove('open'); }
@@ -810,19 +1369,21 @@ async function approvePost(approved) {
   } else toast('Action failed.', 'err');
 }
 
-// ─── APPROVALS VIEW ──────────────────────────
+// ═══════════════════════════════════════════
+//  APPROVALS
+// ═══════════════════════════════════════════
 async function loadPendingApprovals() {
   const url = session.role === 'client_owner'
     ? `/api/posts/pending-approval?client_id=${session.client_id}`
     : '/api/posts/pending-approval';
 
-  const posts = await fetch(url).then(r => r.json());
-  const badge = document.getElementById('approval-badge');
-  badge.style.display = posts.length ? 'block' : 'none';
+  let posts = [];
+  try { posts = await fetch(url).then(r => r.json()); } catch(e) {}
+  document.getElementById('approval-badge').style.display = posts.length ? 'block' : 'none';
 
   const container = document.getElementById('approvals-list');
   if (!posts.length) {
-    container.innerHTML = `<div class="empty-state"><p>No posts pending approval.</p></div>`;
+    container.innerHTML = `<div class="empty-state"><p>No posts pending approval. ✓</p></div>`;
     return;
   }
 
@@ -831,16 +1392,16 @@ async function loadPendingApprovals() {
       <div class="approval-card">
         <div class="approval-card-info">
           <div class="approval-card-title">${p.title}</div>
-          <div class="approval-card-meta">${p.client_name || '—'} · ${(p.post_date || '').substring(0, 10)} · Created by ${p.creator_name || 'Unknown'}</div>
+          <div class="approval-card-meta">${p.client_name || '—'} · ${(p.post_date||'').substring(0,10)} · By ${p.creator_name || 'Unknown'}</div>
           <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">
-            ${(p.platforms || []).map(pf => `<span class="pf-tag pf-${pf === 'instagram' ? 'ig' : pf === 'facebook' ? 'fb' : pf === 'linkedin' ? 'li' : 'sk'}">${pf}</span>`).join('')}
+            ${(p.platforms||[]).map(pf => `<span class="pf-tag pf-${pf==='instagram'?'ig':pf==='facebook'?'fb':pf==='linkedin'?'li':'sk'}">${pf}</span>`).join('')}
           </div>
         </div>
         <div class="approval-card-actions">
-          <button class="btn btn-green btn-sm" onclick='approvePostById(${p.id}, true, ${JSON.stringify(JSON.stringify(p))})'>✓ Approve</button>
-          <button class="btn btn-red btn-sm"   onclick='approvePostById(${p.id}, false, ${JSON.stringify(JSON.stringify(p))})'>✕ Reject</button>
+          <button class="btn btn-green btn-sm" onclick="approvePostById(${p.id}, true)">✓ Approve</button>
+          <button class="btn btn-red btn-sm"   onclick="approvePostById(${p.id}, false)">✕ Reject</button>
         </div>
-      </div>`).join('') + `</div>`;
+      </div>`).join('') + '</div>';
 }
 
 async function approvePostById(id, approved) {
@@ -855,58 +1416,69 @@ async function approvePostById(id, approved) {
   } else toast('Action failed.', 'err');
 }
 
-// ─── TASKS ───────────────────────────────────
-let currentTaskFilter = 'all';
-
+// ═══════════════════════════════════════════
+//  TASKS
+// ═══════════════════════════════════════════
 function setTaskFilter(mode) {
   currentTaskFilter = mode;
-  document.getElementById('task-filter-my').classList.toggle('btn-dark', mode === 'mine');
-  document.getElementById('task-filter-all').classList.toggle('btn-dark', mode === 'all');
+  const mineBtn = document.getElementById('task-filter-mine');
+  const allBtn  = document.getElementById('task-filter-all');
+  if (mineBtn) mineBtn.classList.toggle('btn-dark', mode === 'mine');
+  if (allBtn)  allBtn.classList.toggle('btn-dark', mode === 'all');
   loadTasks();
 }
 
 async function loadTasks() {
-  let url = `/api/tasks?role=${session.role}&client_id=${session.client_id || ''}&user_id=${session.userId}`;
-  const tasks = await fetch(url).then(r => r.json());
+  let url = `/api/tasks?role=${session.role}&client_id=${session.client_id||''}&user_id=${session.userId}`;
+  let tasks = [];
+  try { tasks = await fetch(url).then(r => r.json()); } catch(e) {}
+  allTasksCache = tasks;
 
-  // Badge: show dot if user/admin has todo tasks
+  // Badge
   const myPending = tasks.filter(t => t.assigned_to == session.userId && t.status === 'todo');
   document.getElementById('task-badge').style.display = myPending.length ? 'block' : 'none';
 
+  // Dashboard stats
+  updateDashStats();
+
   const list = document.getElementById('task-list');
-  if (!tasks.length) {
+  if (!list) return;
+
+  let display = tasks;
+  if (currentTaskFilter === 'mine') display = tasks.filter(t => t.assigned_to == session.userId);
+
+  if (!display.length) {
     list.innerHTML = `<div class="empty-state"><p>No tasks yet.</p></div>`;
     return;
   }
 
-  list.innerHTML = tasks.map(t => {
+  list.innerHTML = display.map(t => {
     const canMarkDone     = t.assigned_to == session.userId && t.status === 'todo';
-    const canApprove      = session.role === 'client_owner' && t.status === 'pending_approval';
-    const canAdminApprove = session.role === 'admin' && t.status === 'pending_approval';
+    const canApprove      = (session.role === 'client_owner' || session.role === 'admin') && t.status === 'pending_approval';
+    const statusClass     = t.status === 'todo' ? 'todo' : t.status === 'pending_approval' ? 'pending_approval' : 'completed';
+    const statusLabel     = t.status === 'todo' ? 'To Do' : t.status === 'pending_approval' ? 'Awaiting Approval' : 'Completed';
 
     return `<div class="task-card">
       <div class="task-card-top">
-        <div>
-          <span class="badge badge-${t.status === 'todo' ? 'todo' : t.status === 'pending_approval' ? 'pending' : 'done'}" style="margin-bottom:8px;display:inline-block">
-            ${t.status === 'todo' ? 'To Do' : t.status === 'pending_approval' ? 'Awaiting Approval' : 'Completed'}
-          </span>
+        <div style="flex:1">
+          <span class="badge badge-${statusClass}" style="margin-bottom:8px;display:inline-block">${statusLabel}</span>
           <div class="task-title">${t.title}</div>
         </div>
       </div>
       <div class="task-meta">
-        ${t.assignee_name ? `Assigned to: <strong>${t.assignee_name}</strong>` : 'Unassigned'}
+        ${t.assignee_name ? `Assigned to <strong>${t.assignee_name}</strong>` : 'Unassigned'}
         ${t.client_name ? ` · ${t.client_name}` : ''}
-        ${t.creator_name ? ` · By: ${t.creator_name}` : ''}
+        ${t.creator_name ? ` · By ${t.creator_name}` : ''}
       </div>
       ${t.description ? `<div class="task-desc">${t.description}</div>` : ''}
       <div class="task-actions">
-        ${canMarkDone     ? `<button class="btn btn-dark btn-sm" onclick="updateTaskStatus(${t.id}, 'pending_approval')">Mark Done →</button>` : ''}
-        ${canApprove || canAdminApprove ? `<button class="btn btn-green btn-sm" onclick="updateTaskStatus(${t.id}, 'completed')">✓ Approve</button>` : ''}
+        ${canMarkDone ? `<button class="btn btn-dark btn-sm" onclick="updateTaskStatus(${t.id},'pending_approval')">Mark Done →</button>` : ''}
+        ${canApprove  ? `<button class="btn btn-green btn-sm" onclick="updateTaskStatus(${t.id},'completed')">✓ Approve</button>` : ''}
         ${session.role === 'admin' ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTask(${t.id})">Delete</button>` : ''}
       </div>
       <button class="task-comments-toggle" onclick="toggleComments(${t.id}, this)">💬 View / Add Feedback</button>
       <div class="task-comments-area" id="comments-${t.id}">
-        <div id="comment-list-${t.id}">Loading…</div>
+        <div id="comment-list-${t.id}"></div>
         <div class="comment-input-row">
           <input type="text" placeholder="Add feedback…" id="comment-input-${t.id}" onkeydown="if(event.key==='Enter') submitComment(${t.id})">
           <button class="btn btn-dark btn-sm" onclick="submitComment(${t.id})">Send</button>
@@ -917,17 +1489,19 @@ async function loadTasks() {
 }
 
 async function toggleComments(taskId, btn) {
-  const area = document.getElementById(`comments-${taskId}`);
+  const area   = document.getElementById(`comments-${taskId}`);
   const isOpen = area.classList.toggle('open');
   btn.textContent = isOpen ? '💬 Hide Feedback' : '💬 View / Add Feedback';
   if (isOpen) loadComments(taskId);
 }
 
 async function loadComments(taskId) {
-  const listEl = document.getElementById(`comment-list-${taskId}`);
-  const comments = await fetch(`/api/tasks/${taskId}/comments`).then(r => r.json());
+  const listEl   = document.getElementById(`comment-list-${taskId}`);
+  listEl.innerHTML = '<div style="font-size:12px;color:var(--ink3);padding:4px 0">Loading…</div>';
+  let comments = [];
+  try { comments = await fetch(`/api/tasks/${taskId}/comments`).then(r => r.json()); } catch(e) {}
   if (!comments.length) {
-    listEl.innerHTML = '<div style="font-size:12px;color:var(--ink3);margin-bottom:8px">No feedback yet. Be the first to add a comment.</div>';
+    listEl.innerHTML = '<div style="font-size:12px;color:var(--ink3);margin-bottom:8px">No feedback yet.</div>';
     return;
   }
   listEl.innerHTML = comments.map(c => `
@@ -938,42 +1512,49 @@ async function loadComments(taskId) {
 }
 
 async function submitComment(taskId) {
-  const input = document.getElementById(`comment-input-${taskId}`);
+  const input   = document.getElementById(`comment-input-${taskId}`);
   const comment = input.value.trim();
   if (!comment) return;
-  const r = await fetch(`/api/tasks/${taskId}/comments`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: session.userId, comment })
-  });
-  if (r.ok) { input.value = ''; loadComments(taskId); toast('Feedback sent!', 'ok'); }
-  else toast('Failed to send.', 'err');
+  try {
+    const r = await fetch(`/api/tasks/${taskId}/comments`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: session.userId, comment })
+    });
+    if (r.ok) { input.value = ''; loadComments(taskId); toast('Feedback sent!', 'ok'); }
+    else toast('Failed to send.', 'err');
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
 async function updateTaskStatus(id, status) {
-  await fetch(`/api/tasks/${id}/status`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
-  });
-  loadTasks();
-  toast(status === 'completed' ? 'Task completed!' : 'Task updated.', 'ok');
+  try {
+    await fetch(`/api/tasks/${id}/status`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    loadTasks();
+    toast(status === 'completed' ? 'Task completed! ✓' : 'Task updated.', 'ok');
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
 async function deleteTask(id) {
-  if (!confirm('Delete this task?')) return;
-  await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-  loadTasks();
-  toast('Task deleted.');
+  if (!confirm('Delete this task? This cannot be undone.')) return;
+  try {
+    await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    loadTasks();
+    toast('Task deleted.');
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
-// ─── TASK MODAL ──────────────────────────────
+// ═══════════════════════════════════════════
+//  TASK MODAL
+// ═══════════════════════════════════════════
 async function openTaskModal() {
-  // Load assignable users fresh
-  const users = await fetch('/api/users/assignable').then(r => r.json());
+  let users = [];
+  try { users = await fetch('/api/users/assignable').then(r => r.json()); } catch(e) {}
   document.getElementById('t-assign').innerHTML =
     '<option value="">Unassigned</option>' +
     users.map(u => `<option value="${u.id}">${u.name || u.email} (${roleLabel(u.role)})</option>`).join('');
 
-  // Pre-fill client for client_owner
   if (session.role === 'client_owner' && session.client_id) {
     document.getElementById('t-client').value = session.client_id;
   }
@@ -997,25 +1578,30 @@ async function saveTask() {
     created_by:  session.userId
   };
 
-  const r = await fetch('/api/tasks', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-  });
-  if (r.ok) {
-    toast('Task created!', 'ok');
-    closeTaskModal();
-    document.getElementById('t-title').value = '';
-    document.getElementById('t-desc').value  = '';
-    loadTasks();
-  } else {
-    const e = await r.json();
-    toast(e.error || 'Failed to create task.', 'err');
-  }
+  try {
+    const r = await fetch('/api/tasks', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      toast('Task created!', 'ok');
+      closeTaskModal();
+      document.getElementById('t-title').value = '';
+      document.getElementById('t-desc').value  = '';
+      loadTasks();
+    } else {
+      const e = await r.json();
+      toast(e.error || 'Failed to create task.', 'err');
+    }
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
-// ─── USER MANAGEMENT (admin) ─────────────────
+// ═══════════════════════════════════════════
+//  USER MANAGEMENT
+// ═══════════════════════════════════════════
 async function loadAdminUsers() {
-  const users = await fetch('/api/admin/users').then(r => r.json());
-  const wrap  = document.getElementById('user-list-wrap');
+  let users = [];
+  try { users = await fetch('/api/admin/users').then(r => r.json()); } catch(e) {}
+  const wrap = document.getElementById('user-list-wrap');
   if (!users.length) { wrap.innerHTML = ''; return; }
 
   wrap.innerHTML = `<div class="table-wrap" style="margin-bottom:16px">
@@ -1025,7 +1611,7 @@ async function loadAdminUsers() {
         <tr>
           <td><strong>${u.name || '—'}</strong></td>
           <td style="color:var(--ink2)">${u.email}</td>
-          <td><span class="badge badge-${u.role === 'admin' ? 'scheduled' : u.role === 'client_owner' ? 'pending' : 'todo'}">${roleLabel(u.role)}</span></td>
+          <td><span class="badge badge-${u.role==='admin'?'scheduled':u.role==='client_owner'?'pending':'todo'}">${roleLabel(u.role)}</span></td>
           <td style="color:var(--ink3)">${u.client_name || '—'}</td>
           <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${u.id})">Remove</button></td>
         </tr>`).join('')}
@@ -1035,7 +1621,7 @@ async function loadAdminUsers() {
 }
 
 async function deleteUser(id) {
-  if (!confirm('Remove this user? This cannot be undone.')) return;
+  if (!confirm('Remove this user?')) return;
   const r = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
   if (r.ok) { toast('User removed.'); loadAdminUsers(); }
   else toast('Failed to remove user.', 'err');
@@ -1059,41 +1645,59 @@ async function createNewUser() {
   const password = document.getElementById('nu-password').value.trim();
   const clientId = document.getElementById('nu-client').value;
 
-  if (!name)  return toast('Name is required.', 'err');
-  if (!email) return toast('Email is required.', 'err');
-  if (!password) return toast('Password is required.', 'err');
+  if (!name)     return toast('Full name is required.', 'err');
+  if (!email)    return toast('Email is required.', 'err');
+  if (!email.includes('@')) return toast('Enter a valid email address.', 'err');
+  if (!password) return toast('A password is required.', 'err');
 
-  const r = await fetch('/api/admin/add-user', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, role, password, client_id: clientId || null })
-  });
-  const d = await r.json();
-  if (r.ok && d.success) {
-    toast(`User "${name}" created!`, 'ok');
-    document.getElementById('nu-name').value     = '';
-    document.getElementById('nu-email').value    = '';
-    document.getElementById('nu-password').value = 'ChangeMe123!';
-    loadAdminUsers();
-  } else {
-    toast(d.error || 'Failed to create user.', 'err');
-  }
+  try {
+    const r = await fetch('/api/admin/add-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, role, password, client_id: clientId || null })
+    });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      toast(`User "${name}" created successfully!`, 'ok');
+      document.getElementById('nu-name').value     = '';
+      document.getElementById('nu-email').value    = '';
+      document.getElementById('nu-password').value = 'ChangeMe123!';
+      document.getElementById('nu-role').value     = 'user';
+      document.getElementById('nu-client-wrap').style.display = 'none';
+      loadAdminUsers();
+    } else {
+      toast(d.error || 'Failed to create user.', 'err');
+    }
+  } catch(e) { toast('Network error.', 'err'); }
 }
 
-// ─── HELPERS ─────────────────────────────────
+// ═══════════════════════════════════════════
+//  CLIENTS
+// ═══════════════════════════════════════════
 function addClientPrompt() {
-  const name  = prompt('Client name:');
-  if (!name) return;
-  const email = prompt('Client email:');
-  if (!email) return;
+  const name  = prompt('New client name:');
+  if (!name || !name.trim()) return;
+  const email = prompt('Client contact email:');
+  if (!email || !email.trim()) return;
+
   fetch('/api/clients', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: name.trim(), email: email.trim() })
   }).then(r => r.json()).then(c => {
     if (c.id) { toast(`Client "${c.name}" added!`, 'ok'); loadClients(); }
     else toast(c.error || 'Failed to add client.', 'err');
-  });
+  }).catch(() => toast('Network error.', 'err'));
 }
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => {
+    if (e.target === bd) {
+      bd.classList.remove('open');
+    }
+  });
+});
 </script>
+
 </body>
 </html>
