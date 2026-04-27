@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -925,6 +925,23 @@
   </div>
 </div>
 
+<!-- EDIT CLIENT MODAL -->
+<div class="modal-backdrop" id="edit-client-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Edit Client</h2><button class="modal-close" onclick="closeEditClientModal()">✕</button></div>
+    <input type="hidden" id="ec-id">
+    <div class="field"><label>Client Name</label><input type="text" id="ec-name-edit"></div>
+    <div class="field"><label>Contact Email</label><input type="email" id="ec-email-edit"></div>
+    <div class="field"><label>Status</label>
+      <select id="ec-status-edit">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+    <button class="btn btn-dark btn-full" onclick="updateClient()">Update Client</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1351,7 +1368,7 @@ async function saveTask(){
 // ════════════════════════════════
 function openAdminModal() {
   document.getElementById('admin-modal').classList.add('open');
-  setAdminTab('account', document.querySelector('.task-tab.active'));
+  setAdminTab('account', document.querySelector('#admin-modal .task-tab.active'));
 }
 function closeAdminModal() { document.getElementById('admin-modal').classList.remove('open'); }
 
@@ -1376,11 +1393,16 @@ async function loadAdminUsers() {
 async function loadAdminClients() {
   const el = document.getElementById('admin-client-list');
   el.innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Client</th><th>Status</th><th>Action</th></tr></thead><tbody>` +
-    allClients.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.status}</td><td><button class="btn btn-ghost btn-xs">Edit</button></td></tr>`).join('') + `</tbody></table></div>`;
+    allClients.map(c => `<tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.status}</td>
+      <td><button class="btn btn-ghost btn-xs" onclick='openEditClient(${JSON.stringify(c)})'>Edit</button></td>
+    </tr>`).join('') + `</tbody></table></div>`;
 }
 
 async function loadProductsForAdmin() {
   const cid = document.getElementById('prod-client-filter').value;
+  if(!cid) { document.getElementById('admin-product-list').innerHTML = '<div style="padding:20px;color:var(--ink3);">Select a client to view products.</div>'; return; }
   const products = await fetch(`/api/products?client_id=${cid}`).then(r => r.json());
   document.getElementById('admin-product-list').innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>Price</th><th>Billing</th><th>Action</th></tr></thead><tbody>` +
     products.map(p => `<tr><td><strong>${p.name}</strong></td><td>R${p.price}</td><td>${p.billing_type}</td><td><button class="btn btn-ghost btn-xs" style="color:var(--red)">Delete</button></td></tr>`).join('') + `</tbody></table></div>`;
@@ -1454,19 +1476,58 @@ function openProductModal() { document.getElementById('product-modal').classList
 function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
 
 async function saveProduct() {
+  const cid = document.getElementById('prod-client-filter').value;
+  if(!cid) return toast("Please select a client first.", "err");
+
   const data = {
-    client_id: document.getElementById('prod-client-filter').value,
+    client_id: cid,
     name: document.getElementById('p-name').value.trim(),
     price: document.getElementById('p-price').value,
     billing_type: document.getElementById('p-billing').value,
-    duration_months: document.getElementById('p-duration').value
+    duration_months: document.getElementById('p-duration').value || 0
   };
+  
   if(!data.name || !data.price) return toast('Name and price are required.','err');
+  
   try {
     const r = await fetch('/api/products', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-    if(r.ok) { toast('Product added!', 'ok'); closeProductModal(); loadProductsForAdmin(); }
-    else toast('Failed to save product.','err');
-  } catch(e){toast('Network error.','err');}
+    if(r.ok) {
+      toast('Product added!', 'ok');
+      closeProductModal();
+      loadProductsForAdmin();
+    } else {
+      const err = await r.json();
+      toast(err.error || 'Failed to save product.', 'err');
+    }
+  } catch(e){ toast('Network error.', 'err'); }
+}
+
+// ════════════════════════════════
+//  EDIT CLIENT HANDLERS
+// ════════════════════════════════
+function openEditClient(client) {
+  document.getElementById('ec-id').value = client.id;
+  document.getElementById('ec-name-edit').value = client.name;
+  document.getElementById('ec-email-edit').value = client.email;
+  document.getElementById('ec-status-edit').value = client.status;
+  document.getElementById('edit-client-modal').classList.add('open');
+}
+
+function closeEditClientModal() { document.getElementById('edit-client-modal').classList.remove('open'); }
+
+async function updateClient() {
+  const id = document.getElementById('ec-id').value;
+  const data = {
+    name: document.getElementById('ec-name-edit').value,
+    email: document.getElementById('ec-email-edit').value,
+    status: document.getElementById('ec-status-edit').value
+  };
+  const r = await fetch(`/api/clients/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  if(r.ok) {
+    toast("Client updated!", "ok");
+    closeEditClientModal();
+    loadInitialData(); 
+  } else toast("Update failed", "err");
 }
 
 // ════════════════════════════════
