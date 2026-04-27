@@ -35,7 +35,7 @@ app.get('/setup-db', async (req, res) => {
     return res.status(403).send('Forbidden – provide ?secret=YOUR_SETUP_SECRET');
   }
   try {
-    // 1. Users Table (Enhanced)
+    // 1. Users Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -60,7 +60,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 3. Products Table (New)
+    // 3. Products Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -73,7 +73,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 4. End Customers Table (New - Clients of Clients)
+    // 4. End Customers Table (Clients of Clients)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS end_customers (
         id SERIAL PRIMARY KEY,
@@ -87,7 +87,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 5. Posts Table
+    // 5. Posts Table (Updated with ON DELETE SET NULL for users)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
@@ -100,18 +100,18 @@ app.get('/setup-db', async (req, res) => {
         status VARCHAR(20) DEFAULT 'draft',
         is_approved BOOLEAN DEFAULT FALSE,
         approval_status VARCHAR(20) DEFAULT 'pending',
-        created_by INTEGER REFERENCES users(id),
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // 6. Tasks Table
+    // 6. Tasks Table (Updated with ON DELETE SET NULL for users)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
         client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
-        assigned_to INTEGER REFERENCES users(id),
-        created_by INTEGER REFERENCES users(id),
+        assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
         title TEXT NOT NULL,
         description TEXT,
         status VARCHAR(20) DEFAULT 'todo',
@@ -119,12 +119,12 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 7. Task Comments Table
+    // 7. Task Comments Table (Updated with ON DELETE SET NULL for users)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS task_comments (
         id SERIAL PRIMARY KEY,
         task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id),
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         comment TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -142,7 +142,7 @@ app.get('/setup-db', async (req, res) => {
       );
     }
 
-    res.send('<pre>✅ Database is synchronized with all features (Customers, Products, Tasks, Posts) enabled.</pre>');
+    res.send('<pre>✅ Database is synchronized with all features enabled. User deletion fixed.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
@@ -227,24 +227,13 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-app.put('/api/admin/users/:id', async (req, res) => {
-  const { name, email, role, client_id } = req.body;
-  try {
-    await pool.query(
-      `UPDATE users SET name=$1, email=$2, role=$3, client_id=$4 WHERE id=$5`,
-      [name, email.toLowerCase().trim(), role, client_id || null, req.params.id]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
+    // Due to ON DELETE SET NULL on related tables, this will now succeed
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
+    console.error('Delete user error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -317,6 +306,7 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   const { client_id, name, price, billing_type, duration_months } = req.body;
+  if (!client_id) return res.status(400).json({ error: 'Client selection is required.' });
   try {
     const { rows } = await pool.query(
       'INSERT INTO products (client_id, name, price, billing_type, duration_months) VALUES ($1, $2, $3, $4, $5) RETURNING *',
