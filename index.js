@@ -48,8 +48,12 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
-    // 2. Clients Table (Main Clients)
+    // 2. Clients Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
@@ -73,7 +77,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 4. End Customers Table (Clients of Clients)
+    // 4. End Customers Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS end_customers (
         id SERIAL PRIMARY KEY,
@@ -100,31 +104,34 @@ app.get('/setup-db', async (req, res) => {
         status VARCHAR(20) DEFAULT 'draft',
         is_approved BOOLEAN DEFAULT FALSE,
         approval_status VARCHAR(20) DEFAULT 'pending',
-        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
 
     // 6. Tasks Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
         client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
-        assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        assigned_to INTEGER REFERENCES users(id),
+        created_by INTEGER REFERENCES users(id),
         title TEXT NOT NULL,
         description TEXT,
         status VARCHAR(20) DEFAULT 'todo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)`);
 
     // 7. Task Comments Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS task_comments (
         id SERIAL PRIMARY KEY,
         task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        user_id INTEGER REFERENCES users(id),
         comment TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -133,21 +140,18 @@ app.get('/setup-db', async (req, res) => {
     // ─────────────────────────────────────────────────────────────────
     //  CONSTRAINT MIGRATION (Ensures existing tables allow user deletion)
     // ─────────────────────────────────────────────────────────────────
-    // Posts
     await pool.query(`ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_created_by_fkey;`);
     await pool.query(`ALTER TABLE posts ADD CONSTRAINT posts_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;`);
     
-    // Tasks
     await pool.query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey;`);
     await pool.query(`ALTER TABLE tasks ADD CONSTRAINT tasks_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL;`);
     await pool.query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_created_by_fkey;`);
     await pool.query(`ALTER TABLE tasks ADD CONSTRAINT tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;`);
 
-    // Task Comments
     await pool.query(`ALTER TABLE task_comments DROP CONSTRAINT IF EXISTS task_comments_user_id_fkey;`);
     await pool.query(`ALTER TABLE task_comments ADD CONSTRAINT task_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;`);
 
-    // Seed Admin if needed
+    // Seed Admin
     const { rows } = await pool.query('SELECT COUNT(*) FROM users');
     if (parseInt(rows[0].count) === 0) {
       const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@meuglobal.com';
@@ -159,7 +163,7 @@ app.get('/setup-db', async (req, res) => {
       );
     }
 
-    res.send('<pre>✅ Database is synchronized. Constraint migration complete: you can now delete users without restriction.</pre>');
+    res.send('<pre>✅ Database is synchronized with all features enabled. User deletion constraints fixed.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
