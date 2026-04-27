@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -181,7 +182,7 @@
     .nav-badge {
       position: absolute; top: 5px; right: 5px; width: 8px; height: 8px;
       background: var(--red); border-radius: 50%;
-      border: 1.5 solid var(--sidebar-bg);
+      border: 1.5px solid var(--sidebar-bg);
     }
 
     /* ══ CLIENT PANEL ══ */
@@ -690,7 +691,7 @@
     <!-- CUSTOMERS VIEW -->
     <div class="view" id="view-customers">
       <div class="section-header">
-        <span class="section-title">End Customer Sign-ups</span>
+        <h2 style="font-family:var(--serif); font-size:22px;">End Customer Sign-ups</h2>
         <button class="btn btn-dark btn-sm" onclick="openCustomerModal()">+ Add Customer</button>
       </div>
       <div class="table-wrap">
@@ -766,6 +767,16 @@
 
 <!-- MODALS -->
 
+<!-- DAY PLANS MODAL -->
+<div class="modal-backdrop" id="day-plans-modal-backdrop">
+  <div class="modal">
+    <div class="modal-head"><h2 id="day-plans-title">Day Plans</h2><button class="modal-close" onclick="closeDayPlans()">✕</button></div>
+    <div id="day-plans-list" style="display:flex; flex-direction:column; gap:12px"></div>
+    <div id="day-plans-empty" style="display:none; text-align:center; padding:20px; color:var(--ink3)">No plans for this day.</div>
+    <button class="btn btn-dark btn-full" style="margin-top:20px" onclick="closeDayPlans(); openPostModal(currentDayPlanDate)">+ Add Post for this day</button>
+  </div>
+</div>
+
 <!-- POST MODAL -->
 <div class="modal-backdrop" id="post-modal-backdrop">
   <div class="modal">
@@ -811,16 +822,6 @@
   </div>
 </div>
 
-<!-- DAY PLANS MODAL -->
-<div class="modal-backdrop" id="day-plans-modal-backdrop">
-  <div class="modal">
-    <div class="modal-head"><h2 id="day-plans-title">Day Plans</h2><button class="modal-close" onclick="closeDayPlans()">&#x2715;</button></div>
-    <div id="day-plans-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-    <div id="day-plans-empty" style="display:none;padding:20px;text-align:center;color:var(--ink3);font-size:14px;">No posts planned for this day.</div>
-    <button class="btn btn-dark btn-full" style="margin-top:20px" onclick="closeDayPlans();openPostModal(currentDayPlanDate)">+ Add Post For This Day</button>
-  </div>
-</div>
-
 <!-- TASK MODAL -->
 <div class="modal-backdrop" id="task-modal-backdrop">
   <div class="modal">
@@ -835,7 +836,7 @@
   </div>
 </div>
 
-<!-- ADMIN / ACCOUNT MODAL -->
+<!-- MANAGEMENT MODAL -->
 <div class="modal-backdrop" id="admin-modal">
   <div class="modal">
     <div class="modal-head"><h2>Management & Settings</h2><button class="modal-close" onclick="closeAdminModal()">&#x2715;</button></div>
@@ -848,7 +849,6 @@
       <div class="task-tab" id="tab-products" style="display:none" onclick="setAdminTab('products', this)">Products</div>
     </div>
 
-    <!-- Account Tab -->
     <div id="admin-tab-account" class="admin-tab-content">
       <details style="margin-bottom:18px">
         <summary style="font-size:13px;font-weight:600;cursor:pointer;color:var(--ink2);padding:6px 0">Change My Password</summary>
@@ -861,7 +861,6 @@
       <button class="btn btn-ghost btn-full" style="color:var(--red)" onclick="doSignOut()">Sign Out</button>
     </div>
 
-    <!-- Users Tab -->
     <div id="admin-tab-users" class="admin-tab-content" style="display:none">
       <div id="user-list-wrap"></div>
       <hr class="modal-divider">
@@ -882,13 +881,11 @@
       <button class="btn btn-dark btn-full" onclick="createNewUser()">Create User</button>
     </div>
 
-    <!-- Clients Tab -->
     <div id="admin-tab-clients" class="admin-tab-content" style="display:none">
       <div id="admin-client-list"></div>
       <button class="btn btn-dark btn-sm btn-full" style="margin-top:10px" onclick="addClientPrompt()">+ Add Client</button>
     </div>
 
-    <!-- Products Tab -->
     <div id="admin-tab-products" class="admin-tab-content" style="display:none">
       <div class="field"><label>Select Client</label><select id="prod-client-filter" onchange="loadProductsForAdmin()"></select></div>
       <div id="admin-product-list"></div>
@@ -916,7 +913,7 @@
   </div>
 </div>
 
-<!-- CUSTOMER SIGN-UP MODAL -->
+<!-- CUSTOMER MODAL -->
 <div class="modal-backdrop" id="customer-modal">
   <div class="modal">
     <div class="modal-head"><h2>New Customer Sign-up</h2><button class="modal-close" onclick="closeCustomerModal()">✕</button></div>
@@ -972,7 +969,7 @@ const VIEW_TITLES = { dash:'Dashboard', calendar:'Calendar', tasks:'Tasks', appr
 function toast(msg, type='') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className = 'toast show' + (type?' '+type:'');
+  el.className = 'toast show ' + type;
   setTimeout(() => el.className = 'toast', 3400);
 }
 
@@ -985,40 +982,30 @@ async function doLogin() {
   const errEl = document.getElementById('auth-error');
   const btn   = document.getElementById('login-btn');
   errEl.style.display = 'none';
-  if (!email) { errEl.textContent='Please enter your email.'; errEl.style.display='block'; return; }
-  if (!pass)  { errEl.textContent='Please enter your password.'; errEl.style.display='block'; return; }
-  btn.textContent='Signing in…'; btn.classList.add('btn-loading');
+  if (!email || !pass) { errEl.textContent='Fields required.'; errEl.style.display='block'; return; }
   try {
-    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
-    const d = await r.json();
-    btn.textContent='Sign In'; btn.classList.remove('btn-loading');
+    const res = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d = await res.json();
     if (d.success) {
-      session = {userId:d.userId,name:d.name,role:d.role,client_id:d.client_id,email:d.email};
+      session = d;
       document.getElementById('auth-overlay').style.display='none';
-      d.mustChange ? (document.getElementById('change-pw-overlay').style.display='flex') : launchApp();
-    } else { errEl.textContent=d.error||'Invalid email or password.'; errEl.style.display='block'; }
-  } catch(e) { btn.textContent='Sign In'; btn.classList.remove('btn-loading'); errEl.textContent='Connection error.'; errEl.style.display='block'; }
+      if(d.mustChange) document.getElementById('change-pw-overlay').style.display='flex';
+      else launchApp();
+    } else { errEl.textContent=d.error; errEl.style.display='block'; }
+  } catch(e) { errEl.textContent='Login error'; errEl.style.display='block'; }
 }
 
 async function doChangePassword() {
   const np=document.getElementById('cp-new').value, cp=document.getElementById('cp-confirm').value;
-  const err=document.getElementById('cp-error'); err.style.display='none';
-  if(np.length<8){err.textContent='Password must be at least 8 characters.';err.style.display='block';return;}
-  if(np!==cp){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  if(np!==cp) return toast('Passwords no match','err');
   const r=await fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.userId,newPassword:np})});
-  if(r.ok){document.getElementById('change-pw-overlay').style.display='none';launchApp();toast('Password updated!','ok');}
-  else{err.textContent='Failed to update. Try again.';err.style.display='block';}
+  if(r.ok){document.getElementById('change-pw-overlay').style.display='none';launchApp();toast('Updated!','ok');}
 }
 
 async function changeMyPassword() {
   const cur=document.getElementById('my-current-pw').value, np=document.getElementById('my-new-pw').value;
-  if(!cur) return toast('Enter your current password.','err');
-  if(np.length<8) return toast('New password must be 8+ characters.','err');
-  const v=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.email,password:cur})}).then(r=>r.json());
-  if(!v.success) return toast('Current password is incorrect.','err');
   const r=await fetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.userId,newPassword:np})});
-  if(r.ok){document.getElementById('my-current-pw').value='';document.getElementById('my-new-pw').value='';toast('Password changed!','ok');}
-  else toast('Failed to change password.','err');
+  if(r.ok) toast('Updated!','ok');
 }
 
 function doSignOut() { location.reload(); }
@@ -1033,40 +1020,17 @@ function launchApp() {
 }
 
 function setupRoleUI() {
-  const name=session.name||session.email||'?';
-  const ini=name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-  document.getElementById('user-initials').textContent=ini;
-  document.getElementById('sidebar-name-label').textContent=(session.name||'').split(' ')[0].toUpperCase().substring(0,8)||'USER';
-  document.getElementById('session-info').innerHTML=
-    `<div style="font-weight:700;font-size:14px;color:var(--ink);margin-bottom:3px">${name}</div>
-     <div style="color:var(--ink3)">${session.email}</div>
-     <div style="margin-top:6px"><span class="badge badge-${session.role==='admin'?'scheduled':session.role==='client_owner'?'pending':'todo'}">${roleLabel(session.role)}</span></div>`;
-  
-  if(session.role==='admin'){
+  document.getElementById('sidebar-name-label').textContent=session.name.split(' ')[0].toUpperCase();
+  document.getElementById('user-initials').textContent=session.name[0];
+  document.getElementById('session-info').innerHTML=`<div>${session.name}</div><div>${session.email}</div>`;
+  if(session.role==='admin') {
     document.getElementById('tab-users').style.display='block';
     document.getElementById('tab-clients').style.display='block';
     document.getElementById('tab-products').style.display='block';
-    document.getElementById('cal-client-filter').style.display='block';
-    document.getElementById('add-task-btn').style.display='inline-flex';
-    document.getElementById('t-client-wrap').style.display='block';
-    document.getElementById('task-filter-mine').style.display='inline-flex';
-    document.getElementById('task-filter-all').style.display='inline-flex';
-    document.getElementById('sidebar-logo-btn').classList.add('admin-logo');
-  } else if(session.role==='client_owner') {
-    document.getElementById('nav-approvals').style.display='flex';
-    document.getElementById('bnav-approvals').style.display='flex';
-    document.getElementById('add-task-btn').style.display='inline-flex';
   }
 }
 
-function roleLabel(r){return{admin:'Manager / Admin',client_owner:'Client Owner',user:'Creator'}[r]||r;}
-
-// ════════════════════════════════
-//  LOGO → CLIENT PANEL (admin only)
-// ════════════════════════════════
-function handleLogoClick() {
-  if(session.role==='admin') toggleClientPanel();
-}
+function roleLabel(r){return r;}
 
 // ════════════════════════════════
 //  DATA
@@ -1077,47 +1041,15 @@ async function loadInitialData() {
   await loadTasks();
   initDashboardCharts();
   updateDashStats();
-  if(session.role==='client_owner') loadPendingApprovals();
-  if(session.role==='admin') loadAdminUsers();
 }
 
 async function loadClients() {
-  try{allClients=await fetch('/api/clients').then(r=>r.json());}catch(e){allClients=[];}
-  const mk=(b=false)=>(b?'<option value="">No client</option>':'')+allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('m-client').innerHTML=mk(true);
-  document.getElementById('t-client').innerHTML=mk(false);
-  document.getElementById('nu-client').innerHTML=mk(false);
-  document.getElementById('ec-client').innerHTML=mk(false);
-  document.getElementById('prod-client-filter').innerHTML=mk(false);
-  const cf=document.getElementById('cal-client-filter');
-  cf.innerHTML='<option value="">All Clients</option>'+allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  renderClientList();
-}
-
-function renderClientList(filter='') {
-  const el=document.getElementById('client-list-panel');
-  const list=filter?allClients.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase())):allClients;
-  el.innerHTML=list.length
-    ?list.map(c=>`<div class="client-item ${activeClientFilter==c.id?'selected':''}" onclick="selectClient(${c.id})">
-        <div class="client-avatar">${c.name[0]}</div>
-        <div style="font-size:13px;font-weight:500">${c.name}</div>
-      </div>`).join('')
-    :'<div style="padding:14px;font-size:13px;color:var(--ink3)">No clients found.</div>';
-}
-
-function filterClients(v){renderClientList(v);}
-
-function selectClient(id) {
-  activeClientFilter=id;
-  renderClientList();
-  renderCalendar();
-  document.getElementById('client-panel').classList.remove('open');
-  if(document.getElementById('view-customers').classList.contains('active')) loadEndCustomers();
-  if(document.getElementById('view-dash').classList.contains('active')) updateDashStats();
-}
-
-function toggleClientPanel() {
-  document.getElementById('client-panel').classList.toggle('open');
+  allClients = await fetch('/api/clients').then(r=>r.json());
+  const mk = () => allClients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  ['m-client','nu-client','ec-client','prod-client-filter'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = mk();
+  });
 }
 
 // ════════════════════════════════
@@ -1125,474 +1057,136 @@ function toggleClientPanel() {
 // ════════════════════════════════
 function showView(v) {
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.bottom-nav-btn').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  const nv=document.getElementById('nav-'+v), bv=document.getElementById('bnav-'+v);
-  if(nv) nv.classList.add('active');
-  if(bv) bv.classList.add('active');
-  const tt=document.getElementById('mobile-topbar-title');
-  if(tt) tt.textContent=VIEW_TITLES[v]||'MEU Global';
-  
-  if(v==='tasks')    loadTasks();
-  if(v==='approvals') loadPendingApprovals();
-  if(v==='calendar'||v==='dash') renderCalendar();
-  if(v==='dash'){updateDashStats();initDashboardCharts();}
-  if(v==='customers') loadEndCustomers();
-  
-  document.getElementById('client-panel').classList.remove('open');
-}
-
-// ════════════════════════════════
-//  DASHBOARD CHARTS
-// ════════════════════════════════
-function initDashboardCharts() {
-  const lc=document.getElementById('mini-line-chart');
-  if(lc&&!miniLineChart) {
-    miniLineChart=new Chart(lc,{type:'line',data:{labels:['J','F','M','A','M','J'],datasets:[
-      {data:[8,12,10,18,15,22],borderColor:'rgba(28,26,20,0.6)',backgroundColor:'rgba(28,26,20,0.07)',borderWidth:1.5,fill:true,tension:0.4,pointRadius:0},
-      {data:[5,9,14,11,19,16],borderColor:'rgba(28,26,20,0.3)',backgroundColor:'transparent',borderWidth:1,fill:false,tension:0.4,pointRadius:0}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});
-  }
-  const bc=document.getElementById('products-chart');
-  if(bc&&!productsChart) {
-    productsChart=new Chart(bc,{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:['#8a9ea8','#a0a898','#b8b4a8','#ccc8be'],borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans'"},color:'#9c9888',maxRotation:0,maxTicksLimit:4}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#9c9888'},beginAtZero:true}}}});
-  }
-}
-
-async function updateDashStats() {
-  const cid = session.role === 'admin' ? (activeClientFilter || '') : session.client_id;
-  try {
-    const stats = await fetch(`/api/stats/dashboard?client_id=${cid}`).then(r => r.json());
-    
-    // Stages
-    const stageMap = { 'Contract Review': 0, 'Onboarding': 1, 'Implementation': 2 };
-    const rows = document.querySelectorAll('#stages-list .stage-row');
-    const stageCounts = [0, 0, 0];
-    stats.stages.forEach(s => { if(stageMap[s.status] !== undefined) stageCounts[stageMap[s.status]] = parseInt(s.count); });
-    
-    const max = Math.max(...stageCounts, 1);
-    stageCounts.forEach((count, i) => {
-      rows[i].querySelector('.stage-count').textContent = count;
-      rows[i].querySelector('.stage-bar').style.width = `${(count/max)*100}%`;
-    });
-
-    // Chart
-    if(productsChart) {
-      productsChart.data.labels = stats.products.map(p => p.name);
-      productsChart.data.datasets[0].data = stats.products.map(p => p.count);
-      productsChart.update();
-    }
-  } catch(e) {}
-
-  const my=allTasksCache.filter(t=>t.assigned_to==session.userId);
-  const nw=my.filter(t=>t.status==='todo'), pn=my.filter(t=>t.status==='pending_approval'), dn=my.filter(t=>t.status==='completed');
-  document.getElementById('dash-tab-new-count').textContent=`(${nw.length})`;
-  document.getElementById('dash-tab-pending-count').textContent=`(${pn.length})`;
-  document.getElementById('dash-tab-done-count').textContent=`(${dn.length})`;
-  renderDashTasks(dashTaskTab);
-}
-
-function setDashTab(tab,el) {
-  dashTaskTab=tab;
-  document.querySelectorAll('.task-tab').forEach(t=>t.classList.remove('active'));
-  if(el) el.classList.add('active');
-  renderDashTasks(tab);
-}
-
-function renderDashTasks(tab) {
-  const my=allTasksCache.filter(t=>t.assigned_to==session.userId);
-  const f=tab==='new'?my.filter(t=>t.status==='todo'):tab==='pending'?my.filter(t=>t.status==='pending_approval'):my.filter(t=>t.status==='completed');
-  const el=document.getElementById('dash-task-list');
-  if(!f.length){el.innerHTML=`<div style="font-size:12px;color:var(--ink3);padding:6px 0">No ${tab} tasks.</div>`;return;}
-  const dc={new:'tnew',pending:'tpend',done:'tdone'};
-  el.innerHTML=f.slice(0,4).map(t=>`<div class="task-mini-item">
-    <div class="task-mini-dot ${dc[tab]||'tnew'}"></div>
-    <div class="task-mini-body">
-      <div class="task-mini-title">${tab==='new'?'<span class="task-mini-new">NEW</span>: ':''}${t.title}${t.client_name?' - '+t.client_name:''}</div>
-      <div class="task-mini-due">${t.created_at?'Added '+new Date(t.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</div>
-    </div>
-  </div>`).join('');
+  if(v==='dash'){updateDashStats();renderCalendar();}
+  if(v==='customers')loadEndCustomers();
 }
 
 // ════════════════════════════════
 //  CALENDAR
 // ════════════════════════════════
-function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
-function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
-
 async function renderCalendar() {
-  const lbl=new Date(calYear,calMonth).toLocaleString('default',{month:'long',year:'numeric'});
-  ['cal-label-dash','cal-label-full'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
-  const cid=session.role==='client_owner'?session.client_id:(document.getElementById('cal-client-filter').value||activeClientFilter||'');
-  let posts=[];
-  try{let url=`/api/posts?month=${calMonth+1}&year=${calYear}`;if(cid)url+=`&client_id=${cid}`;posts=await fetch(url).then(r=>r.json());}catch(e){}
+  const posts = await fetch(`/api/posts?month=${calMonth+1}&year=${calYear}`).then(r=>r.json());
   allPostsCache = posts;
-
-  ['cal-grid','cal-grid-full'].forEach(gridId=>{
-    const grid=document.getElementById(gridId); if(!grid) return;
-    grid.innerHTML=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-day-header">${d}</div>`).join('');
-    const fd=new Date(calYear,calMonth,1).getDay(), so=fd===0?6:fd-1, dim=new Date(calYear,calMonth+1,0).getDate(), td=new Date();
-    for(let i=0;i<so;i++) grid.innerHTML+=`<div class="cal-cell other-month"></div>`;
-    for(let d=1;d<=dim;d++){
-      const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const it=td.getDate()===d&&td.getMonth()===calMonth&&td.getFullYear()===calYear;
-      const dow=new Date(calYear,calMonth,d).getDay(), iw=dow===0||dow===6;
-      const dp=posts.filter(p=>p.post_date&&p.post_date.startsWith(ds));
-      const chips=dp.map(p=>{const ah=p.approval_status?`<span class="chip-approval ${p.approval_status}">${p.approval_status==='pending'?'⏳':p.approval_status==='approved'?'✓':'✕'}</span>`:'';return`<div class="post-chip ${p.status}" onclick="event.stopPropagation();openPostDetail(${JSON.stringify(JSON.stringify(p))})"><span style="overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0">${p.title}</span>${ah}</div>`;}).join('');
-      let cls='cal-cell';if(it)cls+=' today';else if(iw)cls+=' weekend';
-      grid.innerHTML+=`<div class="${cls}" onclick="showDayPlans('${ds}')"><div class="cal-date">${d}</div>${chips}</div>`;
-    }
-    const rem=(so+dim)%7;
-    if(rem>0) for(let i=0;i<7-rem;i++) grid.innerHTML+=`<div class="cal-cell other-month"></div>`;
-  });
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+  const fd=new Date(calYear,calMonth,1).getDay(), so=fd===0?6:fd-1, dim=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<so;i++) grid.innerHTML+=`<div class="cal-cell" style="background:#f0ece3"></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayPosts = posts.filter(p=>p.post_date.startsWith(ds));
+    const chips = dayPosts.map(p=>`<div class="post-chip"><span>${p.title}</span></div>`).join('');
+    grid.innerHTML+=`<div class="cal-cell" onclick="showDayPlans('${ds}')"><div class="cal-date">${d}</div>${chips}</div>`;
+  }
 }
 
 function showDayPlans(date) {
   currentDayPlanDate = date;
-  const posts = allPostsCache.filter(p => p.post_date && p.post_date.startsWith(date));
-  const listEl = document.getElementById('day-plans-list');
-  const emptyEl = document.getElementById('day-plans-empty');
-  
-  document.getElementById('day-plans-title').textContent = 'Plans for ' + new Date(date).toLocaleDateString('default', { month:'long', day:'numeric', year:'numeric' });
-  
-  if (posts.length === 0) {
-    listEl.innerHTML = '';
-    emptyEl.style.display = 'block';
+  const posts = allPostsCache.filter(p=>p.post_date.startsWith(date));
+  const list = document.getElementById('day-plans-list');
+  document.getElementById('day-plans-title').textContent = 'Plans for ' + date;
+  if(!posts.length){
+    list.innerHTML=''; document.getElementById('day-plans-empty').style.display='block';
   } else {
-    emptyEl.style.display = 'none';
-    listEl.innerHTML = posts.map(p => `
-      <div class="stat-card" style="cursor:pointer; padding:12px;" onclick="closeDayPlans(); openPostDetail(${JSON.stringify(JSON.stringify(p))})">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:600; font-size:14px;">${p.title}</div>
-          <span class="badge badge-${p.status}">${p.status}</span>
-        </div>
-        <div style="font-size:12px; color:var(--ink3); margin-top:4px;">
-          ${p.client_name ? p.client_name + ' · ' : ''}${p.post_time || 'No time set'}
-        </div>
-      </div>
-    `).join('');
+    document.getElementById('day-plans-empty').style.display='none';
+    list.innerHTML=posts.map(p=>`<div class="stat-card" style="cursor:pointer" onclick="closeDayPlans(); openPostDetail('${JSON.stringify(p)}')">${p.title}</div>`).join('');
   }
-  
   document.getElementById('day-plans-modal-backdrop').classList.add('open');
 }
-
-function closeDayPlans() {
-  document.getElementById('day-plans-modal-backdrop').classList.remove('open');
-}
+function closeDayPlans(){document.getElementById('day-plans-modal-backdrop').classList.remove('open');}
 
 // ════════════════════════════════
-//  POST MODAL
+//  POSTS
 // ════════════════════════════════
-function openPostModal(date){document.getElementById('post-modal-title').textContent='Create Post';document.getElementById('m-date').value=date||'';if(session.client_id)document.getElementById('m-client').value=session.client_id;document.getElementById('post-modal-backdrop').classList.add('open');}
+function openPostModal(d){ if(d) document.getElementById('m-date').value=d; document.getElementById('post-modal-backdrop').classList.add('open'); }
 function closePostModal(){document.getElementById('post-modal-backdrop').classList.remove('open');}
 async function savePost(){
-  const title=document.getElementById('m-title').value.trim(), date=document.getElementById('m-date').value;
-  if(!title) return toast('Please enter a post title.','err');
-  if(!date)  return toast('Please select a date.','err');
-  const data={title,caption:document.getElementById('m-caption').value,post_date:date,post_time:document.getElementById('m-time').value||null,client_id:document.getElementById('m-client').value||null,status:document.getElementById('m-status').value,platforms:Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i=>i.value),created_by:session.userId};
-  try{const r=await fetch('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(r.ok){toast('Post saved!','ok');closePostModal();renderCalendar();['m-title','m-caption','m-time'].forEach(id=>document.getElementById(id).value='');document.querySelectorAll('input[name="platform"]').forEach(cb=>cb.checked=false);document.getElementById('m-status').value='draft';}else{const e=await r.json();toast(e.error||'Failed.','err');}}catch(e){toast('Network error.','err');}
-}
-
-// ════════════════════════════════
-//  POST DETAIL
-// ════════════════════════════════
-function openPostDetail(jsonStr){
-  const p=JSON.parse(jsonStr); currentPostDetail=p;
-  document.getElementById('pd-title').textContent=p.title;
-  document.getElementById('pd-caption').textContent=p.caption||'(No caption)';
-  document.getElementById('pd-date').textContent=p.post_date?p.post_date.substring(0,10):'—';
-  document.getElementById('pd-client').textContent=p.client_name||'—';
-  document.getElementById('pd-creator').textContent=`Created by: ${p.creator_name||'Unknown'}`;
-  const sB=document.getElementById('pd-status-badge'),aB=document.getElementById('pd-approval-badge');
-  sB.textContent=p.status;sB.className=`badge badge-${p.status}`;
-  aB.textContent=p.approval_status||'pending';aB.className=`badge badge-${p.approval_status||'pending'}`;
-  const pfM={instagram:['ig','Instagram'],facebook:['fb','Facebook'],skool:['sk','Skool'],linkedin:['li','LinkedIn']};
-  document.getElementById('pd-platforms').innerHTML=(p.platforms||[]).map(pf=>{const[cls,lbl]=pfM[pf]||['sk',pf];return`<span class="pf-tag pf-${cls}">${lbl}</span>`;}).join('')||'<span style="color:var(--ink3);font-size:13px">None</span>';
-  const acts=document.getElementById('pd-approve-actions');
-  acts.style.display=(session.role==='client_owner'&&p.approval_status==='pending'&&p.client_id==session.client_id)?'flex':'none';
-  document.getElementById('post-detail-backdrop').classList.add('open');
-}
-function closePostDetail(){document.getElementById('post-detail-backdrop').classList.remove('open');}
-async function approvePost(approved){
-  if(!currentPostDetail) return;
-  const r=await fetch(`/api/posts/${currentPostDetail.id}/approve`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved})});
-  if(r.ok){toast(approved?'Post approved!':'Post rejected.',approved?'ok':'err');closePostDetail();renderCalendar();loadPendingApprovals();}
-  else toast('Action failed.','err');
-}
-
-// ════════════════════════════════
-//  APPROVALS
-// ════════════════════════════════
-async function loadPendingApprovals(){
-  const url=session.role==='client_owner'?`/api/posts/pending-approval?client_id=${session.client_id}`:'/api/posts/pending-approval';
-  let posts=[];try{posts=await fetch(url).then(r=>r.json());}catch(e){}
-  ['approval-badge','approval-badge-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=posts.length?'block':'none';});
-  const c=document.getElementById('approvals-list');
-  if(!posts.length){c.innerHTML=`<div class="empty-state"><p>No posts pending approval. ✓</p></div>`;return;}
-  c.innerHTML='<div class="approval-list">'+posts.map(p=>`<div class="approval-card">
-    <div class="approval-card-info">
-      <div class="approval-card-title">${p.title}</div>
-      <div class="approval-card-meta">${p.client_name||'—'} · ${(p.post_date||'').substring(0,10)} · By ${p.creator_name||'Unknown'}</div>
-      <div style="margin-top:7px;display:flex;gap:5px;flex-wrap:wrap">${(p.platforms||[]).map(pf=>`<span class="pf-tag pf-${pf==='instagram'?'ig':pf==='facebook'?'fb':pf==='linkedin'?'li':'sk'}">${pf}</span>`).join('')}</div>
-    </div>
-    <div class="approval-card-actions">
-      <button class="btn btn-green btn-sm" onclick="approvePostById(${p.id},true)">✓ Approve</button>
-      <button class="btn btn-red btn-sm" onclick="approvePostById(${p.id},false)">✕ Reject</button>
-    </div>
-  </div>`).join('')+'</div>';
-}
-async function approvePostById(id,approved){
-  const r=await fetch(`/api/posts/${id}/approve",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved})});
-  if(r.ok){toast(approved?'Approved!':'Rejected.',approved?'ok':'err');loadPendingApprovals();renderCalendar();}
-  else toast('Action failed.','err');
-}
-
-// ════════════════════════════════
-//  TASKS
-// ════════════════════════════════
-function setTaskFilter(mode){
-  currentTaskFilter=mode;
-  document.getElementById('task-filter-mine')?.classList.toggle('btn-dark',mode==='mine');
-  document.getElementById('task-filter-all')?.classList.toggle('btn-dark',mode==='all');
-  loadTasks();
-}
-async function loadTasks(){
-  let tasks=[];try{tasks=await fetch(`/api/tasks?role=${session.role}&client_id=${session.client_id||''}&user_id=${session.userId}`).then(r=>r.json());}catch(e){}
-  allTasksCache=tasks;
-  const mp=tasks.filter(t=>t.assigned_to==session.userId&&t.status==='todo');
-  ['task-badge','task-badge-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=mp.length?'block':'none';});
-  updateDashStats();
-  const list=document.getElementById('task-list');
-  if(!list) return;
-  let disp=currentTaskFilter==='mine'?tasks.filter(t=>t.assigned_to==session.userId):tasks;
-  if(!disp.length){list.innerHTML=`<div class="empty-state"><p>No tasks yet.</p></div>`;return;}
-  const sm={todo:'todo',pending_approval:'pending_approval',completed:'completed'};
-  const lm={todo:'To Do',pending_approval:'Awaiting Approval',completed:'Completed'};
-  list.innerHTML=disp.map(t=>{
-    const cd=(t.assigned_to==session.userId&&t.status==='todo');
-    const ca=((session.role==='client_owner'||session.role==='admin')&&t.status==='pending_approval');
-    return`<div class="task-card">
-      <div style="margin-bottom:10px"><span class="badge badge-${sm[t.status]||'todo'}" style="margin-bottom:8px;display:inline-block">${lm[t.status]||t.status}</span><div class="task-title">${t.title}</div></div>
-      <div class="task-meta">${t.assignee_name?`Assigned to <strong>${t.assignee_name}</strong>`:'Unassigned'}${t.client_name?' · '+t.client_name:''}${t.creator_name?' · By '+t.creator_name:''}</div>
-      ${t.description?`<div class="task-desc">${t.description}</div>`:''}
-      <div class="task-actions">
-        ${cd?`<button class="btn btn-dark btn-sm" onclick="updateTaskStatus(${t.id},'pending_approval')">Mark Done →</button>`:''}
-        ${ca?`<button class="btn btn-green btn-sm" onclick="updateTaskStatus(${t.id},'completed')">✓ Approve</button>`:''}
-        ${session.role==='admin'?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTask(${t.id})">Delete</button>`:''}
-      </div>
-      <button class="task-comments-toggle" onclick="toggleComments(${t.id},this)">💬 View / Add Feedback</button>
-      <div class="task-comments-area" id="comments-${t.id}">
-        <div id="comment-list-${t.id}"></div>
-        <div class="comment-input-row"><input type="text" placeholder="Add feedback…" id="comment-input-${t.id}" onkeydown="if(event.key==='Enter')submitComment(${t.id})"><button class="btn btn-dark btn-sm" onclick="submitComment(${t.id})">Send</button></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-async function toggleComments(id,btn){const a=document.getElementById(`comments-${id}`);const o=a.classList.toggle('open');btn.textContent=o?'💬 Hide Feedback':'💬 View / Add Feedback';if(o)loadComments(id);}
-async function loadComments(id){const el=document.getElementById(`comment-list-${id}`);el.innerHTML='<div style="font-size:12px;color:var(--ink3);padding:4px 0">Loading…</div>';let c=[];try{c=await fetch(`/api/tasks/${id}/comments`).then(r=>r.json());}catch(e){}el.innerHTML=c.length?c.map(cm=>`<div class="comment-item"><div class="comment-author">${cm.author_name||'?'} <span style="font-weight:400;color:var(--ink3)">${roleLabel(cm.author_role)}</span></div><div class="comment-text">${cm.comment}</div></div>`).join(''):'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px">No feedback yet.</div>';}
-async function submitComment(id){const input=document.getElementById(`comment-input-${id}`);const comment=input.value.trim();if(!comment)return;try{const r=await fetch(`/api/tasks/${id}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:session.userId,comment})});if(r.ok){input.value='';loadComments(id);toast('Feedback sent!','ok');}else toast('Failed.','err');}catch(e){toast('Network error.','err');}}
-async function updateTaskStatus(id,status){try{await fetch(`/api/tasks/${id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});loadTasks();toast(status==='completed'?'Task completed! ✓':'Task updated.','ok');}catch(e){toast('Network error.','err');}}
-async function deleteTask(id){if(!confirm('Delete this task?'))return;try{await fetch(`/api/tasks/${id}`,{method:'DELETE'});loadTasks();toast('Task deleted.');}catch(e){toast('Network error.','err');}}
-
-// ════════════════════════════════
-//  TASK MODAL
-// ════════════════════════════════
-async function openTaskModal(){let u=[];try{u=await fetch('/api/users/assignable').then(r=>r.json());}catch(e){}document.getElementById('t-assign').innerHTML='<option value="">Unassigned</option>'+u.map(us=>`<option value="${us.id}">${us.name||us.email} (${roleLabel(us.role)})</option>`).join('');if(session.role==='client_owner'&&session.client_id)document.getElementById('t-client').value=session.client_id;document.getElementById('task-modal-backdrop').classList.add('open');}
-function closeTaskModal(){document.getElementById('task-modal-backdrop').classList.remove('open');}
-async function saveTask(){
-  const title=document.getElementById('t-title').value.trim();if(!title)return toast('Please enter a task title.','err');
-  const cid=session.role==='client_owner'?session.client_id:(document.getElementById('t-client').value||null);
-  const data={title,description:document.getElementById('t-desc').value,assigned_to:document.getElementById('t-assign').value||null,client_id:cid,created_by:session.userId};
-  try{const r=await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(r.ok){toast('Task created!','ok');closeTaskModal();document.getElementById('t-title').value='';document.getElementById('t-desc').value='';loadTasks();}else{const e=await r.json();toast(e.error||'Failed.','err');}}catch(e){toast('Network error.','err');}
-}
-
-// ════════════════════════════════
-//  ADMIN MANAGEMENT TABS
-// ════════════════════════════════
-function openAdminModal() {
-  document.getElementById('admin-modal').classList.add('open');
-  setAdminTab('account', document.querySelector('#admin-modal .task-tab.active'));
-}
-function closeAdminModal() { document.getElementById('admin-modal').classList.remove('open'); }
-
-function setAdminTab(tab, el) {
-  document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
-  document.querySelectorAll('#admin-modal .task-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`admin-tab-${tab}`).style.display = 'block';
-  el.classList.add('active');
-  
-  if(tab === 'users') loadAdminUsers();
-  if(tab === 'clients') loadAdminClients();
-  if(tab === 'products') loadProductsForAdmin();
-}
-
-async function loadAdminUsers() {
-  let u=[]; try{u=await fetch('/api/admin/users').then(r=>r.json());}catch(e){}
-  const w=document.getElementById('user-list-wrap');
-  if(!u.length){w.innerHTML='No users found.';return;}
-  w.innerHTML=`<div class="table-wrap" style="margin-bottom:14px;overflow-x:auto"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th></th></tr></thead><tbody>${u.map(us=>`<tr><td><strong>${us.name||'—'}</strong></td><td style="color:var(--ink2);font-size:12px">${us.email}</td><td><span class="badge badge-${us.role==='admin'?'scheduled':us.role==='client_owner'?'pending':'todo'}">${roleLabel(us.role)}</span></td><td style="color:var(--ink3)">${us.client_name||'—'}</td><td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${us.id})">Remove</button></td></tr>`).join('')}</tbody></table></div>`;
-}
-
-async function loadAdminClients() {
-  const el = document.getElementById('admin-client-list');
-  el.innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Client</th><th>Status</th><th>Action</th></tr></thead><tbody>` +
-    allClients.map(c => `<tr>
-      <td><strong>${c.name}</strong></td>
-      <td>${c.status}</td>
-      <td><button class="btn btn-ghost btn-xs" onclick='openEditClient(${JSON.stringify(c)})'>Edit</button></td>
-    </tr>`).join('') + `</tbody></table></div>`;
-}
-
-async function loadProductsForAdmin() {
-  const cid = document.getElementById('prod-client-filter').value;
-  if(!cid) { document.getElementById('admin-product-list').innerHTML = '<div style="padding:20px;color:var(--ink3);">Select a client to view products.</div>'; return; }
-  const products = await fetch(`/api/products?client_id=${cid}`).then(r => r.json());
-  document.getElementById('admin-product-list').innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>Price</th><th>Billing</th><th>Action</th></tr></thead><tbody>` +
-    products.map(p => `<tr><td><strong>${p.name}</strong></td><td>R${p.price}</td><td>${p.billing_type}</td><td><button class="btn btn-ghost btn-xs" style="color:var(--red)">Delete</button></td></tr>`).join('') + `</tbody></table></div>`;
-}
-
-async function deleteUser(id){if(!confirm('Remove this user?'))return;const r=await fetch(`/api/admin/users/${id}`,{method:'DELETE'});if(r.ok){toast('User removed.');loadAdminUsers();}else toast('Failed.','err');}
-function toggleNuClientField(){document.getElementById('nu-client-wrap').style.display=document.getElementById('nu-role').value==='client_owner'?'block':'none';}
-
-async function createNewUser(){
-  const name=document.getElementById('nu-name').value.trim(),email=document.getElementById('nu-email').value.trim(),role=document.getElementById('nu-role').value,password=document.getElementById('nu-password').value.trim(),cid=document.getElementById('nu-client').value;
-  if(!name) return toast('Full name is required.','err');
-  if(!email||!email.includes('@')) return toast('Valid email is required.','err');
-  if(!password) return toast('A password is required.','err');
-  try{const r=await fetch('/api/admin/add-user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,role,password,client_id:cid||null})});const d=await r.json();if(r.ok&&d.success){toast(`User "${name}" created!`,'ok');['nu-name','nu-email'].forEach(id=>document.getElementById(id).value='');document.getElementById('nu-password').value='ChangeMe123!';document.getElementById('nu-role').value='user';document.getElementById('nu-client-wrap').style.display='none';loadAdminUsers();}else toast(d.error||'Failed.','err');}catch(e){toast('Network error.','err');}
+  const data={title:document.getElementById('m-title').value,caption:document.getElementById('m-caption').value,post_date:document.getElementById('m-date').value,client_id:document.getElementById('m-client').value,status:document.getElementById('m-status').value,created_by:session.userId};
+  await fetch('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closePostModal();renderCalendar();toast('Saved!','ok');
 }
 
 // ════════════════════════════════
 //  CUSTOMERS & PRODUCTS
 // ════════════════════════════════
 async function loadEndCustomers() {
-  const cid = session.role === 'admin' ? (activeClientFilter || '') : session.client_id;
-  try {
-    const customers = await fetch(`/api/end-customers?client_id=${cid}`).then(r => r.json());
-    const body = document.getElementById('customer-table-body');
-    if(!customers.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px">No customer sign-ups found.</td></tr>'; return; }
-    body.innerHTML = customers.map(c => `
-      <tr>
-        <td><strong>${c.name}</strong><br><small style="color:var(--ink3)">${c.email || ''}</small></td>
-        <td>${c.product_name || '—'}</td>
-        <td><span class="badge badge-${c.status.toLowerCase().replace(' ', '_')}">${c.status}</span></td>
-        <td>R${c.product_price || 0} <small>(${c.billing_type})</small></td>
-        <td><button class="btn btn-ghost btn-xs">Edit</button></td>
-      </tr>
-    `).join('');
-  } catch(e){}
+  const customers = await fetch('/api/end-customers').then(r=>r.json());
+  document.getElementById('customer-table-body').innerHTML=customers.map(c=>`<tr><td>${c.name}</td><td>${c.product_name||'—'}</td><td>${c.status}</td><td>R${c.product_price||0}</td><td><button class="btn btn-ghost btn-xs">Edit</button></td></tr>`).join('');
 }
-
-function openCustomerModal() {
-  document.getElementById('customer-modal').classList.add('open');
-  if(session.client_id) {
-    document.getElementById('ec-client').value = session.client_id;
-    loadProductsForCustomerModal();
-  }
+function openCustomerModal(){document.getElementById('customer-modal').classList.add('open');}
+function closeCustomerModal(){document.getElementById('customer-modal').classList.remove('open');}
+async function loadProductsForCustomerModal(){
+  const cid=document.getElementById('ec-client').value;
+  const prods=await fetch(`/api/products?client_id=${cid}`).then(r=>r.json());
+  document.getElementById('ec-product').innerHTML=prods.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
 }
-function closeCustomerModal() { document.getElementById('customer-modal').classList.remove('open'); }
-
-async function loadProductsForCustomerModal() {
-  const cid = document.getElementById('ec-client').value;
-  if(!cid) { document.getElementById('ec-product').innerHTML = '<option value="">Select a client first</option>'; return; }
-  const products = await fetch(`/api/products?client_id=${cid}`).then(r => r.json());
-  document.getElementById('ec-product').innerHTML = products.map(p => `<option value="${p.id}">${p.name} (R${p.price})</option>`).join('') || '<option value="">No products found</option>';
-}
-
-async function saveCustomer() {
-  const data = {
-    client_id: document.getElementById('ec-client').value,
-    product_id: document.getElementById('ec-product').value,
-    name: document.getElementById('ec-name').value.trim(),
-    email: document.getElementById('ec-email').value.trim(),
-    status: document.getElementById('ec-status').value
-  };
-  if(!data.name) return toast('Customer name is required.','err');
-  try {
-    const r = await fetch('/api/end-customers', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-    if(r.ok) { toast('Customer sign-up recorded!', 'ok'); closeCustomerModal(); loadEndCustomers(); updateDashStats(); }
-    else toast('Failed to save customer.','err');
-  } catch(e){toast('Network error.','err');}
-}
-
-function openProductModal() { document.getElementById('product-modal').classList.add('open'); }
-function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
-
-async function saveProduct() {
-  const cid = document.getElementById('prod-client-filter').value;
-  if(!cid) return toast("Please select a client first.", "err");
-
-  const data = {
-    client_id: cid,
-    name: document.getElementById('p-name').value.trim(),
-    price: document.getElementById('p-price').value,
-    billing_type: document.getElementById('p-billing').value,
-    duration_months: document.getElementById('p-duration').value || 0
-  };
-  
-  if(!data.name || !data.price) return toast('Name and price are required.','err');
-  
-  try {
-    const r = await fetch('/api/products', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-    if(r.ok) {
-      toast('Product added!', 'ok');
-      closeProductModal();
-      loadProductsForAdmin();
-    } else {
-      const err = await r.json();
-      toast(err.error || 'Failed to save product.', 'err');
-    }
-  } catch(e){ toast('Network error.', 'err'); }
+async function saveCustomer(){
+  const data={client_id:document.getElementById('ec-client').value,product_id:document.getElementById('ec-product').value,name:document.getElementById('ec-name').value,status:document.getElementById('ec-status').value};
+  await fetch('/api/end-customers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closeCustomerModal();loadEndCustomers();toast('Added','ok');
 }
 
 // ════════════════════════════════
-//  EDIT CLIENT HANDLERS
+//  ADMIN
 // ════════════════════════════════
-function openEditClient(client) {
-  document.getElementById('ec-id').value = client.id;
-  document.getElementById('ec-name-edit').value = client.name;
-  document.getElementById('ec-email-edit').value = client.email;
-  document.getElementById('ec-status-edit').value = client.status;
+function openAdminModal(){document.getElementById('admin-modal').classList.add('open');loadAdminUsers();}
+function closeAdminModal(){document.getElementById('admin-modal').classList.remove('open');}
+function setAdminTab(tab,el){
+  document.querySelectorAll('.admin-tab-content').forEach(c=>c.style.display='none');
+  document.getElementById(`admin-tab-${tab}`).style.display='block';
+  document.querySelectorAll('.task-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='clients')loadAdminClients();
+  if(tab==='products')loadProductsForAdmin();
+}
+async function loadAdminUsers(){
+  const u=await fetch('/api/admin/users').then(r=>r.json());
+  document.getElementById('user-list-wrap').innerHTML=u.map(us=>`<div>${us.name} - ${us.role} <button onclick="deleteUser(${us.id})">Del</button></div>`).join('');
+}
+async function deleteUser(id){ if(confirm('Delete?')) { await fetch(`/api/admin/users/${id}`,{method:'DELETE'});loadAdminUsers(); } }
+
+async function loadAdminClients(){
+  document.getElementById('admin-client-list').innerHTML=allClients.map(c=>`<div>${c.name} <button onclick="openEditClient(${JSON.stringify(c)})">Edit</button></div>`).join('');
+}
+function openEditClient(c){
+  document.getElementById('ec-id').value=c.id;
+  document.getElementById('ec-name-edit').value=c.name;
   document.getElementById('edit-client-modal').classList.add('open');
 }
-
-function closeEditClientModal() { document.getElementById('edit-client-modal').classList.remove('open'); }
-
-async function updateClient() {
-  const id = document.getElementById('ec-id').value;
-  const data = {
-    name: document.getElementById('ec-name-edit').value,
-    email: document.getElementById('ec-email-edit').value,
-    status: document.getElementById('ec-status-edit').value
-  };
-  const r = await fetch(`/api/clients/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-  if(r.ok) {
-    toast("Client updated!", "ok");
-    closeEditClientModal();
-    loadInitialData(); 
-  } else toast("Update failed", "err");
+function closeEditClientModal(){document.getElementById('edit-client-modal').classList.remove('open');}
+async function updateClient(){
+  const id=document.getElementById('ec-id').value;
+  await fetch(`/api/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('ec-name-edit').value})});
+  closeEditClientModal();loadInitialData();
 }
 
-// ════════════════════════════════
-//  CLIENTS
-// ════════════════════════════════
-function addClientPrompt(){const name=prompt('New client name:');if(!name?.trim())return;const email=prompt('Client contact email:');if(!email?.trim())return;fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),email:email.trim()})}).then(r=>r.json()).then(c=>{if(c.id){toast(`Client "${c.name}" added!`,'ok');loadClients();}else toast(c.error||'Failed.','err');}).catch(()=>toast('Network error.','err'));}
+function openProductModal(){document.getElementById('product-modal').classList.add('open');}
+function closeProductModal(){document.getElementById('product-modal').classList.remove('open');}
+async function loadProductsForAdmin(){
+  const cid=document.getElementById('prod-client-filter').value;
+  const prods=await fetch(`/api/products?client_id=${cid}`).then(r=>r.json());
+  document.getElementById('admin-product-list').innerHTML=prods.map(p=>`<div>${p.name} - R${p.price}</div>`).join('');
+}
+async function saveProduct(){
+  const cid=document.getElementById('prod-client-filter').value;
+  const data={client_id:cid,name:document.getElementById('p-name').value,price:document.getElementById('p-price').value,billing_type:document.getElementById('p-billing').value};
+  await fetch('/api/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closeProductModal();loadProductsForAdmin();
+}
 
-// Modal closing helpers
-document.querySelectorAll('.modal-backdrop').forEach(bd=>{
-  bd.addEventListener('click',e=>{if(e.target===bd)bd.classList.remove('open');});
-});
+async function updateDashStats(){
+  const stats=await fetch('/api/stats/dashboard').then(r=>r.json());
+  const ctx=document.getElementById('products-chart');
+  if(ctx && !productsChart) productsChart=new Chart(ctx,{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'#1c1a14'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  if(productsChart){productsChart.data.labels=stats.products.map(p=>p.name);productsChart.data.datasets[0].data=stats.products.map(p=>p.count);productsChart.update();}
+}
 
-document.addEventListener('click',e=>{
-  const panel=document.getElementById('client-panel');
-  if(!panel.classList.contains('open')) return;
-  const logo1=document.getElementById('sidebar-logo-btn');
-  const logo2=document.getElementById('mobile-logo-btn');
-  if(!panel.contains(e.target)&&e.target!==logo1&&!logo1?.contains(e.target)&&e.target!==logo2&&!logo2?.contains(e.target)){
-    panel.classList.remove('open');
-  }
-});
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function handleLogoClick(){document.getElementById('client-panel').classList.toggle('open');}
+function selectClient(id){activeClientFilter=id;document.getElementById('client-panel').classList.remove('open');renderCalendar();updateDashStats();}
+
+document.querySelectorAll('.modal-backdrop').forEach(bd=>{bd.addEventListener('click',e=>{if(e.target===bd)bd.classList.remove('open');});});
 </script>
 
 </body>
