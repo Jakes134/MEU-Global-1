@@ -35,7 +35,7 @@ app.get('/setup-db', async (req, res) => {
     return res.status(403).send('Forbidden – provide ?secret=YOUR_SETUP_SECRET');
   }
   try {
-    // 1. Users Table
+    // 1. Users Table (Enhanced)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -48,12 +48,8 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
-    // 2. Clients Table
+    // 2. Clients Table (Main Clients)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS clients (
         id SERIAL PRIMARY KEY,
@@ -64,7 +60,34 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 3. Posts Table
+    // 3. Products Table (New)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL,
+        price DECIMAL(12,2) NOT NULL,
+        billing_type VARCHAR(20) DEFAULT 'one-off',
+        duration_months INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 4. End Customers Table (New - Clients of Clients)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS end_customers (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100),
+        status VARCHAR(30) DEFAULT 'Contract Review',
+        sign_up_date DATE DEFAULT CURRENT_DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 5. Posts Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
@@ -81,10 +104,8 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
-    await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
 
-    // 4. Tasks Table — now with task_comments for feedback
+    // 6. Tasks Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
@@ -97,9 +118,8 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)`);
 
-    // 5. Task Comments Table (feedback from admins/users to client owners)
+    // 7. Task Comments Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS task_comments (
         id SERIAL PRIMARY KEY,
@@ -122,7 +142,7 @@ app.get('/setup-db', async (req, res) => {
       );
     }
 
-    res.send('<pre>✅ Database is synchronized with all features enabled.</pre>');
+    res.send('<pre>✅ Database is synchronized with all features (Customers, Products, Tasks, Posts) enabled.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
@@ -158,7 +178,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Change password
 app.post('/api/change-password', async (req, res) => {
   const { userId, newPassword } = req.body;
   if (!userId || !newPassword) return res.status(400).json({ error: 'Missing fields.' });
@@ -175,13 +194,11 @@ app.post('/api/change-password', async (req, res) => {
 //  ADMIN USER MANAGEMENT
 // ─────────────────────────────────────────────
 
-// Create new user — FIXED: generates hashed password server-side
 app.post('/api/admin/add-user', async (req, res) => {
   const { name, email, role, client_id, password } = req.body;
   if (!name || !email) return res.status(400).json({ error: 'Name and Email are required.' });
 
   try {
-    // Use provided password or default; always hash server-side
     const rawPassword = password && password.trim() ? password : 'ChangeMe123!';
     const hashed = await bcrypt.hash(rawPassword, 12);
     const result = await pool.query(
@@ -197,7 +214,6 @@ app.post('/api/admin/add-user', async (req, res) => {
   }
 });
 
-// List all users (admin only)
 app.get('/api/admin/users', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -211,7 +227,19 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-// Delete user (admin only)
+app.put('/api/admin/users/:id', async (req, res) => {
+  const { name, email, role, client_id } = req.body;
+  try {
+    await pool.query(
+      `UPDATE users SET name=$1, email=$2, role=$3, client_id=$4 WHERE id=$5`,
+      [name, email.toLowerCase().trim(), role, client_id || null, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
@@ -221,7 +249,6 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   }
 });
 
-// Get assignable users for Tasks
 app.get('/api/users/assignable', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -237,8 +264,12 @@ app.get('/api/users/assignable', async (req, res) => {
 //  CLIENTS API
 // ─────────────────────────────────────────────
 app.get('/api/clients', async (req, res) => {
-  const { rows } = await pool.query('SELECT * FROM clients ORDER BY name ASC');
-  res.json(rows);
+  try {
+    const { rows } = await pool.query('SELECT * FROM clients ORDER BY name ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/clients', async (req, res) => {
@@ -255,31 +286,145 @@ app.post('/api/clients', async (req, res) => {
   }
 });
 
+app.put('/api/clients/:id', async (req, res) => {
+  const { name, email, status } = req.body;
+  try {
+    await pool.query(
+      'UPDATE clients SET name=$1, email=$2, status=$3 WHERE id=$4',
+      [name, email, status, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  PRODUCTS API
+// ─────────────────────────────────────────────
+app.get('/api/products', async (req, res) => {
+  const { client_id } = req.query;
+  try {
+    let q = 'SELECT * FROM products';
+    const p = [];
+    if (client_id) { q += ' WHERE client_id = $1'; p.push(client_id); }
+    const { rows } = await pool.query(q + ' ORDER BY name ASC', p);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/products', async (req, res) => {
+  const { client_id, name, price, billing_type, duration_months } = req.body;
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO products (client_id, name, price, billing_type, duration_months) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [client_id, name, price, billing_type, duration_months]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  END CUSTOMERS API
+// ─────────────────────────────────────────────
+app.get('/api/end-customers', async (req, res) => {
+  const { client_id } = req.query;
+  try {
+    let q = `SELECT ec.*, p.name as product_name, p.price as product_price, p.billing_type 
+             FROM end_customers ec 
+             LEFT JOIN products p ON ec.product_id = p.id 
+             WHERE 1=1`;
+    const p = [];
+    if (client_id) { q += ' AND ec.client_id = $1'; p.push(client_id); }
+    const { rows } = await pool.query(q + ' ORDER BY ec.sign_up_date DESC', p);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/end-customers', async (req, res) => {
+  const { client_id, product_id, name, email, status } = req.body;
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO end_customers (client_id, product_id, name, email, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [client_id, product_id, name, email, status]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/end-customers/:id', async (req, res) => {
+  const { name, email, status, product_id } = req.body;
+  try {
+    await pool.query(
+      'UPDATE end_customers SET name=$1, email=$2, status=$3, product_id=$4 WHERE id=$5',
+      [name, email, status, product_id, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  DASHBOARD STATS
+// ─────────────────────────────────────────────
+app.get('/api/stats/dashboard', async (req, res) => {
+  const { client_id } = req.query;
+  try {
+    const p = client_id ? [client_id] : [];
+    const filter = client_id ? ' WHERE client_id = $1' : '';
+
+    const stages = await pool.query(`SELECT status, count(*) FROM end_customers ${filter} GROUP BY status`, p);
+    const products = await pool.query(`
+      SELECT p.name, count(ec.id) as count 
+      FROM products p 
+      JOIN end_customers ec ON ec.product_id = p.id 
+      ${client_id ? ' WHERE p.client_id = $1' : ''}
+      GROUP BY p.name ORDER BY count DESC LIMIT 5`, p);
+
+    res.json({ stages: stages.rows, products: products.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─────────────────────────────────────────────
 //  POSTS API
 // ─────────────────────────────────────────────
 app.get('/api/posts', async (req, res) => {
   const { month, year, client_id } = req.query;
-  let query = `SELECT p.*, c.name as client_name, u.name as creator_name
-               FROM posts p
-               LEFT JOIN clients c ON p.client_id = c.id
-               LEFT JOIN users u ON p.created_by = u.id
-               WHERE 1=1`;
-  const params = [];
+  try {
+    let query = `SELECT p.*, c.name as client_name, u.name as creator_name
+                 FROM posts p
+                 LEFT JOIN clients c ON p.client_id = c.id
+                 LEFT JOIN users u ON p.created_by = u.id
+                 WHERE 1=1`;
+    const params = [];
 
-  if (month && year) {
-    params.push(year, month);
-    query += ` AND EXTRACT(YEAR FROM p.post_date) = $${params.length - 1} AND EXTRACT(MONTH FROM p.post_date) = $${params.length}`;
+    if (month && year) {
+      params.push(year, month);
+      query += ` AND EXTRACT(YEAR FROM p.post_date) = $${params.length - 1} AND EXTRACT(MONTH FROM p.post_date) = $${params.length}`;
+    }
+
+    if (client_id && client_id !== 'null') {
+      params.push(client_id);
+      query += ` AND p.client_id = $${params.length}`;
+    }
+
+    query += ' ORDER BY p.post_date ASC, p.post_time ASC';
+    const { rows } = await pool.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  if (client_id && client_id !== 'null') {
-    params.push(client_id);
-    query += ` AND p.client_id = $${params.length}`;
-  }
-
-  query += ' ORDER BY p.post_date ASC, p.post_time ASC';
-  const { rows } = await pool.query(query, params);
-  res.json(rows);
 });
 
 app.post('/api/posts', async (req, res) => {
@@ -311,9 +456,8 @@ app.put('/api/posts/:id', async (req, res) => {
   }
 });
 
-// Post approval by client owner
 app.put('/api/posts/:id/approve', async (req, res) => {
-  const { approved } = req.body; // true = approve, false = reject
+  const { approved } = req.body;
   const approvalStatus = approved ? 'approved' : 'rejected';
   try {
     const { rows } = await pool.query(
@@ -326,7 +470,6 @@ app.put('/api/posts/:id/approve', async (req, res) => {
   }
 });
 
-// Get posts pending approval for a client owner
 app.get('/api/posts/pending-approval', async (req, res) => {
   const { client_id } = req.query;
   try {
@@ -353,31 +496,32 @@ app.get('/api/posts/pending-approval', async (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/tasks', async (req, res) => {
   const { role, client_id, user_id } = req.query;
-  let query = `SELECT t.*, 
-               u.name as assignee_name, 
-               c.name as client_name,
-               cb.name as creator_name
-               FROM tasks t
-               LEFT JOIN users u ON t.assigned_to = u.id
-               LEFT JOIN clients c ON t.client_id = c.id
-               LEFT JOIN users cb ON t.created_by = cb.id
-               WHERE 1=1`;
-  const params = [];
+  try {
+    let query = `SELECT t.*, 
+                 u.name as assignee_name, 
+                 c.name as client_name,
+                 cb.name as creator_name
+                 FROM tasks t
+                 LEFT JOIN users u ON t.assigned_to = u.id
+                 LEFT JOIN clients c ON t.client_id = c.id
+                 LEFT JOIN users cb ON t.created_by = cb.id
+                 WHERE 1=1`;
+    const params = [];
 
-  if (role === 'client_owner' && client_id) {
-    // Client owners see tasks they created
-    params.push(client_id);
-    query += ` AND t.client_id = $${params.length}`;
-  } else if (role === 'user' && user_id) {
-    // Users see tasks assigned to them
-    params.push(user_id);
-    query += ` AND t.assigned_to = $${params.length}`;
+    if (role === 'client_owner' && client_id) {
+      params.push(client_id);
+      query += ` AND t.client_id = $${params.length}`;
+    } else if (role === 'user' && user_id) {
+      params.push(user_id);
+      query += ` AND t.assigned_to = $${params.length}`;
+    }
+
+    query += ' ORDER BY t.created_at DESC';
+    const { rows } = await pool.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  // Admins see all tasks (no filter)
-
-  query += ' ORDER BY t.created_at DESC';
-  const { rows } = await pool.query(query, params);
-  res.json(rows);
 });
 
 app.post('/api/tasks', async (req, res) => {
@@ -414,7 +558,6 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// Task Comments (feedback)
 app.get('/api/tasks/:id/comments', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -449,7 +592,7 @@ app.post('/api/tasks/:id/comments', async (req, res) => {
 //  FRONTEND & SERVER
 // ─────────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
