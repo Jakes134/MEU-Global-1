@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -181,7 +181,7 @@
     .nav-badge {
       position: absolute; top: 5px; right: 5px; width: 8px; height: 8px;
       background: var(--red); border-radius: 50%;
-      border: 1.5px solid var(--sidebar-bg);
+      border: 1.5 solid var(--sidebar-bg);
     }
 
     /* ══ CLIENT PANEL ══ */
@@ -811,6 +811,16 @@
   </div>
 </div>
 
+<!-- DAY PLANS MODAL -->
+<div class="modal-backdrop" id="day-plans-modal-backdrop">
+  <div class="modal">
+    <div class="modal-head"><h2 id="day-plans-title">Day Plans</h2><button class="modal-close" onclick="closeDayPlans()">&#x2715;</button></div>
+    <div id="day-plans-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div id="day-plans-empty" style="display:none;padding:20px;text-align:center;color:var(--ink3);font-size:14px;">No posts planned for this day.</div>
+    <button class="btn btn-dark btn-full" style="margin-top:20px" onclick="closeDayPlans();openPostModal(currentDayPlanDate)">+ Add Post For This Day</button>
+  </div>
+</div>
+
 <!-- TASK MODAL -->
 <div class="modal-backdrop" id="task-modal-backdrop">
   <div class="modal">
@@ -949,9 +959,9 @@
 //  STATE
 // ════════════════════════════════
 let session = { userId:null, name:null, role:null, client_id:null, email:null };
-let allClients = [], allTasksCache = [];
+let allClients = [], allTasksCache = [], allPostsCache = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
-let activeClientFilter = null, currentPostDetail = null;
+let activeClientFilter = null, currentPostDetail = null, currentDayPlanDate = null;
 let currentTaskFilter = 'all', dashTaskTab = 'new';
 let miniLineChart = null, productsChart = null;
 const VIEW_TITLES = { dash:'Dashboard', calendar:'Calendar', tasks:'Tasks', approvals:'Approvals', customers:'Customers' };
@@ -1217,6 +1227,7 @@ async function renderCalendar() {
   const cid=session.role==='client_owner'?session.client_id:(document.getElementById('cal-client-filter').value||activeClientFilter||'');
   let posts=[];
   try{let url=`/api/posts?month=${calMonth+1}&year=${calYear}`;if(cid)url+=`&client_id=${cid}`;posts=await fetch(url).then(r=>r.json());}catch(e){}
+  allPostsCache = posts;
 
   ['cal-grid','cal-grid-full'].forEach(gridId=>{
     const grid=document.getElementById(gridId); if(!grid) return;
@@ -1230,11 +1241,44 @@ async function renderCalendar() {
       const dp=posts.filter(p=>p.post_date&&p.post_date.startsWith(ds));
       const chips=dp.map(p=>{const ah=p.approval_status?`<span class="chip-approval ${p.approval_status}">${p.approval_status==='pending'?'⏳':p.approval_status==='approved'?'✓':'✕'}</span>`:'';return`<div class="post-chip ${p.status}" onclick="event.stopPropagation();openPostDetail(${JSON.stringify(JSON.stringify(p))})"><span style="overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0">${p.title}</span>${ah}</div>`;}).join('');
       let cls='cal-cell';if(it)cls+=' today';else if(iw)cls+=' weekend';
-      grid.innerHTML+=`<div class="${cls}" onclick="openPostModal('${ds}')"><div class="cal-date">${d}</div>${chips}</div>`;
+      grid.innerHTML+=`<div class="${cls}" onclick="showDayPlans('${ds}')"><div class="cal-date">${d}</div>${chips}</div>`;
     }
     const rem=(so+dim)%7;
     if(rem>0) for(let i=0;i<7-rem;i++) grid.innerHTML+=`<div class="cal-cell other-month"></div>`;
   });
+}
+
+function showDayPlans(date) {
+  currentDayPlanDate = date;
+  const posts = allPostsCache.filter(p => p.post_date && p.post_date.startsWith(date));
+  const listEl = document.getElementById('day-plans-list');
+  const emptyEl = document.getElementById('day-plans-empty');
+  
+  document.getElementById('day-plans-title').textContent = 'Plans for ' + new Date(date).toLocaleDateString('default', { month:'long', day:'numeric', year:'numeric' });
+  
+  if (posts.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+  } else {
+    emptyEl.style.display = 'none';
+    listEl.innerHTML = posts.map(p => `
+      <div class="stat-card" style="cursor:pointer; padding:12px;" onclick="closeDayPlans(); openPostDetail(${JSON.stringify(JSON.stringify(p))})">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-weight:600; font-size:14px;">${p.title}</div>
+          <span class="badge badge-${p.status}">${p.status}</span>
+        </div>
+        <div style="font-size:12px; color:var(--ink3); margin-top:4px;">
+          ${p.client_name ? p.client_name + ' · ' : ''}${p.post_time || 'No time set'}
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('day-plans-modal-backdrop').classList.add('open');
+}
+
+function closeDayPlans() {
+  document.getElementById('day-plans-modal-backdrop').classList.remove('open');
 }
 
 // ════════════════════════════════
@@ -1299,7 +1343,7 @@ async function loadPendingApprovals(){
   </div>`).join('')+'</div>';
 }
 async function approvePostById(id,approved){
-  const r=await fetch(`/api/posts/${id}/approve`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved})});
+  const r=await fetch(`/api/posts/${id}/approve",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({approved})});
   if(r.ok){toast(approved?'Approved!':'Rejected.',approved?'ok':'err');loadPendingApprovals();renderCalendar();}
   else toast('Action failed.','err');
 }
