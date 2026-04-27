@@ -87,7 +87,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 5. Posts Table (Updated with ON DELETE SET NULL for users)
+    // 5. Posts Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
@@ -105,7 +105,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 6. Tasks Table (Updated with ON DELETE SET NULL for users)
+    // 6. Tasks Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
@@ -119,7 +119,7 @@ app.get('/setup-db', async (req, res) => {
       );
     `);
 
-    // 7. Task Comments Table (Updated with ON DELETE SET NULL for users)
+    // 7. Task Comments Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS task_comments (
         id SERIAL PRIMARY KEY,
@@ -129,6 +129,23 @@ app.get('/setup-db', async (req, res) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // ─────────────────────────────────────────────────────────────────
+    //  CONSTRAINT MIGRATION (Ensures existing tables allow user deletion)
+    // ─────────────────────────────────────────────────────────────────
+    // Posts
+    await pool.query(`ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_created_by_fkey;`);
+    await pool.query(`ALTER TABLE posts ADD CONSTRAINT posts_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;`);
+    
+    // Tasks
+    await pool.query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey;`);
+    await pool.query(`ALTER TABLE tasks ADD CONSTRAINT tasks_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL;`);
+    await pool.query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_created_by_fkey;`);
+    await pool.query(`ALTER TABLE tasks ADD CONSTRAINT tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;`);
+
+    // Task Comments
+    await pool.query(`ALTER TABLE task_comments DROP CONSTRAINT IF EXISTS task_comments_user_id_fkey;`);
+    await pool.query(`ALTER TABLE task_comments ADD CONSTRAINT task_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;`);
 
     // Seed Admin if needed
     const { rows } = await pool.query('SELECT COUNT(*) FROM users');
@@ -142,7 +159,7 @@ app.get('/setup-db', async (req, res) => {
       );
     }
 
-    res.send('<pre>✅ Database is synchronized with all features enabled. User deletion fixed.</pre>');
+    res.send('<pre>✅ Database is synchronized. Constraint migration complete: you can now delete users without restriction.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ Setup failed:\n' + err.message + '</pre>');
@@ -193,7 +210,6 @@ app.post('/api/change-password', async (req, res) => {
 // ─────────────────────────────────────────────
 //  ADMIN USER MANAGEMENT
 // ─────────────────────────────────────────────
-
 app.post('/api/admin/add-user', async (req, res) => {
   const { name, email, role, client_id, password } = req.body;
   if (!name || !email) return res.status(400).json({ error: 'Name and Email are required.' });
@@ -229,7 +245,6 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
-    // Due to ON DELETE SET NULL on related tables, this will now succeed
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
@@ -314,6 +329,7 @@ app.post('/api/products', async (req, res) => {
     );
     res.json(rows[0]);
   } catch (err) {
+    console.error('Product save error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -582,7 +598,7 @@ app.post('/api/tasks/:id/comments', async (req, res) => {
 //  FRONTEND & SERVER
 // ─────────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
