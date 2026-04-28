@@ -9,7 +9,6 @@ const port = process.env.PORT || 8080;
 
 app.set('trust proxy', 1);
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // ─────────────────────────────────────────────
 //  DATABASE
@@ -153,7 +152,7 @@ app.get('/setup-db', async (req, res) => {
       );
     }
 
-    res.send('<pre>✅ Database fully migrated (rejection_reason, due_date, pending_approval).</pre>');
+    res.send('<pre>✅ Database fully migrated.</pre>');
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).send('<pre>❌ ' + err.message + '</pre>');
@@ -186,7 +185,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-//  ADMIN – USERS
+//  ADMIN - USERS
 // ─────────────────────────────────────────────
 app.post('/api/admin/add-user', async (req, res) => {
   const { name, email, role, client_id, password } = req.body;
@@ -237,8 +236,16 @@ app.get('/api/users/assignable', async (req, res) => {
 //  CLIENTS
 // ─────────────────────────────────────────────
 app.get('/api/clients', async (req, res) => {
+  const { role, client_id } = req.query;
   try {
-    const { rows } = await pool.query('SELECT * FROM clients ORDER BY name ASC');
+    let q = 'SELECT * FROM clients';
+    let p = [];
+    if (role !== 'admin' && client_id && client_id !== 'null') {
+      q += ' WHERE id = $1';
+      p.push(client_id);
+    }
+    q += ' ORDER BY name ASC';
+    const { rows } = await pool.query(q, p);
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -272,7 +279,7 @@ app.get('/api/products', async (req, res) => {
   const { client_id } = req.query;
   try {
     let q = 'SELECT * FROM products', p = [];
-    if (client_id) { q += ' WHERE client_id=$1'; p.push(client_id); }
+    if (client_id && client_id !== 'null') { q += ' WHERE client_id=$1'; p.push(client_id); }
     const { rows } = await pool.query(q + ' ORDER BY name ASC', p);
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -299,7 +306,7 @@ app.get('/api/end-customers', async (req, res) => {
     let q = `SELECT ec.*, p.name as product_name, p.price as product_price, p.billing_type
              FROM end_customers ec LEFT JOIN products p ON ec.product_id = p.id WHERE 1=1`;
     const p = [];
-    if (client_id) { q += ' AND ec.client_id=$1'; p.push(client_id); }
+    if (client_id && client_id !== 'null') { q += ' AND ec.client_id=$1'; p.push(client_id); }
     const { rows } = await pool.query(q + ' ORDER BY ec.sign_up_date DESC', p);
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -333,13 +340,13 @@ app.put('/api/end-customers/:id', async (req, res) => {
 app.get('/api/stats/dashboard', async (req, res) => {
   const { client_id } = req.query;
   try {
-    const p = client_id ? [client_id] : [];
-    const f = client_id ? ' WHERE client_id=$1' : '';
+    const p = client_id && client_id !== 'null' ? [client_id] : [];
+    const f = client_id && client_id !== 'null' ? ' WHERE client_id=$1' : '';
     const stages   = await pool.query(`SELECT status, count(*) FROM end_customers${f} GROUP BY status`, p);
     const products = await pool.query(
       `SELECT p.name, count(ec.id) as count FROM products p
        JOIN end_customers ec ON ec.product_id=p.id
-       ${client_id ? ' WHERE p.client_id=$1' : ''}
+       ${client_id && client_id !== 'null' ? ' WHERE p.client_id=$1' : ''}
        GROUP BY p.name ORDER BY count DESC LIMIT 5`, p
     );
     res.json({ stages: stages.rows, products: products.rows });
@@ -385,17 +392,17 @@ app.post('/api/posts', async (req, res) => {
 app.put('/api/posts/:id', async (req, res) => {
   const { title, caption, platforms, post_date, post_time, status } = req.body;
   try {
-    // Editing a post resets approval to pending
+    // Editing a post resets approval to pending and is_approved to FALSE
     const { rows } = await pool.query(
       `UPDATE posts SET title=$1, caption=$2, platforms=$3, post_date=$4, post_time=$5,
-       status=$6, approval_status='pending', rejection_reason=NULL WHERE id=$7 RETURNING *`,
+       status=$6, approval_status='pending', is_approved=FALSE, rejection_reason=NULL WHERE id=$7 RETURNING *`,
       [title, caption, platforms, post_date, post_time||null, status, req.params.id]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Only client_owners can approve/reject posts (enforced in frontend; also validated here by approval_status logic)
+// Only client_owners can approve/reject posts
 app.put('/api/posts/:id/approve', async (req, res) => {
   const { approved, rejection_reason } = req.body;
   const approvalStatus = approved ? 'approved' : 'rejected';
@@ -417,7 +424,7 @@ app.get('/api/posts/pending-approval', async (req, res) => {
                  LEFT JOIN users u ON p.created_by=u.id
                  WHERE p.approval_status='pending'`;
     const params = [];
-    if (client_id) { params.push(client_id); query += ` AND p.client_id=$${params.length}`; }
+    if (client_id && client_id !== 'null') { params.push(client_id); query += ` AND p.client_id=$${params.length}`; }
     query += ' ORDER BY p.created_at DESC';
     const { rows } = await pool.query(query, params);
     res.json(rows);
@@ -442,17 +449,13 @@ app.get('/api/tasks', async (req, res) => {
     const params = [];
 
     if (role === 'client_owner' && user_id) {
-      // Client owners see ONLY tasks they created
       params.push(user_id);
       query += ` AND t.created_by=$${params.length}`;
     } else if (role === 'user' && user_id) {
-      // Regular creators see tasks assigned to them
       params.push(user_id);
       query += ` AND t.assigned_to=$${params.length}`;
     }
-    // admins see all
 
-    // Calendar filter: tasks due in a specific month/year
     if (due_month && due_year) {
       params.push(due_year, due_month);
       query += ` AND t.due_date IS NOT NULL
@@ -479,7 +482,6 @@ app.post('/api/tasks', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Status update – 'done' is BLOCKED; must use /approve
 app.put('/api/tasks/:id/status', async (req, res) => {
   const { status } = req.body;
   if (status === 'done') {
@@ -491,7 +493,6 @@ app.put('/api/tasks/:id/status', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Task completion approval – creator approves or sends back
 app.put('/api/tasks/:id/approve', async (req, res) => {
   const { approved, feedback, reviewer_id } = req.body;
   const newStatus = approved ? 'done' : 'pending';
@@ -514,7 +515,6 @@ app.delete('/api/tasks/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Task comments
 app.get('/api/tasks/:id/comments', async (req, res) => {
   try {
     const { rows } = await pool.query(
