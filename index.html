@@ -417,7 +417,7 @@
   <!-- CLIENT PANEL -->
   <div class="client-panel" id="client-panel">
     <div class="client-panel-head"><h3>Filter by Client</h3><p>Filter calendar and stats</p></div>
-    <input class="client-search" placeholder="Search clientsâ¦" oninput="filterClients(this.value)">
+    <input class="client-search" placeholder="Search clients..." oninput="filterClients(this.value)">
     <div class="client-list-scroll" id="client-list-panel"></div>
     <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm btn-full" onclick="selectClient(null)">All Clients</button>
@@ -457,7 +457,7 @@
             <div class="task-tab" onclick="setDashTab('review',this)">REVIEW <span class="task-count" id="dash-tab-review-count">(0)</span></div>
             <div class="task-tab" onclick="setDashTab('done',this)">DONE <span class="task-count" id="dash-tab-done-count">(0)</span></div>
           </div>
-          <div class="task-mini-list" id="dash-task-list"><div style="font-size:12px;color:var(--ink3)">Loadingâ¦</div></div>
+          <div class="task-mini-list" id="dash-task-list"><div style="font-size:12px;color:var(--ink3)">Loading...</div></div>
         </div>
       </div>
       <div class="cal-toolbar">
@@ -486,7 +486,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>Customer</th><th>Product</th><th>Stage</th><th>Pricing</th><th>Action</th></tr></thead>
-          <tbody id="customer-table-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--ink3)">Loadingâ¦</td></tr></tbody>
+          <tbody id="customer-table-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--ink3)">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -517,13 +517,13 @@
           <button class="btn btn-dark btn-sm" id="add-task-btn"      onclick="openTaskModal()"       style="display:none">+ New Task</button>
         </div>
       </div>
-      <div class="task-grid" id="task-list"><div class="empty-state"><p>Loadingâ¦</p></div></div>
+      <div class="task-grid" id="task-list"><div class="empty-state"><p>Loading...</p></div></div>
     </div>
 
     <!-- APPROVALS -->
     <div class="view" id="view-approvals">
       <div class="section-header"><span class="section-title">Post Approvals</span></div>
-      <div id="approvals-list"><div class="empty-state"><p>Loadingâ¦</p></div></div>
+      <div id="approvals-list"><div class="empty-state"><p>Loading...</p></div></div>
     </div>
   </div>
 
@@ -536,7 +536,7 @@
   </nav>
 </div>
 
-<!-- ââ MODALS ââ -->
+<!-- Ã¢â¢ Ã¢â¢  MODALS Ã¢â¢ Ã¢â¢  -->
 
 <!-- DAY PLANS -->
 <div class="modal-backdrop" id="day-plans-modal-backdrop">
@@ -553,7 +553,7 @@
   <div class="modal">
     <div class="modal-head"><h2 id="post-modal-title">Create Post</h2><button class="modal-close" onclick="closePostModal()">&#x2715;</button></div>
     <div class="field"><label>Title / Campaign</label><input type="text" id="m-title" placeholder="e.g. Summer Launch Campaign"></div>
-    <div class="field"><label>Caption</label><textarea id="m-caption" rows="3" placeholder="Write your post copyâ¦"></textarea></div>
+    <div class="field"><label>Caption</label><textarea id="m-caption" rows="3" placeholder="Write your post copy..."></textarea></div>
     <div class="two-col">
       <div class="field"><label>Date</label><input type="date" id="m-date"></div>
       <div class="field"><label>Time (optional)</label><input type="time" id="m-time"></div>
@@ -583,7 +583,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
       <span id="pd-status-badge" class="badge"></span>
       <span id="pd-approval-badge" class="badge" style="display:none"></span>
-      <button id="pd-edit-btn" class="btn btn-ghost btn-sm" style="display:none;margin-left:auto" onclick="editCurrentPost()">â Edit Post</button>
+      <button id="pd-edit-btn" class="btn btn-ghost btn-sm" style="display:none;margin-left:auto" onclick="editCurrentPost()">â Edit Post</button>
     </div>
     <!-- Rejection reason (visible to creator when rejected) -->
     <div id="pd-rejection-box" class="rejection-box" style="display:none">
@@ -616,7 +616,7 @@
   <div class="modal">
     <div class="modal-head"><h2>Reject Post</h2><button class="modal-close" onclick="closeRejectModal()">&#x2715;</button></div>
     <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">Please provide a reason so the creator can revise the post.</p>
-    <div class="field"><label>Rejection Reason</label><textarea id="reject-reason-input" rows="3" placeholder="e.g. The caption needs to be shorter and the tone adjusted for our brandâ¦"></textarea></div>
+    <div class="field"><label>Rejection Reason</label><textarea id="reject-reason-input" rows="3" placeholder="e.g. The caption needs to be shorter and the tone adjusted for our brand..."></textarea></div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn btn-ghost btn-sm" onclick="closeRejectModal()">Cancel</button>
       <button class="btn btn-red btn-sm" style="flex:1" onclick="submitRejection()">&#10005; Confirm Rejection</button>
@@ -629,7 +629,7 @@
   <div class="modal">
     <div class="modal-head"><h2>New Task</h2><button class="modal-close" onclick="closeTaskModal()">&#x2715;</button></div>
     <div class="field"><label>Task Title</label><input type="text" id="t-title" placeholder="e.g. Write Q2 captions"></div>
-    <div class="field"><label>Description</label><textarea id="t-desc" rows="3" placeholder="Task detailsâ¦"></textarea></div>
+    <div class="field"><label>Description</label><textarea id="t-desc" rows="3" placeholder="Task details..."></textarea></div>
     <div class="two-col">
       <div class="field"><label>Assign To</label><select id="t-assign"><option value="">Unassigned</option></select></div>
       <div class="field"><label>Due Date</label><input type="date" id="t-due-date"></div>
@@ -644,7 +644,7 @@
   <div class="modal">
     <div class="modal-head"><h2>Send Task Back</h2><button class="modal-close" onclick="closeSendbackModal()">&#x2715;</button></div>
     <p style="font-size:13px;color:var(--ink2);margin-bottom:16px">Explain what needs to be revised before the task can be completed.</p>
-    <div class="field"><label>Feedback</label><textarea id="sendback-input" rows="3" placeholder="e.g. The design needs to match the brand guidelinesâ¦"></textarea></div>
+    <div class="field"><label>Feedback</label><textarea id="sendback-input" rows="3" placeholder="e.g. The design needs to match the brand guidelines..."></textarea></div>
     <input type="hidden" id="sendback-task-id">
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn btn-ghost btn-sm" onclick="closeSendbackModal()">Cancel</button>
@@ -758,7 +758,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// âââ STATE âââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ STATE Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 let session     = { userId:null, name:'', role:null, client_id:null, email:'' };
 let allClients  = [], allTasksCache = [], allPostsCache = [];
 let calYear     = new Date().getFullYear();
@@ -773,14 +773,14 @@ let miniLineChart      = null;
 let productsChart      = null;
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// âââ TOAST âââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ TOAST Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function toast(msg, type='') {
   const el = document.getElementById('toast');
   el.textContent = msg; el.className = 'toast show ' + type;
   clearTimeout(el._t); el._t = setTimeout(() => el.className='toast', 3400);
 }
 
-// âââ UTILS âââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ UTILS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function escHtml(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function dueDateClass(dueDateStr) {
@@ -806,12 +806,12 @@ function parsePlatforms(platforms) {
   return String(platforms).replace(/{|}/g,'').split(',').filter(Boolean);
 }
 
-// âââ AUTH âââââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ AUTH Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function doLogin() {
   const email=document.getElementById('l-email').value.trim(), pass=document.getElementById('l-pass').value;
   const errEl=document.getElementById('auth-error'); errEl.style.display='none';
   if(!email||!pass){errEl.textContent='Email and password required.';errEl.style.display='block';return;}
-  const btn=document.getElementById('login-btn'); btn.textContent='Signing inâ¦'; btn.disabled=true;
+  const btn=document.getElementById('login-btn'); btn.textContent='Signing inÃ¢â¬Â¦'; btn.disabled=true;
   try {
     const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
     const d=await res.json();
@@ -840,13 +840,13 @@ async function changeMyPassword() {
 
 function doSignOut(){location.reload();}
 
-// âââ LAUNCH âââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ LAUNCH Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function launchApp(){document.getElementById('app').style.display='flex';setupRoleUI();loadInitialData();}
 
 function setupRoleUI() {
   document.getElementById('sidebar-name-label').textContent=(session.name||'').split(' ')[0].toUpperCase();
   document.getElementById('user-initials').textContent=(session.name||'?')[0].toUpperCase();
-  document.getElementById('session-info').innerHTML=`<div style="font-weight:700">${escHtml(session.name)}</div><div style="font-size:12px;color:var(--ink3);margin-top:3px">${escHtml(session.email)} Â· ${session.role}</div>`;
+  document.getElementById('session-info').innerHTML=`<div style="font-weight:700">${escHtml(session.name)}</div><div style="font-size:12px;color:var(--ink3);margin-top:3px">${escHtml(session.email)} ÃÂ· ${session.role}</div>`;
 
   if(session.role==='admin'){
     document.getElementById('tab-users').style.display='block';
@@ -869,11 +869,11 @@ function setupRoleUI() {
   }
 }
 
-// âââ INITIAL DATA âââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ INITIAL DATA Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function loadInitialData(){await loadClients();await Promise.all([renderCalendar(),loadTasks()]);updateDashStats();}
 
 async function loadClients(){
-  try{allClients=await fetch('/api/clients').then(r=>r.json());}catch(e){allClients=[];}
+  try{allClients=await fetch(`/api/clients?role=${session.role}&client_id=${session.client_id||''}`).then(r=>r.json());}catch(e){allClients=[];}
   populateClientDropdowns();renderClientPanelList();
 }
 
@@ -882,7 +882,7 @@ function populateClientDropdowns(){
   ['m-client','nu-client','ec-client','prod-client-filter','t-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
 }
 
-// âââ CLIENT PANEL âââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ CLIENT PANEL Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function renderClientPanelList(filter=''){
   const list=document.getElementById('client-list-panel');
   const f=allClients.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
@@ -892,7 +892,7 @@ function filterClients(val){renderClientPanelList(val);}
 function selectClient(id){activeClientFilter=id;document.getElementById('client-panel').classList.remove('open');renderClientPanelList();renderCalendar();updateDashStats();}
 function handleLogoClick(){document.getElementById('client-panel').classList.toggle('open');}
 
-// âââ VIEW SWITCHING âââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ VIEW SWITCHING Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 const VIEW_LABELS={dash:'Dashboard',calendar:'Calendar',tasks:'Tasks',approvals:'Approvals',customers:'Customers'};
 function showView(v){
   document.getElementById('client-panel').classList.remove('open');
@@ -910,13 +910,13 @@ function showView(v){
   if(v==='customers') loadEndCustomers();
 }
 
-// âââ CALENDAR âââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ CALENDAR Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function renderCalendar(){
   const label=`${MONTHS[calMonth]} ${calYear}`;
   document.getElementById('cal-label-dash').textContent=label;
   document.getElementById('cal-label-full').textContent=label;
 
-  const qs=`month=${calMonth+1}&year=${calYear}${activeClientFilter?'&client_id='+activeClientFilter:''}`;
+  let cId = activeClientFilter; if (!cId && session.role !== 'admin') cId = session.client_id; const qs=`month=${calMonth+1}&year=${calYear}${cId ? '&client_id='+cId : ''}`;
   let posts=[],tasks=[];
   try{
     [posts,tasks]=await Promise.all([
@@ -973,7 +973,7 @@ async function renderCalendar(){
 function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
 function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
-// âââ DAY PLANS ââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ DAY PLANS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function showDayPlans(date){
   currentDayPlanDate=date;
   const [y,m,d]=date.split('-').map(Number);
@@ -986,8 +986,8 @@ function showDayPlans(date){
   if(!dp.length&&!dt.length){list.innerHTML='';empty.style.display='block';}
   else{
     empty.style.display='none';
-    const postHtml=dp.map(p=>`<div class="approval-card" style="cursor:pointer" onclick="closeDayPlans();openPostDetail(${p.id})"><div class="approval-card-info"><div class="approval-card-title">ð ${escHtml(p.title)}</div><div class="approval-card-meta">${escHtml(p.client_name||'â')}${p.post_time?' Â· '+p.post_time.substring(0,5):''}</div>${p.caption?`<div style="margin-top:5px;font-size:12px;color:var(--ink2)">${escHtml(p.caption.substring(0,80))}${p.caption.length>80?'â¦':''}</div>`:''}</div><div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0"><span class="badge badge-${p.status}">${p.status}</span>${p.approval_status&&p.approval_status!=='pending'?`<span class="badge badge-${p.approval_status}">${p.approval_status}</span>`:''}</div></div>`).join('');
-    const taskHtml=dt.map(t=>{const dc=dueDateClass(t.due_date);return`<div class="approval-card" style="cursor:pointer" onclick="closeDayPlans();openTaskDetail(${t.id})"><div class="approval-card-info"><div class="approval-card-title">â ${escHtml(t.title)}</div><div class="approval-card-meta">Due today Â· ${escHtml(t.assignee_name||'Unassigned')}</div></div><span class="badge badge-${t.status}">${t.status}</span></div>`}).join('');
+    const postHtml=dp.map(p=>`<div class="approval-card" style="cursor:pointer" onclick="closeDayPlans();openPostDetail(${p.id})"><div class="approval-card-info"><div class="approval-card-title">ð ${escHtml(p.title)}</div><div class="approval-card-meta">${escHtml(p.client_name||'â')}${p.post_time?' ÃÂ· '+p.post_time.substring(0,5):''}</div>${p.caption?`<div style="margin-top:5px;font-size:12px;color:var(--ink2)">${escHtml(p.caption.substring(0,80))}${p.caption.length>80?'Ã¢â¬Â¦':''}</div>`:''}</div><div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0"><span class="badge badge-${p.status}">${p.status}</span>${p.approval_status&&p.approval_status!=='pending'?`<span class="badge badge-${p.approval_status}">${p.approval_status}</span>`:''}</div></div>`).join('');
+    const taskHtml=dt.map(t=>{const dc=dueDateClass(t.due_date);return`<div class="approval-card" style="cursor:pointer" onclick="closeDayPlans();openTaskDetail(${t.id})"><div class="approval-card-info"><div class="approval-card-title">â ${escHtml(t.title)}</div><div class="approval-card-meta">Due today ÃÂ· ${escHtml(t.assignee_name||'Unassigned')}</div></div><span class="badge badge-${t.status}">${t.status}</span></div>`}).join('');
     list.innerHTML=postHtml+taskHtml;
   }
   document.getElementById('day-plans-modal-backdrop').classList.add('open');
@@ -1005,7 +1005,7 @@ function openTaskDetail(id){
   },300);
 }
 
-// âââ POSTS ââââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ POSTS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function openPostModal(date){
   editingPostId=null;
   document.getElementById('post-modal-title').textContent='Create Post';
@@ -1027,7 +1027,7 @@ function openPostEdit(post){
   document.getElementById('m-date').value=(post.post_date||'').substring(0,10);
   document.getElementById('m-time').value=post.post_time?post.post_time.substring(0,5):'';
   document.getElementById('m-status').value=post.status||'draft';
-  if(post.client_id) document.getElementById('m-client').value=post.client_id;
+  if(post.client_id) const cs=document.getElementById('m-client');if(cs.querySelector(`option[value="${post.client_id}"]`))cs.value=post.client_id;
   const platforms=parsePlatforms(post.platforms);
   document.querySelectorAll('[name="platform"]').forEach(cb=>cb.checked=platforms.includes(cb.value));
   document.getElementById('post-modal-backdrop').classList.add('open');
@@ -1042,7 +1042,7 @@ async function savePost(){
   if(!post_date) return toast('Date is required','err');
   const platforms=[...document.querySelectorAll('[name="platform"]:checked')].map(cb=>cb.value);
   const data={title,caption:document.getElementById('m-caption').value,post_date,post_time:document.getElementById('m-time').value||null,client_id:document.getElementById('m-client').value||null,status:document.getElementById('m-status').value,platforms,created_by:session.userId};
-  const btn=document.getElementById('post-save-btn');btn.disabled=true;btn.textContent='Savingâ¦';
+  const btn=document.getElementById('post-save-btn');btn.disabled=true;btn.textContent='SavingÃ¢â¬Â¦';
   try{
     const r=await fetch(editingPostId?`/api/posts/${editingPostId}`:'/api/posts',{method:editingPostId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(r.ok){closePostModal();closePostDetail();await renderCalendar();toast(editingPostId?'Post updated!':'Post created!','ok');}
@@ -1050,10 +1050,10 @@ async function savePost(){
   }finally{btn.disabled=false;btn.textContent=editingPostId?'Update Post':'Save Post';}
 }
 
-// âââ POST DETAIL ââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ POST DETAIL Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function openPostDetail(id){
   const post=allPostsCache.find(p=>p.id===id);
-  if(!post){toast('Post not found â refresh the page','err');return;}
+  if(!post){toast('Post not found Ã¢â¬â refresh the page','err');return;}
   currentPostDetail=post;
 
   document.getElementById('pd-title').textContent=post.title;
@@ -1084,7 +1084,7 @@ function openPostDetail(id){
 
   // Creator (any role) can always edit their own post; admin can edit any post
   const editBtn=document.getElementById('pd-edit-btn');
-  editBtn.style.display=(session.role==='admin'||post.created_by===session.userId)?'inline-flex':'none';
+  editBtn.style.display=(session.role==='admin'||post.created_by==session.userId)&&post.approval_status!=='approved'?'inline-flex':'none';
 
   document.getElementById('post-detail-backdrop').classList.add('open');
 }
@@ -1111,7 +1111,7 @@ async function submitRejection(){
   else toast('Error rejecting post','err');
 }
 
-// âââ APPROVALS ââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ APPROVALS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function loadApprovals(){
   // Only client_owners see approvals (and only for their client)
   if(session.role!=='client_owner') return; // admins don't approve posts
@@ -1123,7 +1123,7 @@ async function loadApprovals(){
   posts.forEach(p=>{if(!allPostsCache.find(x=>x.id===p.id))allPostsCache.push(p);});
   const el=document.getElementById('approvals-list');
   if(!posts.length){el.innerHTML='<div class="empty-state"><p>No posts awaiting your approval. ð</p></div>';return;}
-  el.innerHTML=`<div class="approval-list">${posts.map(p=>`<div class="approval-card"><div class="approval-card-info"><div class="approval-card-title">${escHtml(p.title)}</div><div class="approval-card-meta">${escHtml(p.client_name||'â')} Â· ${(p.post_date||'').substring(0,10)} Â· by ${escHtml(p.creator_name||'â')}</div>${p.caption?`<div style="margin-top:5px;font-size:12px;color:var(--ink2)">${escHtml(p.caption.substring(0,120))}${p.caption.length>120?'â¦':''}</div>`:''}</div><div class="approval-card-actions"><button class="btn btn-ghost btn-sm" onclick="openPostDetail(${p.id})">View</button><button class="btn btn-green btn-sm" onclick="quickApprove(${p.id},true)">&#10003;</button><button class="btn btn-red btn-sm" onclick="quickReject(${p.id})">&#10005;</button></div></div>`).join('')}</div>`;
+  el.innerHTML=`<div class="approval-list">${posts.map(p=>`<div class="approval-card"><div class="approval-card-info"><div class="approval-card-title">${escHtml(p.title)}</div><div class="approval-card-meta">${escHtml(p.client_name||'â')} ÃÂ· ${(p.post_date||'').substring(0,10)} ÃÂ· by ${escHtml(p.creator_name||'â')}</div>${p.caption?`<div style="margin-top:5px;font-size:12px;color:var(--ink2)">${escHtml(p.caption.substring(0,120))}${p.caption.length>120?'Ã¢â¬Â¦':''}</div>`:''}</div><div class="approval-card-actions"><button class="btn btn-ghost btn-sm" onclick="openPostDetail(${p.id})">View</button><button class="btn btn-green btn-sm" onclick="quickApprove(${p.id},true)">&#10003;</button><button class="btn btn-red btn-sm" onclick="quickReject(${p.id})">&#10005;</button></div></div>`).join('')}</div>`;
 }
 
 async function quickApprove(id,approved){
@@ -1137,7 +1137,7 @@ function quickReject(id){
   if(post){currentPostDetail=post;openRejectModal();}
 }
 
-// âââ TASKS ââââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ TASKS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function loadTasks(){
   const params=new URLSearchParams({role:session.role});
   if(session.client_id) params.append('client_id',session.client_id);
@@ -1198,7 +1198,7 @@ function renderTasks(){
       </div>
       ${t.description?`<div class="task-desc">${escHtml(t.description)}</div>`:''}
       ${dueHtml}
-      <div class="task-meta">ð¤ ${escHtml(t.assignee_name||'Unassigned')}${t.client_name?' Â· '+escHtml(t.client_name):''}${t.creator_name?' Â· by '+escHtml(t.creator_name):''}</div>
+      <div class="task-meta">ð¤ ${escHtml(t.assignee_name||'Unassigned')}${t.client_name?' ÃÂ· '+escHtml(t.client_name):''}${t.creator_name?' ÃÂ· by '+escHtml(t.creator_name):''}</div>
       ${approvalBar}
       <div class="task-actions">
         ${t.status!=='done'?dropdownHtml:'<span class="badge badge-done">Done â</span>'}
@@ -1208,7 +1208,7 @@ function renderTasks(){
       <div class="task-comments-area">
         <div id="comments-${t.id}"></div>
         <div class="comment-input-row">
-          <input placeholder="Add a commentâ¦" id="comment-input-${t.id}" onkeydown="if(event.key==='Enter')addComment(${t.id})">
+          <input placeholder="Add a comment..." id="comment-input-${t.id}" onkeydown="if(event.key==='Enter')addComment(${t.id})">
           <button class="btn btn-dark btn-xs" onclick="addComment(${t.id})">Send</button>
         </div>
       </div>
@@ -1253,7 +1253,7 @@ function updateDashTaskList(){
   const el=document.getElementById('dash-task-list');
   if(!filtered.length){el.innerHTML=`<div style="font-size:12px;color:var(--ink3)">No ${dashTaskTab} tasks.</div>`;return;}
   const dotMap={new:'tnew',pending:'tpend',review:'treview',done:'tdone'};
-  el.innerHTML=filtered.slice(0,4).map(t=>`<div class="task-mini-item"><div class="task-mini-dot ${dotMap[dashTaskTab]}"></div><div class="task-mini-body"><div class="task-mini-title">${escHtml(t.title)}</div><div class="task-mini-due">${t.assignee_name||'Unassigned'}${t.due_date?' Â· due '+formatDate(t.due_date):''}</div></div></div>`).join('');
+  el.innerHTML=filtered.slice(0,4).map(t=>`<div class="task-mini-item"><div class="task-mini-dot ${dotMap[dashTaskTab]}"></div><div class="task-mini-body"><div class="task-mini-title">${escHtml(t.title)}</div><div class="task-mini-due">${t.assignee_name||'Unassigned'}${t.due_date?' ÃÂ· due '+formatDate(t.due_date):''}</div></div></div>`).join('');
 }
 
 async function updateTaskStatus(id,status){
@@ -1288,7 +1288,7 @@ async function addComment(taskId){
   input.value='';await loadComments(taskId);
 }
 
-// âââ TASK MODAL âââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ TASK MODAL Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function openTaskModal(){
   fetch('/api/users/assignable').then(r=>r.json()).then(users=>{
     document.getElementById('t-assign').innerHTML=`<option value="">Unassigned</option>`+users.map(u=>`<option value="${u.id}">${escHtml(u.name)}</option>`).join('');
@@ -1306,7 +1306,7 @@ async function saveTask(){
   if(r.ok){closeTaskModal();await loadTasks();renderCalendar();toast('Task created!','ok');}else toast('Error creating task','err');
 }
 
-// âââ DASHBOARD CHARTS âââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ DASHBOARD CHARTS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function initDashboardCharts(){
   const ctx=document.getElementById('mini-line-chart');
   if(ctx&&!miniLineChart){miniLineChart=new Chart(ctx,{type:'line',data:{labels:['','','','','',''],datasets:[{data:[2,4,3,6,5,8],borderColor:'var(--green)',borderWidth:2,pointRadius:0,fill:true,backgroundColor:'rgba(45,107,80,.08)',tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});}
@@ -1314,7 +1314,7 @@ function initDashboardCharts(){
 
 async function updateDashStats(){
   initDashboardCharts();
-  const qs=activeClientFilter?`?client_id=${activeClientFilter}`:'';
+  let cId = activeClientFilter; if (!cId && session.role !== 'admin') cId = session.client_id; const qs = cId ? `?client_id=${cId}` : '';
   let stats={stages:[],products:[]};
   try{stats=await fetch(`/api/stats/dashboard${qs}`).then(r=>r.json());}catch(e){}
   const stageMap={};stats.stages.forEach(s=>stageMap[s.status]=parseInt(s.count));
@@ -1325,10 +1325,10 @@ async function updateDashStats(){
   if(ctx){if(productsChart){productsChart.destroy();productsChart=null;}if(stats.products.length){productsChart=new Chart(ctx,{type:'bar',data:{labels:stats.products.map(p=>p.name),datasets:[{data:stats.products.map(p=>p.count),backgroundColor:'#1c1a14',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{stepSize:1,font:{size:10}}}}}});}}
 }
 
-// âââ END CUSTOMERS ââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ END CUSTOMERS Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 async function loadEndCustomers(){
   let customers=[];
-  try{customers=await fetch('/api/end-customers').then(r=>r.json());}catch(e){}
+  let cId = activeClientFilter; if (!cId && session.role !== 'admin') cId = session.client_id; try{customers=await fetch(`/api/end-customers${cId ? '?client_id=' + cId : ''}`).then(r=>r.json());}catch(e){}
   const body=document.getElementById('customer-table-body');
   if(!customers.length){body.innerHTML='<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--ink3)">No customers yet.</td></tr>';return;}
   body.innerHTML=customers.map(c=>{const sk=(c.status||'').toLowerCase().replace(/ /g,'_');return`<tr><td><div style="font-weight:500">${escHtml(c.name)}</div>${c.email?`<div style="font-size:11px;color:var(--ink3)">${escHtml(c.email)}</div>`:''}</td><td>${escHtml(c.product_name||'â')}</td><td><span class="badge badge-${sk}">${c.status}</span></td><td>${c.product_price?'R'+parseFloat(c.product_price).toFixed(2)+(c.billing_type==='monthly'?'/mo':''):'â'}</td><td><button class="btn btn-ghost btn-xs" onclick="editCustomer(${c.id},'${escHtml(c.name)}','${escHtml(c.email||'')}','${c.status}')">Edit</button></td></tr>`;}).join('');
@@ -1342,22 +1342,22 @@ function editCustomer(id,name,email,status){document.getElementById('ecu-id').va
 function closeEditCustomerModal(){document.getElementById('edit-customer-modal').classList.remove('open');}
 async function saveEditCustomer(){const id=document.getElementById('ecu-id').value;const name=document.getElementById('ecu-name').value.trim();if(!name)return toast('Name required','err');const r=await fetch(`/api/end-customers/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email:document.getElementById('ecu-email').value,status:document.getElementById('ecu-status').value})});if(r.ok){closeEditCustomerModal();loadEndCustomers();toast('Updated!','ok');}else toast('Error','err');}
 
-// âââ ADMIN ââââââââââââââââââââââââââââââââââââ
+// Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ ADMIN Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
 function openAdminModal(){document.getElementById('admin-modal').classList.add('open');setAdminTab('account',document.querySelector('#admin-modal .task-tab'));}
 function closeAdminModal(){document.getElementById('admin-modal').classList.remove('open');}
 function setAdminTab(tab,el){document.querySelectorAll('.admin-tab-content').forEach(c=>c.style.display='none');document.getElementById(`admin-tab-${tab}`).style.display='block';document.querySelectorAll('#admin-modal .task-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');if(tab==='users')loadAdminUsers();if(tab==='clients')loadAdminClients();if(tab==='products')loadProductsForAdmin();}
-async function loadAdminUsers(){let users=[];try{users=await fetch('/api/admin/users').then(r=>r.json());}catch(e){}const el=document.getElementById('user-list-wrap');if(!users.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3)">No users yet.</div>';return;}el.innerHTML=users.map(u=>`<div class="user-row"><div class="user-row-info"><div class="user-row-name">${escHtml(u.name)}</div><div class="user-row-sub">${escHtml(u.email)} Â· ${u.role}${u.client_name?' Â· '+escHtml(u.client_name):''}</div></div>${u.id!==session.userId?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${u.id})">Delete</button>`:`<span style="font-size:11px;color:var(--ink3);padding:5px 9px">You</span>`}</div>`).join('');}
+async function loadAdminUsers(){let users=[];try{users=await fetch('/api/admin/users').then(r=>r.json());}catch(e){}const el=document.getElementById('user-list-wrap');if(!users.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3)">No users yet.</div>';return;}el.innerHTML=users.map(u=>`<div class="user-row"><div class="user-row-info"><div class="user-row-name">${escHtml(u.name)}</div><div class="user-row-sub">${escHtml(u.email)} ÃÂ· ${u.role}${u.client_name?' ÃÂ· '+escHtml(u.client_name):''}</div></div>${u.id!==session.userId?`<button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${u.id})">Delete</button>`:`<span style="font-size:11px;color:var(--ink3);padding:5px 9px">You</span>`}</div>`).join('');}
 async function deleteUser(id){if(!confirm('Delete this user?'))return;const r=await fetch(`/api/admin/users/${id}`,{method:'DELETE'});if(r.ok){loadAdminUsers();toast('User deleted','ok');}else toast('Error','err');}
 function toggleNuClientField(){document.getElementById('nu-client-wrap').style.display=document.getElementById('nu-role').value==='client_owner'?'block':'none';}
 async function createNewUser(){const name=document.getElementById('nu-name').value.trim(),email=document.getElementById('nu-email').value.trim(),role=document.getElementById('nu-role').value,password=document.getElementById('nu-password').value,client_id=role==='client_owner'?(document.getElementById('nu-client').value||null):null;if(!name||!email)return toast('Name and email required','err');const r=await fetch('/api/admin/add-user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,role,client_id,password})});const d=await r.json().catch(()=>({}));if(d.success){toast('User created!','ok');document.getElementById('nu-name').value='';document.getElementById('nu-email').value='';loadAdminUsers();}else toast(d.error||'Error','err');}
 async function addClientPrompt(){const name=prompt('Client name:');if(!name?.trim())return;const email=prompt('Client contact email:');if(!email?.trim())return;const r=await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),email:email.trim()})});const d=await r.json().catch(()=>({}));if(d.id){await loadClients();loadAdminClients();toast('Client added!','ok');}else toast(d.error||'Error','err');}
-async function loadAdminClients(){const el=document.getElementById('admin-client-list');if(!allClients.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3)">No clients yet.</div>';return;}el.innerHTML=allClients.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px"><div><div style="font-size:13px;font-weight:600">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--ink3)">${escHtml(c.email||'')} Â· <span class="badge badge-${(c.status||'active').toLowerCase()}" style="font-size:9px">${c.status||'Active'}</span></div></div><button class="btn btn-ghost btn-xs" onclick="openEditClient(${c.id})">Edit</button></div>`).join('');}
+async function loadAdminClients(){const el=document.getElementById('admin-client-list');if(!allClients.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3)">No clients yet.</div>';return;}el.innerHTML=allClients.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px"><div><div style="font-size:13px;font-weight:600">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--ink3)">${escHtml(c.email||'')} ÃÂ· <span class="badge badge-${(c.status||'active').toLowerCase()}" style="font-size:9px">${c.status||'Active'}</span></div></div><button class="btn btn-ghost btn-xs" onclick="openEditClient(${c.id})">Edit</button></div>`).join('');}
 function openEditClient(id){const c=allClients.find(x=>x.id===id);if(!c)return;document.getElementById('ec-id').value=c.id;document.getElementById('ec-name-edit').value=c.name;document.getElementById('ec-email-edit').value=c.email||'';document.getElementById('ec-status-edit').value=c.status||'Active';document.getElementById('edit-client-modal').classList.add('open');}
 function closeEditClientModal(){document.getElementById('edit-client-modal').classList.remove('open');}
 async function updateClient(){const id=document.getElementById('ec-id').value,name=document.getElementById('ec-name-edit').value.trim(),email=document.getElementById('ec-email-edit').value.trim(),status=document.getElementById('ec-status-edit').value;if(!name)return toast('Name required','err');const r=await fetch(`/api/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,status})});if(r.ok){closeEditClientModal();await loadClients();loadAdminClients();toast('Client updated!','ok');}else toast('Error','err');}
 function openProductModal(){document.getElementById('product-modal').classList.add('open');}
 function closeProductModal(){document.getElementById('product-modal').classList.remove('open');}
-async function loadProductsForAdmin(){const cid=document.getElementById('prod-client-filter').value;const el=document.getElementById('admin-product-list');if(!cid){el.innerHTML='';return;}const prods=await fetch(`/api/products?client_id=${cid}`).then(r=>r.json()).catch(()=>[]);el.innerHTML=prods.length?prods.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px"><div><div style="font-size:13px;font-weight:600">${escHtml(p.name)}</div><div style="font-size:11px;color:var(--ink3)">R${parseFloat(p.price).toFixed(2)} Â· ${p.billing_type}</div></div></div>`).join(''):'<div style="font-size:13px;color:var(--ink3);margin-top:10px;padding:10px">No products.</div>';}
+async function loadProductsForAdmin(){const cid=document.getElementById('prod-client-filter').value;const el=document.getElementById('admin-product-list');if(!cid){el.innerHTML='';return;}const prods=await fetch(`/api/products?client_id=${cid}`).then(r=>r.json()).catch(()=>[]);el.innerHTML=prods.length?prods.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px"><div><div style="font-size:13px;font-weight:600">${escHtml(p.name)}</div><div style="font-size:11px;color:var(--ink3)">R${parseFloat(p.price).toFixed(2)} ÃÂ· ${p.billing_type}</div></div></div>`).join(''):'<div style="font-size:13px;color:var(--ink3);margin-top:10px;padding:10px">No products.</div>';}
 async function saveProduct(){const cid=document.getElementById('prod-client-filter').value,name=document.getElementById('p-name').value.trim();if(!cid)return toast('Select a client','err');if(!name)return toast('Name required','err');const data={client_id:cid,name,price:document.getElementById('p-price').value||0,billing_type:document.getElementById('p-billing').value,duration_months:document.getElementById('p-duration').value||0};const r=await fetch('/api/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(r.ok){closeProductModal();loadProductsForAdmin();document.getElementById('p-name').value='';toast('Product saved!','ok');}else toast('Error','err');}
 
 // Close modals on backdrop click
