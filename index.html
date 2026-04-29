@@ -146,8 +146,8 @@
 .mobile-icon-btn svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; }
 
 /* VIEWS */
-.view { display:none; flex:1; overflow-y:auto; padding:20px 22px; }
-.view.active { display:flex; flex-direction:column; }
+.view { display:none; flex:1; overflow-y:auto; overflow-x:hidden; padding:20px 22px; }
+.view.active { display:flex; flex-direction:column; min-height:0; }
 
 /* DASHBOARD */
 .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
@@ -616,7 +616,7 @@
 
 <!-- TASK PREVIEW -->
 
-<div class="modal-backdrop" id="task-preview-backdrop">
+<invoke name="modal-backdrop" id="task-preview-backdrop">
   <div class="modal">
     <div class="modal-head"><h2 id="tp-title">Task</h2><button class="modal-close" onclick="closeTaskPreview()">×</button></div>
     <div style="margin-bottom:14px"><span id="tp-status-badge" class="badge"></span></div>
@@ -633,6 +633,16 @@
       <div id="tp-subtasks"></div>
     </div>
     <div id="tp-creator" style="font-size:12px;color:var(--ink3);margin-bottom:10px"></div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">Comments</label>
+      <div id="tp-comments-list" style="max-height:200px;overflow-y:auto;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px">
+        <!-- Comments will be inserted here -->
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="tp-comment-input" placeholder="Add a comment..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+        <button class="btn btn-dark btn-sm" onclick="addTaskComment()">Send</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -643,6 +653,7 @@
     <div class="modal-head"><h2 id="post-modal-title">Create Post</h2><button class="modal-close" onclick="closePostModal()">×</button></div>
     <div class="field"><label>Title / Campaign</label><input type="text" id="m-title" placeholder="e.g. Summer Launch Campaign"></div>
     <div class="field"><label>Caption</label><textarea id="m-caption" rows="3" placeholder="Write your post copy..."></textarea></div>
+    <div class="field"><label>Media Link (Google Drive, etc.)</label><input type="url" id="m-media-link" placeholder="https://drive.google.com/..."></div>
     <div class="two-col">
       <div class="field"><label>Date</label><input type="date" id="m-date"></div>
       <div class="field"><label>Time (optional)</label><input type="time" id="m-time"></div>
@@ -683,6 +694,10 @@
     <div class="field">
       <label>Caption</label>
       <div id="pd-caption" style="font-size:14px;color:var(--ink2);line-height:1.6;padding:11px;background:var(--bg);border-radius:8px;min-height:50px;white-space:pre-wrap"></div>
+    </div>
+    <div id="pd-media-link-wrap" style="display:none;margin-bottom:14px">
+      <label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Media Link</label>
+      <a id="pd-media-link" href="#" target="_blank" style="font-size:14px;color:var(--blue);word-break:break-all">View Media</a>
     </div>
     <div class="two-col" style="margin-bottom:14px">
       <div><label style="font-size:10px;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Date & Time</label><div id="pd-date" style="font-size:14px"></div></div>
@@ -1012,7 +1027,7 @@ function renderClientPanelList(filter=''){
   list.innerHTML=f.length?f.map(c=>`<div class="client-item${activeClientFilter==c.id?' selected':''}" onclick="selectClient(${c.id})"><div class="client-avatar">${c.name[0].toUpperCase()}</div><div><div style="font-size:13px;font-weight:500">${escHtml(c.name)}</div><div style="font-size:10px;color:var(--ink3)">${c.status||'Active'}</div></div></div>`).join(''):'<div style="padding:16px;font-size:13px;color:var(--ink3)">No clients found.</div>';
 }
 function filterClients(val){renderClientPanelList(val);}
-function selectClient(id){activeClientFilter=id;document.getElementById('client-panel').classList.remove('open');renderClientPanelList();renderCalendar();updateDashStats();}
+function selectClient(id){activeClientFilter=id;document.getElementById('client-panel').classList.remove('open');renderClientPanelList();renderCalendar();updateDashStats();loadTasks();}
 function handleLogoClick(){document.getElementById('client-panel').classList.toggle('open');}
 
 // ─── VIEW SWITCHING ──────────────────────────────
@@ -1173,16 +1188,58 @@ function openTaskPreview(id){
   } else stWrap.style.display='none';
   
   document.getElementById('tp-creator').textContent=task.creator_name?`Created by ${task.creator_name}`:'';
+  
+  loadTaskComments(id);
   document.getElementById('task-preview-backdrop').classList.add('open');
 }
 function closeTaskPreview(){document.getElementById('task-preview-backdrop').classList.remove('open');currentTaskPreview=null;}
+
+async function loadTaskComments(taskId){
+  try{
+    const r=await fetch(`/api/tasks/${taskId}/comments`);
+    const comments=r.ok?await r.json():[];
+    const list=document.getElementById('tp-comments-list');
+    if(comments.length===0){
+      list.innerHTML='<div style="text-align:center;color:var(--ink3);font-size:12px;padding:20px">No comments yet</div>';
+    }else{
+      list.innerHTML=comments.map(c=>`
+        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--ink3);margin-bottom:4px">${c.author_name||'Unknown'} • ${new Date(c.created_at).toLocaleDateString()}</div>
+          <div style="font-size:13px;color:var(--ink2)">${escHtml(c.comment)}</div>
+        </div>
+      `).join('');
+    }
+  }catch(e){console.error('Error loading comments:',e);}
+}
+
+async function addTaskComment(){
+  if(!currentTaskPreview)return;
+  const input=document.getElementById('tp-comment-input');
+  const text=input.value.trim();
+  if(!text)return toast('Enter a comment','err');
+  
+  try{
+    const r=await fetch(`/api/tasks/${currentTaskPreview.id}/comments`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({comment_text:text,user_id:session.userId})
+    });
+    if(r.ok){
+      input.value='';
+      await loadTaskComments(currentTaskPreview.id);
+      toast('Comment added','ok');
+    }else{
+      toast('Error adding comment','err');
+    }
+  }catch(e){toast('Error adding comment','err');}
+}
 
 // ─── POSTS ───────────────────────────────────────
 function openPostModal(date){
   editingPostId=null;
   document.getElementById('post-modal-title').textContent='Create Post';
   document.getElementById('post-save-btn').textContent='Save Post';
-  document.getElementById('m-title').value='';document.getElementById('m-caption').value='';
+  document.getElementById('m-title').value='';document.getElementById('m-caption').value='';document.getElementById('m-media-link').value='';
   document.getElementById('m-date').value=date||'';document.getElementById('m-time').value='';
   document.getElementById('m-status').value='draft';
   document.querySelectorAll('[name="platform"]').forEach(cb=>cb.checked=false);
@@ -1196,6 +1253,7 @@ function openPostEdit(post){
   document.getElementById('post-save-btn').textContent='Update Post';
   document.getElementById('m-title').value=post.title||'';
   document.getElementById('m-caption').value=post.caption||'';
+  document.getElementById('m-media-link').value=post.media_link||'';
   document.getElementById('m-date').value=(post.post_date||'').substring(0,10);
   document.getElementById('m-time').value=post.post_time?post.post_time.substring(0,5):'';
   document.getElementById('m-status').value=post.status||'draft';
@@ -1213,7 +1271,7 @@ async function savePost(){
   if(!title) return toast('Title is required','err');
   if(!post_date) return toast('Date is required','err');
   const platforms=[...document.querySelectorAll('[name="platform"]:checked')].map(cb=>cb.value);
-  const data={title,caption:document.getElementById('m-caption').value,post_date,post_time:document.getElementById('m-time').value||null,client_id:document.getElementById('m-client').value||null,status:document.getElementById('m-status').value,platforms,created_by:session.userId};
+  const data={title,caption:document.getElementById('m-caption').value,media_link:document.getElementById('m-media-link').value||null,post_date,post_time:document.getElementById('m-time').value||null,client_id:document.getElementById('m-client').value||null,status:document.getElementById('m-status').value,platforms,created_by:session.userId};
   const btn=document.getElementById('post-save-btn');btn.disabled=true;btn.textContent='Saving...';
   try{
     const r=await fetch(editingPostId?`/api/posts/${editingPostId}`:'/api/posts',{method:editingPostId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -1231,6 +1289,15 @@ function openPostDetail(id){
   document.getElementById('pd-date').textContent=`${formatDate(post.post_date)}${post.post_time?' at '+post.post_time.substring(0,5):''}`;
   document.getElementById('pd-client').textContent=post.client_name||'–';
   document.getElementById('pd-creator').textContent=post.creator_name?`Created by ${post.creator_name}`:'';
+
+  const mediaWrap=document.getElementById('pd-media-link-wrap');
+  if(post.media_link){
+    document.getElementById('pd-media-link').href=post.media_link;
+    document.getElementById('pd-media-link').textContent=post.media_link;
+    mediaWrap.style.display='block';
+  }else{
+    mediaWrap.style.display='none';
+  }
 
   const sb=document.getElementById('pd-status-badge');sb.className=`badge badge-${post.status}`;sb.textContent=post.status;
   const ab=document.getElementById('pd-approval-badge');
@@ -1357,8 +1424,9 @@ function quickReject(id){
 
 // ─── TASKS & KANBAN ──────────────────────────────
 async function loadTasks(){
+  let cId = activeClientFilter; if (!cId && session.role !== 'admin') cId = session.client_id;
   const params=new URLSearchParams({role:session.role});
-  if(session.client_id) params.append('client_id',session.client_id);
+  if(cId) params.append('client_id',cId);
   if(session.userId) params.append('user_id',session.userId);
   try{allTasksCache=await fetch(`/api/tasks?${params}`).then(r=>r.json());}catch(e){allTasksCache=[];}
 
