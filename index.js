@@ -13,7 +13,9 @@ app.use(express.json());
 const dbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, '') : undefined;
 const pool = new Pool({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
 
-pool.query('SELECT NOW()').then(r => console.log('Database connected at', r.rows[0].now)).catch(e => console.error('Database connection FAILED:', e.message));
+pool.query('SELECT NOW()')
+  .then(r => console.log('Database connected at', r.rows[0].now))
+  .catch(e => console.error('Database connection FAILED:', e.message));
 
 app.get('/setup-db', async (req, res) => {
   if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) return res.status(403).send('Forbidden');
@@ -28,6 +30,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, price DECIMAL(12,2) NOT NULL, billing_type VARCHAR(20) DEFAULT 'one-off', duration_months INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`CREATE TABLE IF NOT EXISTS end_customers (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, product_id INTEGER REFERENCES products(id) ON DELETE SET NULL, name VARCHAR(100) NOT NULL, email VARCHAR(100), status VARCHAR(30) DEFAULT 'Contract Review', sign_up_date DATE DEFAULT CURRENT_DATE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`CREATE TABLE IF NOT EXISTS posts (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, title TEXT NOT NULL, caption TEXT, platforms TEXT[], post_date DATE NOT NULL, post_time TIME, status VARCHAR(20) DEFAULT 'draft', is_approved BOOLEAN DEFAULT FALSE, approval_status VARCHAR(20) DEFAULT 'pending', rejection_reason TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
+    
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS rejection_reason TEXT`);
@@ -70,7 +73,7 @@ app.post('/api/login', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
     if (!rows.length) return res.status(401).json({ error: 'Invalid credentials.' });
     const user = rows[0];
-    if (!await bcrypt.compare(password, user.password)) return res.status(401).json({ error: 'Invalid credentials.' });
+    if (!(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     res.json({ success: true, userId: user.id, name: user.name, role: user.role, client_id: user.client_id, email: user.email, mustChange: user.must_change_password });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -278,6 +281,7 @@ app.post('/api/posts', async (req, res) => {
 app.put('/api/posts/:id', async (req, res) => {
   const { title, caption, media_link, platforms, post_date, post_time, status } = req.body;
   try {
+    // FIXED: Reset approval status to pending when editing any post
     const { rows } = await pool.query(`UPDATE posts SET title=$1, caption=$2, media_link=$3, platforms=$4, post_date=$5, post_time=$6, status=$7, approval_status='pending', is_approved=FALSE, rejection_reason=NULL WHERE id=$8 RETURNING *`, [title, caption, media_link || null, platforms, post_date, post_time || null, status, req.params.id]);
     res.json(rows[0]);
   } catch (err) {
@@ -335,6 +339,7 @@ app.get('/api/posts/pending-approval', async (req, res) => {
   }
 });
 
+// FIXED: Added DELETE endpoint for posts
 app.delete('/api/posts/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM posts WHERE id=$1', [req.params.id]);
