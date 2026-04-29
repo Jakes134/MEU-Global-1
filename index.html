@@ -684,7 +684,7 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
       <span id="pd-status-badge" class="badge"></span>
       <span id="pd-approval-badge" class="badge" style="display:none"></span>
-      <button id="pd-edit-btn" class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="editCurrentPost()">✏ Edit Post</button>
+      <button id="pd-edit-btn" class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="editPost()">✏ Edit Post</button>
       <button id="pd-delete-btn" class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteCurrentPost()">Delete</button>
     </div>
     <div id="pd-rejection-box" class="rejection-box" style="display:none">
@@ -1248,19 +1248,33 @@ function openPostModal(date){
 }
 
 function openPostEdit(post){
-  editingPostId=post.id;
-  document.getElementById('post-modal-title').textContent='Edit Post';
-  document.getElementById('post-save-btn').textContent='Update Post';
-  document.getElementById('m-title').value=post.title||'';
-  document.getElementById('m-caption').value=post.caption||'';
-  document.getElementById('m-media-link').value=post.media_link||'';
-  document.getElementById('m-date').value=(post.post_date||'').substring(0,10);
-  document.getElementById('m-time').value=post.post_time?post.post_time.substring(0,5):'';
-  document.getElementById('m-status').value=post.status||'draft';
-  const cs=document.getElementById('m-client');if(cs.querySelector(`option[value="${post.client_id}"]`))cs.value=post.client_id;
-  const platforms=parsePlatforms(post.platforms);
-  document.querySelectorAll('[name="platform"]').forEach(cb=>cb.checked=platforms.includes(cb.value));
-  document.getElementById('post-modal-backdrop').classList.add('open');
+  if(!post){
+    console.error('openPostEdit called with no post data');
+    toast('Error loading post data','err');
+    return;
+  }
+  
+  try{
+    editingPostId=post.id;
+    document.getElementById('post-modal-title').textContent='Edit Post';
+    document.getElementById('post-save-btn').textContent='Update Post';
+    document.getElementById('m-title').value=post.title||'';
+    document.getElementById('m-caption').value=post.caption||'';
+    document.getElementById('m-media-link').value=post.media_link||'';
+    document.getElementById('m-date').value=(post.post_date||'').substring(0,10);
+    document.getElementById('m-time').value=post.post_time?post.post_time.substring(0,5):'';
+    document.getElementById('m-status').value=post.status||'draft';
+    const cs=document.getElementById('m-client');
+    if(cs&&cs.querySelector(`option[value="${post.client_id}"]`)){
+      cs.value=post.client_id;
+    }
+    const platforms=parsePlatforms(post.platforms);
+    document.querySelectorAll('[name="platform"]').forEach(cb=>cb.checked=platforms.includes(cb.value));
+    document.getElementById('post-modal-backdrop').classList.add('open');
+  }catch(err){
+    console.error('Error in openPostEdit:',err);
+    toast('Error opening edit form','err');
+  }
 }
 
 function closePostModal(){document.getElementById('post-modal-backdrop').classList.remove('open');editingPostId=null;}
@@ -1328,7 +1342,18 @@ function openPostDetail(id){
 }
 
 function closePostDetail(){document.getElementById('post-detail-backdrop').classList.remove('open');currentPostDetail=null;}
-function editCurrentPost(){if(!currentPostDetail)return;closePostDetail();openPostEdit(currentPostDetail);}
+
+function editPost(){
+  if(!currentPostDetail){
+    console.error('No post detail available');
+    toast('Error: Post data not found','err');
+    return;
+  }
+  closePostDetail();
+  openPostEdit(currentPostDetail);
+}
+
+function editCurrentPost(){editPost();}
 
 async function deleteCurrentPost(){
   if(!currentPostDetail)return;
