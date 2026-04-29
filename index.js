@@ -284,6 +284,15 @@ res.status(500).json({ error: err.message });
 }
 });
 
+app.delete('/api/posts/:id', async (req, res) => {
+try {
+await pool.query('DELETE FROM posts WHERE id=$1', [req.params.id]);
+res.json({ success: true });
+} catch (err) {
+res.status(500).json({ error: err.message });
+}
+});
+
 app.put('/api/posts/:id/date', async (req, res) => {
 const { post_date } = req.body;
 try {
