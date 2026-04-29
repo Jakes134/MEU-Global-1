@@ -1349,8 +1349,9 @@ function editPost(){
     toast('Error: Post data not found','err');
     return;
   }
+  const postToEdit = currentPostDetail;  // Save the post data before closing
   closePostDetail();
-  openPostEdit(currentPostDetail);
+  openPostEdit(postToEdit);  // Use the saved data
 }
 
 function editCurrentPost(){editPost();}
