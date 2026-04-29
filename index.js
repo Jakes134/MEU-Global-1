@@ -10,7 +10,9 @@ const port = process.env.PORT || 8080;
 app.set(‘trust proxy’, 1);
 app.use(express.json());
 
-// Database setup
+// ─────────────────────────────────────────────
+//  DATABASE
+// ─────────────────────────────────────────────
 const dbUrl = process.env.DATABASE_URL
 ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, ‘’)
 : undefined;
@@ -21,12 +23,14 @@ pool.query(‘SELECT NOW()’)
 .then(r  => console.log(‘✅ PostgreSQL connected at’, r.rows[0].now))
 .catch(e => console.error(‘❌ PostgreSQL connection FAILED:’, e.message));
 
-// Setup/Migration endpoint
+// ─────────────────────────────────────────────
+//  SETUP / MIGRATIONS
+// ─────────────────────────────────────────────
 app.get(’/setup-db’, async (req, res) => {
 if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET)
 return res.status(403).send(‘Forbidden’);
 try {
-// Users table
+// 1. Users
 await pool.query(` CREATE TABLE IF NOT EXISTS users ( id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE NOT NULL, password TEXT NOT NULL, role VARCHAR(20) DEFAULT 'user', client_id INTEGER, must_change_password BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP );`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
@@ -34,7 +38,7 @@ await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`)
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
 ```
-// Clients table
+// 2. Clients
 await pool.query(`
   CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
@@ -44,7 +48,7 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
 
-// Products table
+// 3. Products
 await pool.query(`
   CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
@@ -56,7 +60,7 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
 
-// End Customers table
+// 4. End Customers
 await pool.query(`
   CREATE TABLE IF NOT EXISTS end_customers (
     id SERIAL PRIMARY KEY,
@@ -69,7 +73,7 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
 
-// Posts table
+// 5. Posts
 await pool.query(`
   CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
@@ -90,7 +94,7 @@ await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
 await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS rejection_reason TEXT`);
 
-// Tasks table
+// 6. Tasks  (status: todo | pending | pending_approval | done)
 await pool.query(`
   CREATE TABLE IF NOT EXISTS tasks (
     id SERIAL PRIMARY KEY,
@@ -101,14 +105,12 @@ await pool.query(`
     description TEXT,
     due_date DATE,
     status VARCHAR(30) DEFAULT 'todo',
-    subtasks JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
 await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by INTEGER`);
 await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date DATE`);
-await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS subtasks JSONB DEFAULT '[]'::jsonb`);
 
-// Task Comments table
+// 7. Task Comments
 await pool.query(`
   CREATE TABLE IF NOT EXISTS task_comments (
     id SERIAL PRIMARY KEY,
@@ -118,7 +120,7 @@ await pool.query(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
 
-// Foreign key constraints
+// FK constraints – allow user deletion without cascade issues
 await pool.query(`ALTER TABLE posts  DROP CONSTRAINT IF EXISTS posts_created_by_fkey`);
 await pool.query(`ALTER TABLE posts  ADD  CONSTRAINT posts_created_by_fkey  FOREIGN KEY (created_by)  REFERENCES users(id) ON DELETE SET NULL`);
 await pool.query(`ALTER TABLE tasks  DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey`);
@@ -128,7 +130,7 @@ await pool.query(`ALTER TABLE tasks  ADD  CONSTRAINT tasks_created_by_fkey  FORE
 await pool.query(`ALTER TABLE task_comments DROP CONSTRAINT IF EXISTS task_comments_user_id_fkey`);
 await pool.query(`ALTER TABLE task_comments ADD  CONSTRAINT task_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL`);
 
-// Seed admin user
+// Seed admin
 const { rows } = await pool.query('SELECT COUNT(*) FROM users');
 if (parseInt(rows[0].count) === 0) {
   const adminEmail = process.env.SEED_ADMIN_EMAIL    || 'admin@meuglobal.com';
@@ -150,7 +152,9 @@ res.status(500).send(’<pre>❌ ’ + err.message + ‘</pre>’);
 }
 });
 
-// AUTH endpoints
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
 app.post(’/api/login’, async (req, res) => {
 const { email, password } = req.body;
 if (!email || !password) return res.status(400).json({ error: ‘Email and password required.’ });
@@ -173,7 +177,9 @@ res.json({ success: true });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ADMIN - USERS
+// ─────────────────────────────────────────────
+//  ADMIN - USERS
+// ─────────────────────────────────────────────
 app.post(’/api/admin/add-user’, async (req, res) => {
 const { name, email, role, client_id, password } = req.body;
 if (!name || !email) return res.status(400).json({ error: ‘Name and email required.’ });
@@ -216,7 +222,9 @@ res.json(rows);
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// CLIENTS
+// ─────────────────────────────────────────────
+//  CLIENTS
+// ─────────────────────────────────────────────
 app.get(’/api/clients’, async (req, res) => {
 const { role, client_id } = req.query;
 try {
@@ -254,7 +262,9 @@ res.json({ success: true });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// PRODUCTS
+// ─────────────────────────────────────────────
+//  PRODUCTS
+// ─────────────────────────────────────────────
 app.get(’/api/products’, async (req, res) => {
 const { client_id } = req.query;
 try {
@@ -277,7 +287,9 @@ res.json(rows[0]);
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// END CUSTOMERS
+// ─────────────────────────────────────────────
+//  END CUSTOMERS
+// ─────────────────────────────────────────────
 app.get(’/api/end-customers’, async (req, res) => {
 const { client_id } = req.query;
 try {
@@ -311,7 +323,9 @@ res.json({ success: true });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// DASHBOARD STATS
+// ─────────────────────────────────────────────
+//  DASHBOARD STATS
+// ─────────────────────────────────────────────
 app.get(’/api/stats/dashboard’, async (req, res) => {
 const { client_id } = req.query;
 try {
@@ -325,7 +339,9 @@ res.json({ stages: stages.rows, products: products.rows });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// POSTS
+// ─────────────────────────────────────────────
+//  POSTS
+// ─────────────────────────────────────────────
 app.get(’/api/posts’, async (req, res) => {
 const { month, year, client_id } = req.query;
 try {
@@ -357,6 +373,7 @@ res.json(rows[0]);
 app.put(’/api/posts/:id’, async (req, res) => {
 const { title, caption, platforms, post_date, post_time, status } = req.body;
 try {
+// Editing a post resets approval to pending and is_approved to FALSE
 const { rows } = await pool.query(
 `UPDATE posts SET title=$1, caption=$2, platforms=$3, post_date=$4, post_time=$5, status=$6, approval_status='pending', is_approved=FALSE, rejection_reason=NULL WHERE id=$7 RETURNING *`,
 [title, caption, platforms, post_date, post_time||null, status, req.params.id]
@@ -365,17 +382,7 @@ res.json(rows[0]);
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put(’/api/posts/:id/date’, async (req, res) => {
-const { post_date } = req.body;
-try {
-const { rows } = await pool.query(
-‘UPDATE posts SET post_date=$1 WHERE id=$2 RETURNING *’,
-[post_date, req.params.id]
-);
-res.json(rows[0]);
-} catch (err) { res.status(500).json({ error: err.message }); }
-});
-
+// Only client_owners can approve/reject posts
 app.put(’/api/posts/:id/approve’, async (req, res) => {
 const { approved, rejection_reason } = req.body;
 const approvalStatus = approved ? ‘approved’ : ‘rejected’;
@@ -385,21 +392,6 @@ const { rows } = await pool.query(
 [approved, approvalStatus, approved ? null : (rejection_reason || null), req.params.id]
 );
 res.json(rows[0]);
-} catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.put(’/api/posts/bulk-approve’, async (req, res) => {
-const { post_ids } = req.body;
-if (!post_ids || !Array.isArray(post_ids) || post_ids.length === 0) {
-return res.status(400).json({ error: ‘post_ids array required’ });
-}
-try {
-const placeholders = post_ids.map((_, i) => `$${i + 1}`).join(’,’);
-await pool.query(
-`UPDATE posts SET is_approved=TRUE, approval_status='approved', rejection_reason=NULL  WHERE id IN (${placeholders})`,
-post_ids
-);
-res.json({ success: true });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -415,7 +407,9 @@ res.json(rows);
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// TASKS
+// ─────────────────────────────────────────────
+//  TASKS
+// ─────────────────────────────────────────────
 app.get(’/api/tasks’, async (req, res) => {
 const { role, client_id, user_id, due_month, due_year } = req.query;
 try {
@@ -447,12 +441,12 @@ res.json(rows);
 });
 
 app.post(’/api/tasks’, async (req, res) => {
-const { client_id, assigned_to, title, description, due_date, created_by, subtasks } = req.body;
+const { client_id, assigned_to, title, description, due_date, created_by } = req.body;
 if (!title) return res.status(400).json({ error: ‘Title required.’ });
 try {
 const { rows } = await pool.query(
-`INSERT INTO tasks (client_id, assigned_to, title, description, due_date, created_by, subtasks) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-[client_id||null, assigned_to||null, title, description||’’, due_date||null, created_by||null, JSON.stringify(subtasks || [])]
+`INSERT INTO tasks (client_id, assigned_to, title, description, due_date, created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+[client_id||null, assigned_to||null, title, description||’’, due_date||null, created_by||null]
 );
 res.json(rows[0]);
 } catch (err) { res.status(500).json({ error: err.message }); }
@@ -480,17 +474,6 @@ await pool.query(
 [req.params.id, reviewer_id || null, `↩ Sent back: ${feedback}`]
 );
 }
-res.json({ success: true });
-} catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.put(’/api/tasks/:id/subtasks’, async (req, res) => {
-const { subtasks } = req.body;
-try {
-await pool.query(
-‘UPDATE tasks SET subtasks=$1 WHERE id=$2’,
-[JSON.stringify(subtasks), req.params.id]
-);
 res.json({ success: true });
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -524,7 +507,9 @@ res.json(rows[0]);
 } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Serve frontend
+// ─────────────────────────────────────────────
+//  FRONTEND
+// ─────────────────────────────────────────────
 app.get(’*’, (req, res) => { res.sendFile(path.join(__dirname, ‘index.html’)); });
 
 app.listen(port, () => console.log(`🚀 MEU Global CRM running on port ${port}`));
