@@ -11,7 +11,7 @@
   
   <!-- Scripts: Chart.js & jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <!-- jsPDF added for local invoice generation -->
+  <!-- jsPDF added for local invoice generation matching the specific MEU design -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <style>
@@ -157,7 +157,6 @@
     /* ==========================================================================
        MAIN CONTENT AREA & MOBILE TOPBAR
        ========================================================================== */
-    /* UPDATED: Fixed overflow for dashboard scrolling on mobile */
     .main { flex:1; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; min-width:0; position:relative; }
     
     .mobile-topbar { display:none; align-items:center; justify-content:space-between; height:54px; background:var(--sidebar-bg); padding:0 16px; flex-shrink:0; position:sticky; top:0; z-index:100; }
@@ -170,7 +169,6 @@
     .mobile-icon-btn svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; }
 
     /* VIEWS */
-    /* UPDATED: Ensuring proper flex growth and preventing fixed heights from breaking scroll */
     .view { display:none; flex:1; flex-direction:column; padding:20px 22px; overflow:visible; }
     .view.active { display:flex; }
 
@@ -324,7 +322,7 @@
     /* MODAL */
     .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.40); display:none; align-items:flex-end; justify-content:center; z-index:8000; backdrop-filter:blur(4px); }
     .modal-backdrop.open { display:flex; }
-    .modal { background:var(--surface); border-radius:18px 18px 0 0; width:100%; padding:28px 24px; box-shadow:0 -8px 40px rgba(0,0,0,.16); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; }
+    .modal { background:var(--surface); border-radius:18px 18px 0 0; width:100%; padding:28px 24px; box-shadow:0 -8px 40px rgba(0,0,0,.16); max-height:92vh; overflow-y:auto; animation:slideUp .22s ease; position: relative; }
     @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
     .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
     .modal-head h2 { font-family:var(--serif); font-size:20px; }
@@ -363,6 +361,19 @@
     .invoice-row button { background: var(--red-bg); color: var(--red); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .invoice-total-row { display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); font-weight: bold; margin-top: 10px; }
 
+    /* AI CHATBOT STYLES */
+    .ai-chat-panel { position: absolute; right: -420px; top: 0; bottom: 0; width: 400px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -4px 0 24px rgba(0,0,0,0.1); border-radius: 0 18px 0 0; display: flex; flex-direction: column; transition: right 0.3s ease; }
+    .ai-chat-panel.open { right: 0; z-index: 1000; }
+    .ai-chat-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: #fff; border-radius: 0 18px 0 0; }
+    .ai-chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
+    .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; word-wrap: break-word; }
+    .ai-msg.user { background: var(--surface2); color: var(--ink); align-self: flex-end; border-bottom-right-radius: 2px; }
+    .ai-msg.bot { background: #fff; border: 1px solid var(--border); color: var(--ink); align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .ai-chat-input-area { padding: 12px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 8px; }
+    .ai-chat-input-area input { flex: 1; padding: 10px 14px; border: 1px solid var(--border-mid); border-radius: 20px; font-size: 13px; outline: none; }
+    .ai-chat-input-area button { background: var(--ink); color: #fff; border: none; border-radius: 20px; padding: 0 16px; font-weight: bold; cursor: pointer; }
+    .use-caption-btn { margin-top: 8px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+
     /* RESPONSIVE */
     @media(max-width:1024px){
       .stats-row{grid-template-columns:1fr 1fr;}
@@ -376,12 +387,12 @@
       .cal-day-header{font-size:9px;padding:8px 4px 6px;}
       .post-chip,.task-chip{font-size:9px;}
       .kanban-col { min-width: 240px; width: 240px; }
+      .ai-chat-panel { width: 100%; right: -100%; border-radius: 18px 18px 0 0; }
     }
     @media(max-width:640px){
       .sidebar{display:none;}
       #app{flex-direction:column;}
       .mobile-topbar{display:flex;}
-      /* UPDATED: Ensuring mobile scroll is confined within the main content block, not body */
       .main{padding-bottom:var(--bottom-nav); overflow-y: auto; height: 100vh;}
       .view{padding:12px; min-height: auto;}
       .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--bottom-nav);background:var(--sidebar-bg);display:flex;align-items:center;justify-content:space-around;z-index:200;border-top:1px solid rgba(255,255,255,.07);}
@@ -665,10 +676,16 @@
   </div>
 </div>
 
-<!-- POST CREATE/EDIT -->
-<div class="modal-backdrop" id="post-modal-backdrop">
-  <div class="modal">
-    <div class="modal-head"><h2 id="post-modal-title">Create Post</h2><button class="modal-close" onclick="closePostModal()">×</button></div>
+<!-- POST CREATE/EDIT & AI PANEL -->
+<div class="modal-backdrop" id="post-modal-backdrop" style="overflow: hidden;">
+  <div class="modal" id="post-modal-container" style="position: relative; transition: all 0.3s ease;">
+    <div class="modal-head">
+      <h2 id="post-modal-title">Create Post</h2>
+      <div>
+        <button class="btn btn-ghost btn-sm" style="margin-right: 10px; color: var(--blue);" onclick="toggleAiPanel()">✨ MEU AI Assistant</button>
+        <button class="modal-close" style="display:inline-flex;" onclick="closePostModal()">×</button>
+      </div>
+    </div>
     <div class="field"><label>Title / Campaign</label><input type="text" id="m-title" placeholder="e.g. Summer Launch Campaign"></div>
     <div class="field"><label>Caption</label><textarea id="m-caption" rows="3" placeholder="Write your post copy..."></textarea></div>
     <div class="field"><label>Media Link (Google Drive, etc.)</label><input type="url" id="m-media-link" placeholder="https://drive.google.com/..."></div>
@@ -691,6 +708,22 @@
       </div>
     </div>
     <button class="btn btn-dark btn-full" style="margin-top:16px" id="post-save-btn" onclick="savePost()">Save Post</button>
+
+    <!-- AI CHAT PANEL -->
+    <div class="ai-chat-panel" id="ai-chat-panel">
+      <div class="ai-chat-header">
+        <span style="font-weight:bold;">✨ MEU AI (Gemini)</span>
+        <button class="modal-close" style="background:transparent; color:#fff;" onclick="toggleAiPanel()">×</button>
+      </div>
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="ai-msg bot">Hi! I am reading the brand guidelines for the selected client. How can I help you write this post?</div>
+      </div>
+      <div class="ai-chat-input-area">
+        <input type="text" id="ai-chat-input" placeholder="Draft a caption about..." onkeydown="if(event.key==='Enter') sendAiMessage()">
+        <button onclick="sendAiMessage()">Send</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -834,7 +867,7 @@
 </div>
 
 <!-- ==========================================================================
-     INVOICE MODAL (NEW FEATURE)
+     INVOICE MODAL
      ========================================================================== -->
 <div class="modal-backdrop" id="invoice-modal">
   <div class="modal" style="max-width:600px;">
@@ -862,17 +895,13 @@
 
     <div class="field">
       <label>Line Items</label>
-      <div id="inv-items-container">
-        <!-- Dynamic rows added here -->
-      </div>
+      <div id="inv-items-container"></div>
       <button class="btn btn-ghost btn-xs" onclick="addInvoiceItemRow()">+ Add Item</button>
     </div>
 
     <div class="field">
       <label>Deductions (Optional)</label>
-      <div id="inv-deductions-container">
-        <!-- Dynamic rows added here -->
-      </div>
+      <div id="inv-deductions-container"></div>
       <button class="btn btn-ghost btn-xs" onclick="addInvoiceDeductionRow()">+ Add Deduction</button>
     </div>
 
@@ -922,14 +951,15 @@
   </div>
 </div>
 
-<!-- EDIT CLIENT MODAL -->
+<!-- EDIT CLIENT MODAL (WITH DESCRIPTION) -->
 <div class="modal-backdrop" id="edit-client-modal">
   <div class="modal">
     <div class="modal-head"><h2>Edit Client</h2><button class="modal-close" onclick="closeEditClientModal()">×</button></div>
     <input type="hidden" id="ec-id">
     <div class="field"><label>Client Name</label><input type="text" id="ec-name-edit"></div>
     <div class="field"><label>Contact Email</label><input type="email" id="ec-email-edit"></div>
-    <div class="field"><label>Billing Address</label><textarea id="ec-address-edit" rows="3" placeholder="Address for invoicing..."></textarea></div>
+    <div class="field"><label>Billing Address</label><textarea id="ec-address-edit" rows="2" placeholder="Address for invoicing..."></textarea></div>
+    <div class="field"><label>Brand Description (For AI)</label><textarea id="ec-desc-edit" rows="3" placeholder="Describe the client's tone, brand, and content style here..."></textarea></div>
     <div class="field"><label>Status</label><select id="ec-status-edit"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
     <button class="btn btn-dark btn-full" onclick="updateClient()">Update Client</button>
   </div>
@@ -1125,6 +1155,62 @@ function showView(v){
   if(v==='customers') loadEndCustomers();
 }
 
+// ─── GEMINI AI CHAT ────────────────────────────────
+
+function toggleAiPanel() {
+  const panel = document.getElementById('ai-chat-panel');
+  panel.classList.toggle('open');
+}
+
+async function sendAiMessage() {
+  const input = document.getElementById('ai-chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const msgContainer = document.getElementById('ai-chat-messages');
+  msgContainer.innerHTML += `<div class="ai-msg user">${escHtml(msg)}</div>`;
+  input.value = '';
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+
+  const clientId = document.getElementById('m-client').value;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: clientId, prompt: msg })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      const formattedText = escHtml(data.text).replace(/\n/g, '<br>');
+      msgContainer.innerHTML += `
+        <div class="ai-msg bot">
+          <div>${formattedText}</div>
+          <button class="use-caption-btn" onclick="useAiCaption(this)">Use this Caption</button>
+        </div>
+      `;
+    } else {
+      msgContainer.innerHTML += `<div class="ai-msg bot" style="color:red">Error: ${data.error}</div>`;
+    }
+  } catch (err) {
+    msgContainer.innerHTML += `<div class="ai-msg bot" style="color:red">Network error communicating with AI.</div>`;
+  }
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+
+function useAiCaption(btn) {
+  // Extract text from the div above the button, convert <br> back to \n
+  const contentDiv = btn.previousElementSibling;
+  let text = contentDiv.innerHTML.replace(/<br\s*[\/]?>/gi, '\n');
+  
+  // Basic unescape
+  text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+  
+  document.getElementById('m-caption').value = text.trim();
+  toast('Caption applied!', 'ok');
+}
+
 // ─── INVOICE GENERATION LOGIC ──────────────────────
 
 function openInvoiceModal(clientId, clientName, clientAddress) {
@@ -1217,136 +1303,169 @@ async function generateAndSaveInvoice() {
 
   if(items.length === 0) return toast('Add at least one line item.', 'err');
 
-  // Generate PDF via jsPDF
+  // Generate PDF matching "image_2.png" specifications
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   
   const pgW = doc.internal.pageSize.getWidth();
   const pgH = doc.internal.pageSize.getHeight();
 
-  // Draw Header Background Graphics
-  doc.setFillColor(230, 230, 230); // light gray bg
+  // Background - Light Gray
+  doc.setFillColor(217, 217, 217); 
   doc.rect(0, 0, pgW, pgH, 'F');
   
-  doc.setFillColor(30, 30, 30); // black top curve
-  doc.ellipse(pgW/2, -50, pgW, 100, 'F');
-  doc.setFillColor(200, 150, 50); // gold secondary curve
-  doc.ellipse(pgW/2, -45, pgW-20, 90, 'F');
-  doc.setFillColor(230, 230, 230); // restore
-  doc.ellipse(pgW/2, -40, pgW-40, 80, 'F');
+  // Top Left Curves (Simulating the overlapping wavy shapes)
+  doc.setFillColor(25, 25, 25); // Dark/Black curve
+  doc.ellipse(40, -10, 180, 80, 'F');
+  
+  doc.setFillColor(197, 160, 89); // Gold curve
+  doc.ellipse(40, -15, 180, 75, 'F');
+  
+  doc.setFillColor(217, 217, 217); // Overlap to make it look like a band
+  doc.ellipse(40, -20, 180, 70, 'F');
 
-  // Text: INVOICE
-  doc.setFont("helvetica", "normal");
+  // Bottom Curves
+  doc.setFillColor(197, 160, 89); // Gold base
+  doc.ellipse(pgW - 40, pgH + 15, 180, 50, 'F');
+  
+  doc.setFillColor(25, 25, 25); // Black overlap
+  doc.ellipse(pgW - 40, pgH + 20, 180, 45, 'F');
+
+  // Header Title
+  doc.setFont("times", "roman");
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(28);
-  doc.text("INVOICE", 15, 50);
+  doc.text("INVOICE", 15, 45);
   
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(`Invoice Number: ${invoiceNum}`, 15, 60);
+  doc.text(`Invoice Number: ${invoiceNum}`, 15, 55);
   const todayStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  doc.text(`Date: ${todayStr}`, 15, 65);
+  doc.text(`Date: ${todayStr}`, 15, 60);
 
-  // Logo Placeholder (MEU GLOBAL text representation since images are async)
+  // Logo Placeholder 
   doc.setFont("times", "roman");
-  doc.setFontSize(24);
-  doc.setTextColor(150, 150, 150);
-  doc.text("M E U", pgW - 40, 55, { align: 'center' });
-  doc.setFontSize(10);
-  doc.text("G L O B A L", pgW - 40, 60, { align: 'center' });
-
-  // BILL TO
+  doc.setFontSize(26);
+  doc.setTextColor(160, 160, 160); // Grayish logo color
+  doc.text("M E U", pgW - 35, 55, { align: 'center' });
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text("G L O B A L", pgW - 35, 60, { align: 'center', charSpace: 2 });
+
+  // BILL TO column
+  doc.setFont("times", "bold");
+  doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text("BILL TO:", 15, 80);
   doc.setFont("helvetica", "normal");
-  doc.text((clientObj.name || '').toUpperCase(), 15, 85);
+  doc.setFontSize(10);
+  doc.text((clientObj.name || '').toUpperCase(), 15, 86);
   
-  let adrY = 90;
   if (clientAddress) {
     const splitAdd = doc.splitTextToSize(clientAddress, 80);
-    doc.text(splitAdd, 15, adrY);
+    doc.text(splitAdd, 15, 92);
   }
 
-  // PAYMENT INFORMATION
+  // PAYMENT INFORMATION column
+  doc.setFont("times", "bold");
+  doc.setFontSize(11);
+  doc.text("PAYMENT INFORMATION:", pgW / 2 + 10, 80);
   doc.setFont("helvetica", "bold");
-  doc.text("PAYMENT INFORMATION:", pgW / 2, 80);
-  doc.setFont("helvetica", "normal");
-  doc.text("Bank: FNB/RMB", pgW / 2, 87);
-  doc.text("Name: Migel Uys", pgW / 2, 94);
-  doc.text("Account: 62831548675", pgW / 2, 101);
-  doc.text("Branch Code: 250655", pgW / 2, 108);
-
-  // TABLE HEADER
-  const startY = 120;
-  doc.setFillColor(40, 40, 40);
-  doc.rect(15, startY, pgW - 30, 10, 'F');
+  doc.setFontSize(10);
   
-  doc.setTextColor(200, 150, 50); // Gold text
-  doc.setFont("helvetica", "bold");
-  doc.text("ITEM", 20, startY + 7);
-  doc.text("DESCRIPTION", 45, startY + 7);
-  doc.text("RATE", pgW - 70, startY + 7);
-  doc.text("AMOUNT", pgW - 40, startY + 7);
+  let py = 86;
+  doc.text("Bank:", pgW / 2 + 10, py); doc.setFont("helvetica", "normal"); doc.text("FNB/ RMB", pgW / 2 + 30, py); py+=6;
+  doc.setFont("helvetica", "bold"); doc.text("Name:", pgW / 2 + 10, py); doc.setFont("helvetica", "normal"); doc.text("Migel Uys", pgW / 2 + 30, py); py+=6;
+  doc.setFont("helvetica", "bold"); doc.text("Account:", pgW / 2 + 10, py); doc.setFont("helvetica", "normal"); doc.text("62831548675", pgW / 2 + 30, py); py+=6;
+  doc.setFont("helvetica", "bold"); doc.text("Branch Code:", pgW / 2 + 10, py); doc.setFont("helvetica", "normal"); doc.text("250655", pgW / 2 + 35, py);
 
-  // TABLE ROWS
-  let currY = startY + 18;
+  // TABLE HEADER (Black bg, gold text)
+  const startY = 115;
+  doc.setFillColor(25, 25, 25);
+  doc.rect(15, startY, pgW - 30, 12, 'F');
+  
+  doc.setTextColor(197, 160, 89); // Gold
+  doc.setFont("times", "bold");
+  doc.setFontSize(11);
+  doc.text("I T E M", 20, startY + 8);
+  doc.text("D E S C R I P T I O N", 45, startY + 8);
+  doc.text("R A T E", pgW - 65, startY + 8);
+  doc.text("A M O U N T", pgW - 35, startY + 8);
+
+  // TABLE ROW AREA (White/Light Gray block)
+  let currY = startY + 12;
+  const tableHeight = 80; // Fixed visual height for the table body block
+  doc.setFillColor(235, 235, 235);
+  doc.rect(15, currY, pgW - 30, tableHeight, 'F');
+  doc.setDrawColor(25, 25, 25);
+  doc.rect(15, startY, pgW - 30, tableHeight + 12, 'S'); // Outline whole table
+
+  // Populate Items
+  currY += 8;
   doc.setTextColor(30, 30, 30);
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
   
   let subtotal = 0;
   let counter = 1;
   items.forEach((it) => {
-    doc.text(`${counter}.`, 20, currY);
+    doc.text(`${counter}.`, 22, currY);
     doc.text(it.description, 45, currY);
-    doc.text(`R${it.rate}`, pgW - 70, currY);
-    doc.text(`R ${it.amount}`, pgW - 40, currY);
+    doc.text(`R${it.rate.toFixed(0)}`, pgW - 65, currY);
+    doc.text(`R ${it.amount.toFixed(0)}`, pgW - 35, currY);
     subtotal += it.amount;
     currY += 10;
     counter++;
   });
 
+  // Populate Deductions
   let totalDeductions = 0;
   if(deductions.length > 0) {
     currY += 5;
     doc.setFont("helvetica", "italic");
-    doc.text("Deductions:", 20, currY);
+    doc.text("Deductions:", 22, currY);
     currY += 8;
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(180, 0, 0); // Red
+    doc.setTextColor(180, 0, 0); 
     deductions.forEach((ded) => {
-      doc.text(`-`, 20, currY);
+      doc.text(`-`, 22, currY);
       doc.text(ded.description, 45, currY);
-      doc.text(`-R${ded.rate}`, pgW - 70, currY);
-      doc.text(`-R ${ded.amount}`, pgW - 40, currY);
+      doc.text(`-R${ded.rate.toFixed(0)}`, pgW - 65, currY);
+      doc.text(`-R ${ded.amount.toFixed(0)}`, pgW - 35, currY);
       totalDeductions += ded.amount;
       currY += 10;
     });
   }
 
-  // TABLE BORDER
-  doc.setDrawColor(40, 40, 40);
-  doc.rect(15, startY, pgW - 30, currY - startY + 10);
-
   // TOTALS SECTION
-  currY += 15;
-  doc.rect(pgW - 80, currY, 65, 15);
+  const totalY = startY + tableHeight + 12 + 5; 
+  
+  // Subtotal Box (White bg)
+  doc.setFillColor(245, 245, 245);
+  doc.rect(pgW - 85, totalY, 70, 15, 'F');
+  doc.rect(pgW - 85, totalY, 70, 15, 'S');
   doc.setTextColor(30, 30, 30);
-  doc.text("Sub Total:", pgW - 75, currY + 10);
-  doc.text(`R ${subtotal.toFixed(2)}`, pgW - 20, currY + 10, { align: 'right' });
+  doc.text("Sub Total:", pgW - 80, totalY + 10);
+  doc.text(`${subtotal.toFixed(0)}`, pgW - 20, totalY + 10, { align: 'right' });
 
-  currY += 20;
+  // Black Total Box
   doc.setFillColor(0, 0, 0);
-  doc.rect(pgW - 80, currY, 65, 12, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
+  doc.rect(pgW - 85, totalY + 18, 70, 10, 'F');
+  doc.setTextColor(197, 160, 89); // Gold
+  doc.setFont("times", "bold");
+  doc.setFontSize(12);
   const finalTotal = subtotal - totalDeductions;
-  doc.text(`TOTAL: R${finalTotal.toFixed(2)}`, pgW - 20, currY + 8, { align: 'right' });
+  
+  // Center the Total text in the black box
+  doc.text(`TOTAL: R${finalTotal.toFixed(0)}`, pgW - 85 + 35, totalY + 18 + 7, { align: 'center' });
 
   // TERMS
   doc.setTextColor(30, 30, 30);
-  doc.text("TERMS AND CONDITIONS:", 15, pgW + 30); // roughly lower section
+  doc.setFont("times", "bold");
+  doc.text("TERM AND CONDITIONS:", 15, pgW + 40); 
   doc.setFont("helvetica", "normal");
-  doc.text(`Payment is due ${dueDays} day(s) from the invoice date.`, 15, pgW + 37);
+  doc.setFontSize(10);
+  doc.text(`Payment is due ${dueDays} day(s) from the invoice date.`, 15, pgW + 46);
 
   // Save the PDF locally for the user
   doc.save(`${clientObj.name.replace(/\s+/g,'_')}_${invoiceNum}.pdf`);
@@ -1384,15 +1503,16 @@ async function deleteUser(id){if(!confirm('Delete this user?'))return;const r=aw
 function toggleNuClientField(){document.getElementById('nu-client-wrap').style.display=document.getElementById('nu-role').value==='client_owner'?'block':'none';}
 async function createNewUser(){const name=document.getElementById('nu-name').value.trim(),email=document.getElementById('nu-email').value.trim(),role=document.getElementById('nu-role').value,password=document.getElementById('nu-password').value,client_id=role==='client_owner'?(document.getElementById('nu-client').value||null):null;if(!name||!email)return toast('Name and email required','err');const r=await fetch('/api/admin/add-user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,role,client_id,password})});const d=await r.json().catch(()=>({}));if(d.success){toast('User created!','ok');document.getElementById('nu-name').value='';document.getElementById('nu-email').value='';loadAdminUsers();}else toast(d.error||'Error','err');}
 
-// Updated Add Client logic with prompt
+// Expanded Add Client Prompt (Included description for Gemini)
 async function addClientPrompt(){
   const name=prompt('Client name:');
   if(!name?.trim())return;
   const email=prompt('Client contact email:');
   if(!email?.trim())return;
   const address=prompt('Client Billing Address:');
+  const desc=prompt('Briefly describe their Brand Tone for the AI Assistant:');
   
-  const r=await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),email:email.trim(), address: address?.trim()})});
+  const r=await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),email:email.trim(), address: address?.trim(), description: desc?.trim()})});
   const d=await r.json().catch(()=>({}));
   if(d.id){await loadClients();loadAdminClients();toast('Client added!','ok');}else toast(d.error||'Error','err');
 }
@@ -1421,15 +1541,22 @@ function openEditClient(id){
   document.getElementById('ec-name-edit').value=c.name;
   document.getElementById('ec-email-edit').value=c.email||'';
   document.getElementById('ec-address-edit').value=c.address||'';
+  document.getElementById('ec-desc-edit').value=c.description||'';
   document.getElementById('ec-status-edit').value=c.status||'Active';
   document.getElementById('edit-client-modal').classList.add('open');
 }
 function closeEditClientModal(){document.getElementById('edit-client-modal').classList.remove('open');}
 
 async function updateClient(){
-  const id=document.getElementById('ec-id').value,name=document.getElementById('ec-name-edit').value.trim(),email=document.getElementById('ec-email-edit').value.trim(),address=document.getElementById('ec-address-edit').value.trim(),status=document.getElementById('ec-status-edit').value;
+  const id=document.getElementById('ec-id').value;
+  const name=document.getElementById('ec-name-edit').value.trim();
+  const email=document.getElementById('ec-email-edit').value.trim();
+  const address=document.getElementById('ec-address-edit').value.trim();
+  const desc=document.getElementById('ec-desc-edit').value.trim();
+  const status=document.getElementById('ec-status-edit').value;
+  
   if(!name)return toast('Name required','err');
-  const r=await fetch(`/api/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,address,status})});
+  const r=await fetch(`/api/clients/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,address,description:desc,status})});
   if(r.ok){closeEditClientModal();await loadClients();loadAdminClients();toast('Client updated!','ok');}else toast('Error','err');
 }
 
