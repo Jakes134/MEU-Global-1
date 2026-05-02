@@ -16,7 +16,16 @@ app.use(express.json({ limit: '10mb' }));
 
 // Database connection setup
 const dbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, '') : undefined;
-const pool = new Pool({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+const sslConfig = dbUrl ? { rejectUnauthorized: false } : false;
+
+const pool = new Pool({ 
+  connectionString: dbUrl, 
+  ssl: sslConfig 
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client:', err.message);
+});
 
 pool.query('SELECT NOW()')
   .then(r => console.log('Database connected at', r.rows[0].now))
