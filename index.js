@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
+const { GoogleGenAI } = require('@google/genai');
 
 // ============================================================================
 // APP INITIALIZATION & CONFIGURATION
@@ -136,7 +137,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ============================================================================
-// GEMINI API INTEGRATION
+// GEMINI API INTEGRATION (USING OFFICIAL SDK)
 // ============================================================================
 app.post('/api/chat', async (req, res) => {
   const { client_id, prompt } = req.body;
@@ -145,7 +146,7 @@ app.post('/api/chat', async (req, res) => {
   try {
     let systemInstruction = "You are an expert social media manager and content creator.";
     
-    // Fetch client description to personalize the AI (The "Gem" effect)
+    // Fetch client description to personalize the AI
     if (client_id) {
       const clientRes = await pool.query('SELECT name, description FROM clients WHERE id = $1', [client_id]);
       if (clientRes.rows.length > 0) {
@@ -163,36 +164,23 @@ app.post('/api/chat', async (req, res) => {
        return res.status(500).json({ error: 'Google Gemini API key not configured on the server.' });
     }
 
-    // THE FIX: We seamlessly combine the brand instructions and the user's prompt 
-    // into one block of text to completely bypass Google's strict JSON schema limits.
-    const combinedPrompt = `[System Instructions: ${systemInstruction}]\n\n[User Request: ${prompt}]`;
+    // Initialize the official SDK
+    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-    // Using the highly stable gemini-1.5-flash model
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: combinedPrompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-        }
-      })
+    // The SDK handles all the messy formatting for us!
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7,
+      }
     });
 
-    const data = await response.json();
-    
-    // Catch specific Google API errors
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
-
-    const aiText = data.candidates[0].content.parts[0].text;
-    res.json({ success: true, text: aiText });
+    res.json({ success: true, text: response.text });
 
   } catch (err) {
-    console.error('Gemini API Error:', err);
+    console.error('Gemini SDK Error:', err);
     res.status(500).json({ error: `AI Error: ${err.message}` });
   }
 });
@@ -286,7 +274,6 @@ app.put('/api/clients/:id', async (req, res) => {
 // INVOICE API
 // ============================================================================
 
-// Get Suggested Next Invoice Number
 app.get('/api/invoices/next-number', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1');
@@ -305,7 +292,6 @@ app.get('/api/invoices/next-number', async (req, res) => {
   }
 });
 
-// Create an Invoice with Line Items and Deductions
 app.post('/api/invoices', async (req, res) => {
   const { client_id, invoice_number, due_days, items, deductions, created_by } = req.body;
   
@@ -320,7 +306,6 @@ app.post('/api/invoices', async (req, res) => {
     let subtotal = 0;
     let totalDeductions = 0;
     
-    // Calculate totals on backend for security
     if (items && Array.isArray(items)) {
       items.forEach(item => subtotal += parseFloat(item.amount || 0));
     }
@@ -330,7 +315,6 @@ app.post('/api/invoices', async (req, res) => {
     
     const total = subtotal - totalDeductions;
 
-    // Insert Invoice Record
     const invRes = await client.query(
       `INSERT INTO invoices (client_id, invoice_number, due_days, subtotal, deductions, total, created_by) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
@@ -339,7 +323,6 @@ app.post('/api/invoices', async (req, res) => {
     
     const invoiceId = invRes.rows[0].id;
 
-    // Insert standard line items
     if (items && Array.isArray(items)) {
       for (const item of items) {
         await client.query(
@@ -349,7 +332,6 @@ app.post('/api/invoices', async (req, res) => {
       }
     }
 
-    // Insert deductions
     if (deductions && Array.isArray(deductions)) {
       for (const ded of deductions) {
         await client.query(
