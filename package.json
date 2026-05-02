@@ -1,10 +1,11 @@
 {
   "name": "meu-global-crm",
-  "version": "1.0.0",
-  "description": "MEU Global CRM Backend",
+  "version": "2.0.0",
+  "description": "MEU Global CRM - Enhanced with Leads Pipeline, Landing Pages & Email Campaigns",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
   "engines": {
     "node": ">=18.0.0"
