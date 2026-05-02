@@ -34,9 +34,10 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
-    // 2. Clients Table (Updated with Address)
-    await pool.query(`CREATE TABLE IF NOT EXISTS clients (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) UNIQUE NOT NULL, address TEXT, status VARCHAR(20) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
+    // 2. Clients Table (Updated with Address and Description for Gemini)
+    await pool.query(`CREATE TABLE IF NOT EXISTS clients (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) UNIQUE NOT NULL, address TEXT, description TEXT, status VARCHAR(20) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS description TEXT`);
 
     // 3. Products & Customers
     await pool.query(`CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, price DECIMAL(12,2) NOT NULL, billing_type VARCHAR(20) DEFAULT 'one-off', duration_months INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
@@ -56,7 +57,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS subtasks JSONB DEFAULT '[]'::jsonb`);
     await pool.query(`CREATE TABLE IF NOT EXISTS task_comments (id SERIAL PRIMARY KEY, task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE, user_id INTEGER, comment TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
 
-    // 6. Invoices System (NEW)
+    // 6. Invoices System
     await pool.query(`CREATE TABLE IF NOT EXISTS invoices (
       id SERIAL PRIMARY KEY, 
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, 
@@ -97,7 +98,7 @@ app.get('/setup-db', async (req, res) => {
       const hashed = await bcrypt.hash(adminPass, 12);
       await pool.query(`INSERT INTO users (name, email, password, role, must_change_password) VALUES ('System Admin', $1, $2, 'admin', TRUE)`, [adminEmail, hashed]);
     }
-    res.send('<pre>Database fully migrated successfully, including invoices and address fields.</pre>');
+    res.send('<pre>Database fully migrated successfully.</pre>');
 
   } catch (err) {
     console.error('Setup error:', err);
@@ -131,6 +132,66 @@ app.post('/api/change-password', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
+// GEMINI API INTEGRATION
+// ============================================================================
+app.post('/api/chat', async (req, res) => {
+  const { client_id, prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'Prompt is required.' });
+
+  try {
+    let systemInstruction = "You are an expert social media manager and content creator.";
+    
+    // Fetch client description to personalize the AI (The "Gem" effect)
+    if (client_id) {
+      const clientRes = await pool.query('SELECT name, description FROM clients WHERE id = $1', [client_id]);
+      if (clientRes.rows.length > 0) {
+        const client = clientRes.rows[0];
+        systemInstruction = `You are the dedicated expert social media manager for the brand/client named "${client.name}". 
+        Here is their brand description, content style, and guidelines: 
+        ${client.description || 'Create engaging, professional content suitable for their industry.'}
+        
+        Always adapt your tone, vocabulary, and style to perfectly match these guidelines.`;
+      }
+    }
+
+    const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    if (!geminiApiKey) {
+       return res.status(500).json({ error: 'Google Gemini API key not configured on the server.' });
+    }
+
+    // Call Gemini 1.5 Flash via REST API
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: { text: systemInstruction }
+        },
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    const aiText = data.candidates[0].content.parts[0].text;
+    res.json({ success: true, text: aiText });
+
+  } catch (err) {
+    console.error('Gemini API Error:', err);
+    res.status(500).json({ error: 'Failed to generate response from AI.' });
   }
 });
 
@@ -199,9 +260,9 @@ app.get('/api/clients', async (req, res) => {
 });
 
 app.post('/api/clients', async (req, res) => {
-  const { name, email, address } = req.body;
+  const { name, email, address, description } = req.body;
   try {
-    const { rows } = await pool.query('INSERT INTO clients (name, email, address) VALUES ($1, $2, $3) RETURNING *', [name, email, address || null]);
+    const { rows } = await pool.query('INSERT INTO clients (name, email, address, description) VALUES ($1, $2, $3, $4) RETURNING *', [name, email, address || null, description || null]);
     res.json(rows[0]);
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Client email already exists.' });
@@ -210,9 +271,9 @@ app.post('/api/clients', async (req, res) => {
 });
 
 app.put('/api/clients/:id', async (req, res) => {
-  const { name, email, status, address } = req.body;
+  const { name, email, status, address, description } = req.body;
   try {
-    await pool.query('UPDATE clients SET name=$1, email=$2, status=$3, address=$4 WHERE id=$5', [name, email, status, address || null, req.params.id]);
+    await pool.query('UPDATE clients SET name=$1, email=$2, status=$3, address=$4, description=$5 WHERE id=$6', [name, email, status, address || null, description || null, req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -220,7 +281,7 @@ app.put('/api/clients/:id', async (req, res) => {
 });
 
 // ============================================================================
-// INVOICE API (NEW FEATURES)
+// INVOICE API
 // ============================================================================
 
 // Get Suggested Next Invoice Number
@@ -305,7 +366,6 @@ app.post('/api/invoices', async (req, res) => {
     client.release();
   }
 });
-
 
 // ============================================================================
 // PRODUCT & CUSTOMER API
