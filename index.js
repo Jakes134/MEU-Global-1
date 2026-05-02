@@ -34,7 +34,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT TRUE`);
 
-    // 2. Clients Table (Updated with Address and Description for Gemini)
+    // 2. Clients Table
     await pool.query(`CREATE TABLE IF NOT EXISTS clients (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) UNIQUE NOT NULL, address TEXT, description TEXT, status VARCHAR(20) DEFAULT 'Active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS description TEXT`);
@@ -163,16 +163,17 @@ app.post('/api/chat', async (req, res) => {
        return res.status(500).json({ error: 'Google Gemini API key not configured on the server.' });
     }
 
-    // Call Gemini 1.5 Flash via REST API (Updated to -latest version)
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+    // THE FIX: We seamlessly combine the brand instructions and the user's prompt 
+    // into one block of text to completely bypass Google's strict JSON schema limits.
+    const combinedPrompt = `[System Instructions: ${systemInstruction}]\n\n[User Request: ${prompt}]`;
+
+    // Using the highly stable gemini-1.5-flash model
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemInstruction }] // Strictly formatted as an array for the Google API
-        },
         contents: [{
-          parts: [{ text: prompt }]
+          parts: [{ text: combinedPrompt }]
         }],
         generationConfig: {
           temperature: 0.7,
@@ -182,7 +183,7 @@ app.post('/api/chat', async (req, res) => {
 
     const data = await response.json();
     
-    // Catch specific Google API errors (like bad keys or format errors)
+    // Catch specific Google API errors
     if (data.error) {
       throw new Error(data.error.message);
     }
