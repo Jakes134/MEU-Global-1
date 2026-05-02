@@ -13,7 +13,6 @@ const port = process.env.PORT || 8080;
 
 app.set('trust proxy', 1);
 app.use(express.json());
-app.use(express.static(__dirname)); // CRITICAL: This allows the frontend to load invoice.jpeg
 
 // Database connection setup
 const dbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/[?&]sslmode=\w+/g, '') : undefined;
@@ -138,7 +137,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ============================================================================
-// GEMINI API INTEGRATION
+// GEMINI API INTEGRATION (USING OFFICIAL SDK)
 // ============================================================================
 app.post('/api/chat', async (req, res) => {
   const { client_id, prompt } = req.body;
@@ -147,6 +146,7 @@ app.post('/api/chat', async (req, res) => {
   try {
     let systemInstruction = "You are an expert social media manager and content creator.";
     
+    // Fetch client description to personalize the AI
     if (client_id) {
       const clientRes = await pool.query('SELECT name, description FROM clients WHERE id = $1', [client_id]);
       if (clientRes.rows.length > 0) {
@@ -164,8 +164,10 @@ app.post('/api/chat', async (req, res) => {
        return res.status(500).json({ error: 'Google Gemini API key not configured on the server.' });
     }
 
+    // Initialize the official SDK
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
+    // The SDK handles all the messy formatting for us!
     const response = await ai.models.generateContent({
       model: "gemini-1.5-flash",
       contents: prompt,
@@ -271,6 +273,7 @@ app.put('/api/clients/:id', async (req, res) => {
 // ============================================================================
 // INVOICE API
 // ============================================================================
+
 app.get('/api/invoices/next-number', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1');
