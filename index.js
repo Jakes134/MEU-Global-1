@@ -3,7 +3,14 @@ const express = require(‘express’);
 const path = require(‘path’);
 const { Pool } = require(‘pg’);
 const bcrypt = require(‘bcryptjs’);
-const { GoogleGenAI } = require(’@google/genai’);
+
+// Optional Google GenAI - only load if package is installed
+let GoogleGenAI = null;
+try {
+GoogleGenAI = require(’@google/genai’).GoogleGenAI;
+} catch (e) {
+console.log(‘Google GenAI not installed - AI features will be disabled’);
+}
 
 // ============================================================================
 // APP INITIALIZATION & CONFIGURATION
@@ -237,6 +244,13 @@ res.status(500).json({ error: err.message });
 app.post(’/api/chat’, async (req, res) => {
 const { client_id, prompt } = req.body;
 if (!prompt) return res.status(400).json({ error: ‘Prompt is required.’ });
+
+// Check if Google GenAI is available
+if (!GoogleGenAI) {
+return res.status(503).json({
+error: ‘AI features are currently unavailable. Install @google/genai package and restart the server.’
+});
+}
 
 try {
 let systemInstruction = “You are an expert social media manager and content creator.”;
