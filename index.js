@@ -163,8 +163,8 @@ app.post('/api/chat', async (req, res) => {
        return res.status(500).json({ error: 'Google Gemini API key not configured on the server.' });
     }
 
-    // Call Gemini 1.5 Flash via REST API
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+    // Call Gemini 1.5 Flash via REST API (Updated to -latest version)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
