@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "build": "exit 0"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -18,3 +19,4 @@
     "pg": "^8.11.3"
   }
 }
+
