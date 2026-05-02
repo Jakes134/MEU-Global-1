@@ -168,8 +168,8 @@ app.post('/api/chat', async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system_instruction: {
-          parts: { text: systemInstruction }
+        systemInstruction: {
+          parts: [{ text: systemInstruction }] // Strictly formatted as an array for the Google API
         },
         contents: [{
           parts: [{ text: prompt }]
@@ -182,6 +182,7 @@ app.post('/api/chat', async (req, res) => {
 
     const data = await response.json();
     
+    // Catch specific Google API errors (like bad keys or format errors)
     if (data.error) {
       throw new Error(data.error.message);
     }
@@ -191,7 +192,7 @@ app.post('/api/chat', async (req, res) => {
 
   } catch (err) {
     console.error('Gemini API Error:', err);
-    res.status(500).json({ error: 'Failed to generate response from AI.' });
+    res.status(500).json({ error: `AI Error: ${err.message}` });
   }
 });
 
