@@ -1167,7 +1167,7 @@ function setupRoleUI() {
   document.getElementById('session-info').innerHTML=`<div style="font-weight:700">${escHtml(session.name)}</div><div style="font-size:12px;color:var(--ink3);margin-top:3px">${escHtml(session.email)} · ${session.role}</div>`;
 
   if(session.role==='admin'){
-    document.getElementById('tab-users').style.display='block';
+    // Show all admin navigation items
     document.getElementById('nav-clients').style.display='flex';
     document.getElementById('nav-products').style.display='flex';
     document.getElementById('nav-users').style.display='flex';
@@ -1178,6 +1178,9 @@ function setupRoleUI() {
     document.getElementById('bnav-approvals').style.display='flex';
     document.getElementById('nav-pages').style.display='flex';
     document.getElementById('nav-campaigns').style.display='flex';
+    // Make sure add client button is visible
+    const addClientBtn = document.getElementById('panel-add-client-btn');
+    if(addClientBtn) addClientBtn.style.display='inline-flex';
   } else if(session.role==='client_owner'){
     document.getElementById('nav-approvals').style.display='flex';
     document.getElementById('bnav-approvals').style.display='flex';
