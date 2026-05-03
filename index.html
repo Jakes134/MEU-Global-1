@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -6,11 +7,14 @@
   <title>MEU Global | CRM</title>
 
   <!-- Fonts -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 
   <!-- Scripts: Chart.js & jsPDF -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
@@ -1040,10 +1044,17 @@
       }
     }
   </style>
+
 </head>
+
 <body>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <!-- AUTH OVERLAY (LOGIN) -->
+
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-card">
     <div class="auth-title">Welcome back</div>
@@ -1061,7 +1072,12 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <!-- CHANGE PASSWORD OVERLAY -->
+
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <div class="auth-overlay" id="change-pw-overlay" style="display:none">
   <div class="auth-card">
     <div class="auth-title">Change Password</div>
@@ -1079,100 +1095,111 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <!-- MAIN APP -->
+
+<!-- ══════════════════════════════════════════════════════════ -->
+
 <div id="app">
+
   <!-- SIDEBAR -->
+
   <div class="sidebar">
     <div class="logo-area" onclick="handleLogoClick()">
       <span id="sidebar-name-label">M</span>
     </div>
 
-    <div class="nav-section">
-      <button class="nav-btn active" id="nav-dash" onclick="showView('dash')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="14" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-        </svg>
-        <span class="tooltip">Dashboard</span>
-      </button>
+```
+<div class="nav-section">
+  <button class="nav-btn active" id="nav-dash" onclick="showView('dash')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span class="tooltip">Dashboard</span>
+  </button>
 
-      <button class="nav-btn" id="nav-leads" onclick="showView('leads')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <span class="tooltip">Leads</span>
-      </button>
+  <button class="nav-btn" id="nav-leads" onclick="showView('leads')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span class="tooltip">Leads</span>
+  </button>
 
-      <button class="nav-btn" id="nav-customers" onclick="showView('customers')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span class="tooltip">Customers</span>
-      </button>
+  <button class="nav-btn" id="nav-customers" onclick="showView('customers')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+    <span class="tooltip">Customers</span>
+  </button>
 
-      <button class="nav-btn" id="nav-calendar" onclick="showView('calendar')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <span class="tooltip">Calendar</span>
-      </button>
+  <button class="nav-btn" id="nav-calendar" onclick="showView('calendar')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span class="tooltip">Calendar</span>
+  </button>
 
-      <button class="nav-btn" id="nav-tasks" onclick="showView('tasks')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M9 11l3 3L22 4"/>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        <span class="tooltip">Tasks</span>
-      </button>
+  <button class="nav-btn" id="nav-tasks" onclick="showView('tasks')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M9 11l3 3L22 4"/>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+    <span class="tooltip">Tasks</span>
+  </button>
 
-      <button class="nav-btn" id="nav-approvals" style="display:none" onclick="showView('approvals')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <polyline points="9 11 12 14 22 4"/>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        <span class="tooltip">Approvals</span>
-      </button>
+  <button class="nav-btn" id="nav-approvals" style="display:none" onclick="showView('approvals')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <polyline points="9 11 12 14 22 4"/>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+    <span class="tooltip">Approvals</span>
+  </button>
 
-      <button class="nav-btn" id="nav-pages" style="display:none" onclick="showView('pages')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="2" y="3" width="20" height="14" rx="2"/>
-          <line x1="8" y1="21" x2="16" y2="21"/>
-          <line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
-        <span class="tooltip">Landing Pages</span>
-      </button>
+  <button class="nav-btn" id="nav-pages" style="display:none" onclick="showView('pages')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    <span class="tooltip">Landing Pages</span>
+  </button>
 
-      <button class="nav-btn" id="nav-campaigns" style="display:none" onclick="showView('campaigns')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-        </svg>
-        <span class="tooltip">Email Campaigns</span>
-      </button>
-    </div>
+  <button class="nav-btn" id="nav-campaigns" style="display:none" onclick="showView('campaigns')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+    </svg>
+    <span class="tooltip">Email Campaigns</span>
+  </button>
+</div>
 
-    <div class="user-section">
-      <button class="nav-btn" onclick="document.getElementById('user-menu-backdrop').classList.add('open')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-        <span class="tooltip">Settings</span>
-      </button>
-      <div class="user-avatar" id="user-initials">M</div>
-    </div>
+<div class="user-section">
+  <button class="nav-btn" onclick="document.getElementById('user-menu-backdrop').classList.add('open')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span class="tooltip">Settings</span>
+  </button>
+  <div class="user-avatar" id="user-initials">M</div>
+</div>
+```
+
   </div>
 
   <!-- CLIENT PANEL -->
+
   <div class="client-panel" id="client-panel">
     <div class="client-panel-header">
       <input type="text" class="client-search" placeholder="Search clients..." oninput="filterClients(this.value)">
@@ -1182,6 +1209,7 @@
   </div>
 
   <!-- MOBILE TOPBAR -->
+
   <div class="mobile-topbar">
     <div style="font-weight:700" id="mobile-topbar-title">Dashboard</div>
     <div style="display:flex;gap:12px">
@@ -1190,184 +1218,208 @@
   </div>
 
   <!-- MAIN CONTENT -->
+
   <div class="main-content">
-    <!-- DASHBOARD VIEW -->
-    <div class="view active" id="view-dash">
-      <div class="section-header">
-        <span class="section-title">Dashboard</span>
-      </div>
 
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Sign-ups</div>
-          <div class="stat-value" id="total-signups">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Active Projects</div>
-          <div class="stat-value" id="active-projects">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Revenue This Month</div>
-          <div class="stat-value">R<span id="revenue-month">0</span></div>
-        </div>
-      </div>
+```
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- DASHBOARD VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view active" id="view-dash">
+  <div class="section-header">
+    <span class="section-title">Dashboard</span>
+  </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
-        <div class="card">
-          <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">Sign-up Stages</h3>
-          <canvas id="mini-line-chart" style="max-height:200px"></canvas>
-        </div>
-        <div class="card">
-          <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">Top Products</h3>
-          <canvas id="products-chart" style="max-height:200px"></canvas>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:24px">
-        <div class="tabs">
-          <button class="tab-btn active" id="dash-tab-new" onclick="switchDashTaskTab('new')">New (0)</button>
-          <button class="tab-btn" id="dash-tab-progress" onclick="switchDashTaskTab('progress')">In Progress (0)</button>
-          <button class="tab-btn" id="dash-tab-review" onclick="switchDashTaskTab('review')">Review (0)</button>
-          <button class="tab-btn" id="dash-tab-done" onclick="switchDashTaskTab('done')">Done (0)</button>
-        </div>
-        <div id="dash-task-list"></div>
-      </div>
-
-      <div class="card">
-        <div class="calendar-header">
-          <div class="calendar-month" id="dash-cal-month">May 2026</div>
-          <div class="calendar-nav">
-            <button onclick="prevCalMonth()">‹</button>
-            <button onclick="nextCalMonth()">›</button>
-          </div>
-        </div>
-        <div class="calendar-grid" id="dash-calendar"></div>
-      </div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Sign-ups</div>
+      <div class="stat-value" id="total-signups">0</div>
     </div>
-
-    <!-- LEADS VIEW -->
-    <div class="view" id="view-leads">
-      <div class="section-header">
-        <span class="section-title">Sales Pipeline</span>
-        <button class="btn btn-dark btn-sm" onclick="openLeadModal()">+ Add Lead</button>
-      </div>
-      <div class="kanban-board" id="leads-board"></div>
+    <div class="stat-card">
+      <div class="stat-label">Active Projects</div>
+      <div class="stat-value" id="active-projects">0</div>
     </div>
-
-    <!-- CUSTOMERS VIEW -->
-    <div class="view" id="view-customers">
-      <div class="section-header">
-        <span class="section-title">End Customers</span>
-        <button class="btn btn-dark btn-sm" onclick="document.getElementById('add-customer-backdrop').classList.add('open')">+ Add Customer</button>
-      </div>
-      <div id="customers-table"></div>
-    </div>
-
-    <!-- CALENDAR VIEW -->
-    <div class="view" id="view-calendar">
-      <div class="section-header">
-        <span class="section-title">Content Calendar</span>
-        <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
-      </div>
-      <div class="card">
-        <div class="calendar-header">
-          <div class="calendar-month" id="cal-month-title">May 2026</div>
-          <div class="calendar-nav">
-            <button onclick="prevCalMonth()">‹</button>
-            <button onclick="nextCalMonth()">›</button>
-          </div>
-        </div>
-        <div class="calendar-grid" id="calendar-main"></div>
-      </div>
-    </div>
-
-    <!-- TASKS VIEW -->
-    <div class="view" id="view-tasks">
-      <div class="section-header">
-        <span class="section-title">Tasks</span>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" id="task-filter-mine" onclick="filterTasks('mine')">My Tasks</button>
-          <button class="btn btn-ghost btn-sm" id="task-filter-all" onclick="filterTasks('all')">All Tasks</button>
-          <button class="btn btn-dark btn-sm" id="add-task-btn" onclick="document.getElementById('add-task-backdrop').classList.add('open')">+ Add Task</button>
-        </div>
-      </div>
-      <div class="kanban-board" id="tasks-board"></div>
-    </div>
-
-    <!-- APPROVALS VIEW -->
-    <div class="view" id="view-approvals">
-      <div class="section-header">
-        <span class="section-title">Pending Approvals</span>
-        <button class="btn btn-dark btn-sm" onclick="bulkApproveAll()">✓ Approve All</button>
-      </div>
-      <div id="approvals-list"></div>
-    </div>
-
-    <!-- LANDING PAGES VIEW -->
-    <div class="view" id="view-pages">
-      <div class="section-header">
-        <span class="section-title">Landing Pages</span>
-        <button class="btn btn-dark btn-sm" onclick="openPageBuilder()">+ Create Page</button>
-      </div>
-      <div id="pages-list"><div class="empty-state"><p>No landing pages yet. Create your first one!</p></div></div>
-    </div>
-
-    <!-- EMAIL CAMPAIGNS VIEW -->
-    <div class="view" id="view-campaigns">
-      <div class="section-header">
-        <span class="section-title">Email Campaigns</span>
-        <button class="btn btn-dark btn-sm" onclick="openCampaignModal()">+ New Campaign</button>
-      </div>
-      <div id="campaigns-list"><div class="empty-state"><p>No campaigns yet. Create your first one!</p></div></div>
-    </div>
-
-    <!-- SETTINGS TABS -->
-    <div class="view" id="view-settings">
-      <div class="section-header">
-        <span class="section-title">Settings</span>
-      </div>
-      
-      <div class="tabs">
-        <button class="tab-btn active" id="tab-users" style="display:none" onclick="switchSettingsTab('users')">Users</button>
-        <button class="tab-btn" id="tab-clients" style="display:none" onclick="switchSettingsTab('clients')">Clients</button>
-        <button class="tab-btn" id="tab-products" style="display:none" onclick="switchSettingsTab('products')">Products</button>
-        <button class="tab-btn" id="tab-account" onclick="switchSettingsTab('account')">Account</button>
-      </div>
-
-      <div id="settings-users" style="display:none">
-        <button class="btn btn-dark btn-sm" style="margin-bottom:16px" onclick="document.getElementById('add-user-backdrop').classList.add('open')">+ Add User</button>
-        <div id="users-table"></div>
-      </div>
-
-      <div id="settings-clients" style="display:none">
-        <div id="clients-table"></div>
-      </div>
-
-      <div id="settings-products" style="display:none">
-        <div class="field" style="max-width:300px;margin-bottom:16px">
-          <label>Filter by Client</label>
-          <select id="prod-client-filter" onchange="loadProducts()"><option value="">All Clients</option></select>
-        </div>
-        <button class="btn btn-dark btn-sm" style="margin-bottom:16px" onclick="document.getElementById('add-product-backdrop').classList.add('open')">+ Add Product</button>
-        <div id="products-table"></div>
-      </div>
-
-      <div id="settings-account">
-        <div class="card" style="max-width:500px">
-          <div id="session-info" style="margin-bottom:24px"></div>
-          <div class="field">
-            <label>Change Password</label>
-            <input type="password" id="my-new-pw" placeholder="New password (min 8 characters)">
-          </div>
-          <button class="btn btn-dark" onclick="changeMyPassword()">Update Password</button>
-          <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
-          <button class="btn btn-red" onclick="doSignOut()">Sign Out</button>
-        </div>
-      </div>
+    <div class="stat-card">
+      <div class="stat-label">Revenue This Month</div>
+      <div class="stat-value">R<span id="revenue-month">0</span></div>
     </div>
   </div>
 
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+    <div class="card">
+      <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">Sign-up Stages</h3>
+      <canvas id="mini-line-chart" style="max-height:200px"></canvas>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">Top Products</h3>
+      <canvas id="products-chart" style="max-height:200px"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="tabs">
+      <button class="tab-btn active" id="dash-tab-new" onclick="switchDashTaskTab('new')">New (0)</button>
+      <button class="tab-btn" id="dash-tab-progress" onclick="switchDashTaskTab('progress')">In Progress (0)</button>
+      <button class="tab-btn" id="dash-tab-review" onclick="switchDashTaskTab('review')">Review (0)</button>
+      <button class="tab-btn" id="dash-tab-done" onclick="switchDashTaskTab('done')">Done (0)</button>
+    </div>
+    <div id="dash-task-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="calendar-header">
+      <div class="calendar-month" id="dash-cal-month">May 2026</div>
+      <div class="calendar-nav">
+        <button onclick="prevCalMonth()">‹</button>
+        <button onclick="nextCalMonth()">›</button>
+      </div>
+    </div>
+    <div class="calendar-grid" id="dash-calendar"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- LEADS VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-leads">
+  <div class="section-header">
+    <span class="section-title">Sales Pipeline</span>
+    <button class="btn btn-dark btn-sm" onclick="openLeadModal()">+ Add Lead</button>
+  </div>
+  <div class="kanban-board" id="leads-board"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CUSTOMERS VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-customers">
+  <div class="section-header">
+    <span class="section-title">End Customers</span>
+    <button class="btn btn-dark btn-sm" onclick="document.getElementById('add-customer-backdrop').classList.add('open')">+ Add Customer</button>
+  </div>
+  <div id="customers-table"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CALENDAR VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-calendar">
+  <div class="section-header">
+    <span class="section-title">Content Calendar</span>
+    <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
+  </div>
+  <div class="card">
+    <div class="calendar-header">
+      <div class="calendar-month" id="cal-month-title">May 2026</div>
+      <div class="calendar-nav">
+        <button onclick="prevCalMonth()">‹</button>
+        <button onclick="nextCalMonth()">›</button>
+      </div>
+    </div>
+    <div class="calendar-grid" id="calendar-main"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TASKS VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-tasks">
+  <div class="section-header">
+    <span class="section-title">Tasks</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" id="task-filter-mine" onclick="filterTasks('mine')">My Tasks</button>
+      <button class="btn btn-ghost btn-sm" id="task-filter-all" onclick="filterTasks('all')">All Tasks</button>
+      <button class="btn btn-dark btn-sm" id="add-task-btn" onclick="document.getElementById('add-task-backdrop').classList.add('open')">+ Add Task</button>
+    </div>
+  </div>
+  <div class="kanban-board" id="tasks-board"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- APPROVALS VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-approvals">
+  <div class="section-header">
+    <span class="section-title">Pending Approvals</span>
+    <button class="btn btn-dark btn-sm" onclick="bulkApproveAll()">✓ Approve All</button>
+  </div>
+  <div id="approvals-list"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- LANDING PAGES VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-pages">
+  <div class="section-header">
+    <span class="section-title">Landing Pages</span>
+    <button class="btn btn-dark btn-sm" onclick="openPageBuilder()">+ Create Page</button>
+  </div>
+  <div id="pages-list"><div class="empty-state"><p>No landing pages yet. Create your first one!</p></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- EMAIL CAMPAIGNS VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-campaigns">
+  <div class="section-header">
+    <span class="section-title">Email Campaigns</span>
+    <button class="btn btn-dark btn-sm" onclick="openCampaignModal()">+ New Campaign</button>
+  </div>
+  <div id="campaigns-list"><div class="empty-state"><p>No campaigns yet. Create your first one!</p></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SETTINGS TABS (ADMIN ONLY) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="view" id="view-settings">
+  <div class="section-header">
+    <span class="section-title">Settings</span>
+  </div>
+  
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-users" style="display:none" onclick="switchSettingsTab('users')">Users</button>
+    <button class="tab-btn" id="tab-clients" style="display:none" onclick="switchSettingsTab('clients')">Clients</button>
+    <button class="tab-btn" id="tab-products" style="display:none" onclick="switchSettingsTab('products')">Products</button>
+    <button class="tab-btn" id="tab-account" onclick="switchSettingsTab('account')">Account</button>
+  </div>
+
+  <div id="settings-users" style="display:none">
+    <button class="btn btn-dark btn-sm" style="margin-bottom:16px" onclick="document.getElementById('add-user-backdrop').classList.add('open')">+ Add User</button>
+    <div id="users-table"></div>
+  </div>
+
+  <div id="settings-clients" style="display:none">
+    <div id="clients-table"></div>
+  </div>
+
+  <div id="settings-products" style="display:none">
+    <div class="field" style="max-width:300px;margin-bottom:16px">
+      <label>Filter by Client</label>
+      <select id="prod-client-filter" onchange="loadProducts()"><option value="">All Clients</option></select>
+    </div>
+    <button class="btn btn-dark btn-sm" style="margin-bottom:16px" onclick="document.getElementById('add-product-backdrop').classList.add('open')">+ Add Product</button>
+    <div id="products-table"></div>
+  </div>
+
+  <div id="settings-account">
+    <div class="card" style="max-width:500px">
+      <div id="session-info" style="margin-bottom:24px"></div>
+      <div class="field">
+        <label>Change Password</label>
+        <input type="password" id="my-new-pw" placeholder="New password (min 8 characters)">
+      </div>
+      <button class="btn btn-dark" onclick="changeMyPassword()">Update Password</button>
+      <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+      <button class="btn btn-red" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
   <!-- BOTTOM NAV (MOBILE) -->
+
   <div class="bottom-nav">
     <button class="bottom-nav-btn active" id="bnav-dash" onclick="showView('dash')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
@@ -1386,10 +1438,12 @@
       <span>Approvals</span>
     </button>
   </div>
+
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
 
+<div class="toast" id="toast"></div>
 </body>
+
 </html>
