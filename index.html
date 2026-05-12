@@ -424,21 +424,6 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <span class="tooltip">Tasks</span>
     </button>
 
-    <button class="nav-btn" id="nav-approvals" style="display:none" onclick="showView('approvals')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-      <span class="tooltip">Approvals</span>
-    </button>
-
-    <button class="nav-btn" id="nav-campaigns" style="display:none" onclick="showView('campaigns')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-      </svg>
-      <span class="tooltip">Email Campaigns</span>
-    </button>
-
     <div class="spacer"></div>
 
     <div class="user-circle" id="user-initials" onclick="document.getElementById('user-panel').classList.toggle('open')">?</div>
@@ -634,10 +619,6 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <button class="bottom-nav-btn" id="bnav-tasks" onclick="showView('tasks')">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Tasks</span>
-      </button>
-      <button class="bottom-nav-btn" id="bnav-approvals" style="display:none" onclick="showView('approvals')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        <span>Approvals</span>
       </button>
     </div>
   </div>
@@ -1829,7 +1810,7 @@ function closeDayPlan() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// VISUAL PAGE BUILDER LOGIC (NEW)
+// VISUAL PAGE BUILDER LOGIC
 // ═══════════════════════════════════════════════════════════════
 
 let draggedBlockType = null;
@@ -1840,7 +1821,6 @@ function openPageBuilder() {
   document.getElementById('page-slug').value = '';
   if(allClients.length) document.getElementById('page-client').value = allClients[0].id;
   
-  // Reset Canvas
   const canvas = document.getElementById('builder-canvas');
   canvas.innerHTML = '<div style="padding:100px; text-align:center; color:var(--ink3); font-style:italic;" id="canvas-placeholder">Drag blocks here from the sidebar to build your page...</div>';
   
@@ -1961,10 +1941,8 @@ async function saveLandingPageDesign() {
   
   if(!name || !slug) return toast('Page Name and URL Slug are required', 'err');
 
-  // Clone canvas to prepare clean HTML
   const canvasClone = document.getElementById('builder-canvas').cloneNode(true);
   
-  // Clean up builder UI artifacts
   canvasClone.querySelectorAll('.del-btn').forEach(btn => btn.remove());
   canvasClone.querySelectorAll('.builder-element').forEach(el => {
       el.classList.remove('builder-element', 'selected');
@@ -1974,7 +1952,6 @@ async function saveLandingPageDesign() {
       el.removeAttribute('contenteditable');
   });
 
-  // Inject real functional form logic if form block exists
   const formBlocks = canvasClone.querySelectorAll('[data-is-form="true"]');
   formBlocks.forEach(fb => {
       const titleText = fb.querySelector('h3') ? fb.querySelector('h3').innerText : 'Contact Us';
@@ -2024,7 +2001,7 @@ async function saveLandingPageDesign() {
          }
          btn.disabled = false;
       }
-    </script>
+    <\/script>
   `;
 
   const reqData = {
