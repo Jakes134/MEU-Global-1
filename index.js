@@ -57,7 +57,7 @@ app.get('/setup-db', async (req, res) => {
       UNIQUE(client_id, user_id)
     );`);
 
-    // 4. Leads Table (Sales pipeline - Updated default status to 'New')
+    // 4. Leads Table (Sales pipeline - Default status is 'New')
     await pool.query(`CREATE TABLE IF NOT EXISTS leads (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
