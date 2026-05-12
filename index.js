@@ -47,7 +47,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS description TEXT`);
 
-    // 3. Team Members (NEW - for tracking who has access to clients)
+    // 3. Team Members (For tracking who has access to clients)
     await pool.query(`CREATE TABLE IF NOT EXISTS client_team_members (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
@@ -57,7 +57,7 @@ app.get('/setup-db', async (req, res) => {
       UNIQUE(client_id, user_id)
     );`);
 
-    // 4. Leads Table (NEW - for sales pipeline)
+    // 4. Leads Table (Sales pipeline - Updated default status to 'New')
     await pool.query(`CREATE TABLE IF NOT EXISTS leads (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
@@ -67,14 +67,14 @@ app.get('/setup-db', async (req, res) => {
       job_title VARCHAR(100),
       phone VARCHAR(50),
       annual_revenue DECIMAL(12,2),
-      status VARCHAR(50) DEFAULT 'Contacted',
+      status VARCHAR(50) DEFAULT 'New',
       lead_owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 5. Lead Activity (NEW - for activity tracking)
+    // 5. Lead Activity (For activity tracking)
     await pool.query(`CREATE TABLE IF NOT EXISTS lead_activity (
       id SERIAL PRIMARY KEY,
       lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
@@ -84,7 +84,7 @@ app.get('/setup-db', async (req, res) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 6. Landing Pages (NEW)
+    // 6. Landing Pages
     await pool.query(`CREATE TABLE IF NOT EXISTS landing_pages (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
@@ -101,7 +101,7 @@ app.get('/setup-db', async (req, res) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 7. Page Submissions (NEW - for lead captures)
+    // 7. Page Submissions (For lead captures)
     await pool.query(`CREATE TABLE IF NOT EXISTS page_submissions (
       id SERIAL PRIMARY KEY,
       page_id INTEGER REFERENCES landing_pages(id) ON DELETE CASCADE,
@@ -112,7 +112,7 @@ app.get('/setup-db', async (req, res) => {
       submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 8. Email Campaigns (NEW)
+    // 8. Email Campaigns
     await pool.query(`CREATE TABLE IF NOT EXISTS email_campaigns (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
@@ -129,7 +129,7 @@ app.get('/setup-db', async (req, res) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 9. Email Campaign Recipients (NEW)
+    // 9. Email Campaign Recipients
     await pool.query(`CREATE TABLE IF NOT EXISTS campaign_recipients (
       id SERIAL PRIMARY KEY,
       campaign_id INTEGER REFERENCES email_campaigns(id) ON DELETE CASCADE,
@@ -144,7 +144,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, price DECIMAL(12,2) NOT NULL, billing_type VARCHAR(20) DEFAULT 'one-off', duration_months INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`CREATE TABLE IF NOT EXISTS end_customers (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, product_id INTEGER REFERENCES products(id) ON DELETE SET NULL, name VARCHAR(100) NOT NULL, email VARCHAR(100), status VARCHAR(30) DEFAULT 'Contract Review', sign_up_date DATE DEFAULT CURRENT_DATE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
 
-    // 11. Posts Table
+    // 11. Posts Table (Includes Content Calendar & Appointments)
     await pool.query(`CREATE TABLE IF NOT EXISTS posts (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, title TEXT NOT NULL, caption TEXT, platforms TEXT[], post_date DATE NOT NULL, post_time TIME, status VARCHAR(20) DEFAULT 'draft', is_approved BOOLEAN DEFAULT FALSE, approval_status VARCHAR(20) DEFAULT 'pending', rejection_reason TEXT, media_link TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
@@ -243,7 +243,6 @@ app.post('/api/chat', async (req, res) => {
   const { client_id, prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: 'Prompt is required.' });
 
-  // Check if Google GenAI is available
   if (!GoogleGenAI) {
     return res.status(503).json({
       error: 'AI features are currently unavailable. Install @google/genai package and restart the server.'
@@ -375,7 +374,7 @@ app.put('/api/clients/:id', async (req, res) => {
 });
 
 // ============================================================================
-// TEAM MEMBERS API (NEW)
+// TEAM MEMBERS API
 // ============================================================================
 app.get('/api/clients/:id/team', async (req, res) => {
   try {
@@ -410,7 +409,7 @@ app.delete('/api/clients/:clientId/team/:userId', async (req, res) => {
 });
 
 // ============================================================================
-// LEADS API (NEW)
+// LEADS API
 // ============================================================================
 app.get('/api/leads', async (req, res) => {
   const { client_id, status } = req.query;
@@ -457,7 +456,7 @@ app.post('/api/leads', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Name required' });
 
   try {
-    const { rows } = await pool.query(`INSERT INTO leads (client_id, name, email, company, job_title, phone, annual_revenue, status, created_by, lead_owner) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING *`, [client_id, name, email, company, job_title, phone, annual_revenue, status || 'Contacted', created_by]);
+    const { rows } = await pool.query(`INSERT INTO leads (client_id, name, email, company, job_title, phone, annual_revenue, status, created_by, lead_owner) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING *`, [client_id, name, email, company, job_title, phone, annual_revenue, status || 'New', created_by]);
 
     // Log activity
     await pool.query(`
@@ -552,7 +551,7 @@ app.post('/api/leads/:id/activity', async (req, res) => {
 });
 
 // ============================================================================
-// LANDING PAGES API (NEW)
+// LANDING PAGES API
 // ============================================================================
 app.get('/api/pages', async (req, res) => {
   const { client_id } = req.query;
@@ -715,7 +714,7 @@ app.delete('/api/pages/:id', async (req, res) => {
 });
 
 // ============================================================================
-// EMAIL CAMPAIGNS API (NEW)
+// EMAIL CAMPAIGNS API
 // ============================================================================
 app.get('/api/campaigns', async (req, res) => {
   const { client_id } = req.query;
@@ -776,7 +775,6 @@ app.post('/api/campaigns/:id/recipients', async (req, res) => {
 app.put('/api/campaigns/:id/send', async (req, res) => {
   // This would integrate with an email service like SendGrid or AWS SES
   // For now, just mark as sent
-
   try {
     await pool.query(`UPDATE email_campaigns SET status = 'sent', sent_date = CURRENT_TIMESTAMP WHERE id = $1`, [req.params.id]);
 
@@ -959,7 +957,7 @@ app.get('/api/stats/dashboard', async (req, res) => {
 });
 
 // ============================================================================
-// POSTS API
+// POSTS API (Includes Content Calendar and Appointments)
 // ============================================================================
 app.get('/api/posts', async (req, res) => {
   const { month, year, client_id } = req.query;
