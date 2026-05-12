@@ -94,14 +94,16 @@ button { cursor:pointer; }
 
 /* DASHBOARD & PIPELINE */
 .dash-pipeline-section { grid-column: 1 / -1; margin-bottom: 24px; }
-.appointment-btn { margin-top: 10px; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 700; width: 100%; text-align: center; display: block; transition: all 0.2s; }
+.appointment-btn { margin-top: 10px; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; width: 100%; text-align: center; display: block; transition: all 0.2s; }
 .appointment-btn:hover { background: var(--accent); color: #fff; }
 
 .dash-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:24px; }
 .dash-card { background:var(--surface); padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border); }
 .dash-card-title { font-size:12px; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; }
 .dash-card-value { font-size:32px; font-weight:700; color:var(--ink); }
-.dash-card canvas { margin-top:16px; width: 100% !important; height: auto !important; }
+
+/* THIS IS THE FIX FOR THE CHART.JS INFINITE SCROLL BUG */
+.dash-card canvas { margin-top:16px; width: 100% !important; max-height: 250px; }
 
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px; }
 .cal-header { text-align:center; font-size:11px; font-weight:700; color:var(--ink3); padding:8px; }
@@ -124,7 +126,6 @@ button { cursor:pointer; }
 
 /* KANBAN */
 .kanban-board { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; overflow-x: auto; padding-bottom: 10px; }
-/* Override for dash-pipeline to force horizontal scrolling if needed, or flexible grid */
 #dash-leads-board { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 16px; padding-bottom: 10px; }
 #dash-leads-board .kanban-col { min-width: 280px; flex: 1; }
 
@@ -202,7 +203,7 @@ button { cursor:pointer; }
 .badge-sent { background:#d1fae5; color:#065f46; }
 
 /* BUTTONS */
-.btn { padding:10px 20px; border-radius:8px; font-weight:600; font-size:14px; border:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; }
+.btn { padding:10px 20px; border-radius:8px; font-weight:600; font-size:14px; border:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; justify-content:center; }
 .btn:hover { transform:translateY(-1px); }
 .btn-dark { background:var(--dark); color:#fff; }
 .btn-dark:hover { background:var(--ink); }
@@ -301,6 +302,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
 .approval-approved { border-left:4px solid var(--green); }
 .approval-rejected { border-left:4px solid var(--red); }
 </style>
+
 </head>
 
 <body>
@@ -466,7 +468,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
     <div id="topbar">
       <div class="topbar-left">
         <div class="breadcrumb" id="breadcrumb-desktop">
-          <strong>MEU Global / <span id="current-view-title">Dashboard</span></strong>
+          MEU Global / <strong id="current-view-title">Dashboard</strong>
         </div>
         <div id="mobile-topbar-title">Dashboard</div>
       </div>
@@ -487,7 +489,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
         <!-- 1. SALES PIPELINE (Admin Only - Rendered via JS) -->
         <div id="dash-pipeline-container" class="dash-pipeline-section" style="display:none">
            <div class="dash-card">
-              <div class="dash-card-title">Sales Pipeline (MEU Software Sign-ups)</div>
+              <div class="dash-card-title">Active Sales Pipeline (MEU Software)</div>
               <div class="kanban-board" id="dash-leads-board"></div>
            </div>
         </div>
@@ -495,11 +497,19 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
         <div class="dash-grid">
           <!-- 2. CLIENT STAGES BAR GRAPH -->
           <div class="dash-card">
-            <div class="dash-card-title">Lead Distribution by Stage</div>
-            <canvas id="stages-chart" width="300" height="200"></canvas>
+            <div class="dash-card-title">Sign-up Distribution</div>
+            <canvas id="stages-chart"></canvas>
           </div>
+          
+          <!-- 3. TOP PRODUCTS (Restored) -->
+          <div class="dash-card">
+            <div class="dash-card-title">Top Products</div>
+            <canvas id="products-chart"></canvas>
+          </div>
+        </div>
 
-          <!-- 3. MY TASKS -->
+        <div class="dash-grid">
+          <!-- 4. MY TASKS -->
           <div class="dash-card">
             <div class="dash-card-title">My Priority Tasks</div>
             <div class="task-tabs">
@@ -510,11 +520,9 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
             </div>
             <div id="dash-tasks-list"></div>
           </div>
-        </div>
 
-        <!-- 4. INTERACTIVE MINI CALENDAR -->
-        <div class="dash-grid">
-          <div class="dash-card" style="grid-column: 1 / -1;">
+          <!-- 5. INTERACTIVE MINI CALENDAR -->
+          <div class="dash-card">
             <div class="dash-card-title">Interactive Master Schedule</div>
             <div class="cal-grid" id="mini-cal"></div>
           </div>
@@ -542,7 +550,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <!-- CALENDAR VIEW -->
       <div class="view" id="view-calendar">
         <div class="section-header">
-          <span class="section-title">Content Calendar</span>
+          <span class="section-title">Global Calendar</span>
           <button class="btn btn-dark btn-sm" onclick="openPostModal()">+ New Post</button>
         </div>
         <div class="cal-controls">
@@ -701,7 +709,10 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <h2>Schedule Appointment</h2>
       <button class="modal-close" onclick="closeAppointmentModal()">×</button>
     </div>
-    <p id="appt-lead-name" style="margin-bottom:15px; font-weight:700; color:var(--accent);"></p>
+    <div class="field">
+      <label>Lead</label>
+      <input type="text" id="appt-lead-name" disabled>
+    </div>
     <div class="field">
       <label>Appointment Title</label>
       <input type="text" id="appt-title" placeholder="Demo Call with Client">
@@ -712,7 +723,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
     </div>
     <div class="field">
       <label>Notes</label>
-      <textarea id="appt-notes" rows="3"></textarea>
+      <textarea id="appt-notes" rows="3" placeholder="Discuss MEU software benefits..."></textarea>
     </div>
     <button class="btn btn-dark btn-full" onclick="saveAppointment()">Confirm Appointment</button>
   </div>
@@ -999,6 +1010,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
     <div class="field"><label>Client</label><select id="inv-client"></select></div>
     <div class="field"><label>Invoice Number</label><input type="text" id="inv-number" placeholder="INV-0001"></div>
     <div class="field"><label>Payment Due (days)</label><input type="number" id="inv-due-days" value="1"></div>
+
     <div class="field">
       <label>Line Items</label>
       <div id="invoice-items-list">
@@ -1009,11 +1021,13 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       </div>
       <button class="btn btn-ghost btn-xs" onclick="addInvoiceItem()">+ Add Item</button>
     </div>
+
     <div class="field">
       <label>Deductions (Optional)</label>
       <div id="invoice-deductions-list"></div>
       <button class="btn btn-ghost btn-xs" onclick="addDeduction()">+ Add Deduction</button>
     </div>
+
     <button class="btn btn-dark btn-full" onclick="generateInvoicePDF()">Generate PDF</button>
   </div>
 </div>
@@ -1026,6 +1040,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
 // MEU GLOBAL CRM - COMPLETE JAVASCRIPT
 // ═══════════════════════════════════════════════════════════════
 
+// ─── STATE ───────────────────────────────────────────────────────
 let session = {userId:null, name:'', role:null, client_id:null, email:''};
 let allClients = [], allTasksCache = [], allPostsCache = [], allLeadsCache = [];
 let calYear = new Date().getFullYear();
@@ -1040,7 +1055,7 @@ let newSubtasks = [];
 let currentTaskPreview = null;
 let currentLeadDetail = null;
 let currentApprovalPost = null;
-let selectedLeadForAppt = null; // NEW
+let selectedLeadForAppt = null;
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ─── TOAST ───────────────────────────────────────────────────────
@@ -1052,6 +1067,7 @@ function toast(msg, type='') {
   el._t = setTimeout(() => el.className='toast', 3400);
 }
 
+// ─── UTILS ───────────────────────────────────────────────────────
 function escHtml(s) {
   if(!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1191,7 +1207,7 @@ function setupRoleUI() {
 
 async function loadInitialData(){
   await loadClients();
-  await Promise.all([renderCalendar('calendar-grid'), loadTasks(), loadLeads()]);
+  await Promise.all([renderCalendar('calendar-grid'), renderCalendar('mini-cal'), loadTasks(), loadLeads()]);
   updateDashStats();
 }
 
@@ -1225,6 +1241,7 @@ function selectClient(id){
   document.getElementById('client-panel').classList.remove('open');
   renderClientPanelList();
   renderCalendar('calendar-grid');
+  renderCalendar('mini-cal');
   updateDashStats();
   loadTasks();
   loadLeads();
@@ -1270,7 +1287,7 @@ function showView(v){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LEADS PIPELINE & APPOINTMENTS (NEW FEATURES)
+// LEADS PIPELINE (NEW FEATURE INTEGRATION)
 // ═══════════════════════════════════════════════════════════════
 
 async function loadLeads() {
@@ -1342,7 +1359,12 @@ function renderLeadCard(lead) {
         </div>
       </div>
       ${lead.company ? `<div class="lead-company">${escHtml(lead.company)}</div>` : ''}
+      ${lead.job_title ? `<div class="lead-meta" style="margin-bottom:6px">${escHtml(lead.job_title)}</div>` : ''}
       ${lead.annual_revenue ? `<div class="lead-revenue">R${parseFloat(lead.annual_revenue).toLocaleString()}</div>` : ''}
+      <div class="lead-meta" style="margin-top:8px;">
+        ${lead.client_name ? `📊 ${escHtml(lead.client_name)}` : ''}
+        ${lead.owner_name ? ` · 👤 ${escHtml(lead.owner_name)}` : ''}
+      </div>
       
       <!-- Interactive Appointment Button -->
       <button class="appointment-btn" onclick="openAppointmentModal(${lead.id})">
@@ -1383,7 +1405,7 @@ async function dropLead(ev, newStatus) {
   }
 }
 
-// ─── APPOINTMENT MODAL LOGIC ─────────────────────────────────────
+// ─── APPOINTMENT MODAL LOGIC (NEW) ───────────────────────────────
 function openAppointmentModal(leadId) {
     const lead = allLeadsCache.find(l => l.id === leadId);
     if (!lead) return;
@@ -1431,7 +1453,7 @@ async function saveAppointment() {
     if (r.ok) {
         toast('Appointment added to Calendar!', 'ok');
         closeAppointmentModal();
-        renderCalendar('mini-cal'); // Refresh 
+        renderCalendar('mini-cal'); 
         renderCalendar('calendar-grid');
     } else {
         toast('Error saving appointment', 'err');
@@ -1444,7 +1466,7 @@ function openLeadModal() {
   document.getElementById('lead-company').value = '';
   document.getElementById('lead-jobtitle').value = '';
   document.getElementById('lead-revenue').value = '';
-  document.getElementById('lead-status').value = 'New'; // default to New
+  document.getElementById('lead-status').value = 'New';
   if(allClients.length) document.getElementById('lead-client').value = allClients[0].id;
   document.getElementById('lead-modal-backdrop').classList.add('open');
 }
@@ -1542,43 +1564,320 @@ async function deleteCurrentLead() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DASHBOARD & STATS (UPDATED STAGES CHART)
+// LANDING PAGES
+// ═══════════════════════════════════════════════════════════════
+
+async function loadLandingPages() {
+  let cId = activeClientFilter; 
+  if (!cId && session.role !== 'admin') cId = session.client_id;
+  const params = new URLSearchParams();
+  if(cId) params.append('client_id', cId);
+  
+  try {
+    const pages = await fetch(`/api/pages?${params}`).then(r=>r.json());
+    const el = document.getElementById('pages-list');
+    
+    if(!pages.length) {
+      el.innerHTML = '<div class="empty-state"><p>No landing pages yet. Create your first one!</p></div>';
+      return;
+    }
+    
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Page Name</th>
+              <th>Slug</th>
+              <th>Client</th>
+              <th>Views</th>
+              <th>Submissions</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pages.map(p => `
+              <tr>
+                <td><strong>${escHtml(p.name)}</strong></td>
+                <td><code>/${p.slug}</code></td>
+                <td>${escHtml(p.client_name || 'N/A')}</td>
+                <td>${p.views || 0}</td>
+                <td>${p.submissions || 0}</td>
+                <td><span class="badge badge-${p.is_published ? 'active' : 'inactive'}">${p.is_published ? 'Published' : 'Draft'}</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-xs" onclick="window.open('/api/pages/${p.slug}', '_blank')">Preview</button>
+                  <button class="btn btn-ghost btn-xs" onclick="togglePagePublish(${p.id}, ${!p.is_published})">${p.is_published ? 'Unpublish' : 'Publish'}</button>
+                  <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deletePage(${p.id})">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch(e) {
+    toast('Error loading pages', 'err');
+  }
+}
+
+function openPageBuilder() {
+  document.getElementById('page-name').value = '';
+  document.getElementById('page-slug').value = '';
+  document.getElementById('page-headline').value = '';
+  document.getElementById('page-subheadline').value = '';
+  document.getElementById('page-cta').value = '';
+  if(allClients.length) document.getElementById('page-client').value = allClients[0].id;
+  document.getElementById('page-builder-backdrop').classList.add('open');
+}
+
+function closePageBuilder() {
+  document.getElementById('page-builder-backdrop').classList.remove('open');
+}
+
+async function createLandingPage() {
+  const name = document.getElementById('page-name').value.trim();
+  const slug = document.getElementById('page-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  
+  if(!name || !slug) return toast('Name and slug required', 'err');
+  
+  const data = {
+    client_id: document.getElementById('page-client').value,
+    name,
+    slug,
+    headline: document.getElementById('page-headline').value,
+    subheadline: document.getElementById('page-subheadline').value,
+    cta_text: document.getElementById('page-cta').value,
+    created_by: session.userId
+  };
+  
+  const r = await fetch('/api/pages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closePageBuilder();
+    await loadLandingPages();
+    toast('Landing page created!', 'ok');
+  } else {
+    const err = await r.json();
+    toast(err.error || 'Error creating page', 'err');
+  }
+}
+
+async function togglePagePublish(id, publish) {
+  const r = await fetch(`/api/pages/${id}/publish`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ is_published: publish })
+  });
+  
+  if(r.ok) {
+    await loadLandingPages();
+    toast(publish ? 'Page published!' : 'Page unpublished', 'ok');
+  }
+}
+
+async function deletePage(id) {
+  if(!confirm('Delete this page? This cannot be undone.')) return;
+  
+  const r = await fetch(`/api/pages/${id}`, {method: 'DELETE'});
+  if(r.ok) {
+    await loadLandingPages();
+    toast('Page deleted', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EMAIL CAMPAIGNS
+// ═══════════════════════════════════════════════════════════════
+
+async function loadCampaigns() {
+  let cId = activeClientFilter; 
+  if (!cId && session.role !== 'admin') cId = session.client_id;
+  const params = new URLSearchParams();
+  if(cId) params.append('client_id', cId);
+  
+  try {
+    const campaigns = await fetch(`/api/campaigns?${params}`).then(r=>r.json());
+    const el = document.getElementById('campaigns-list');
+    
+    if(!campaigns.length) {
+      el.innerHTML = '<div class="empty-state"><p>No campaigns yet. Create your first one!</p></div>';
+      return;
+    }
+    
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Campaign Name</th>
+              <th>Subject</th>
+              <th>Client</th>
+              <th>Recipients</th>
+              <th>Status</th>
+              <th>Scheduled</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${campaigns.map(c => `
+              <tr>
+                <td><strong>${escHtml(c.name)}</strong></td>
+                <td>${escHtml(c.subject)}</td>
+                <td>${escHtml(c.client_name || 'N/A')}</td>
+                <td>${c.recipients_count || 0}</td>
+                <td><span class="badge badge-${c.status}">${c.status}</span></td>
+                <td>${c.scheduled_date ? new Date(c.scheduled_date).toLocaleDateString() : 'Not scheduled'}</td>
+                <td>
+                  ${c.status === 'draft' ? `<button class="btn btn-green btn-xs" onclick="sendCampaign(${c.id})">Send</button>` : ''}
+                  <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteCampaign(${c.id})">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch(e) {
+    toast('Error loading campaigns', 'err');
+  }
+}
+
+function openCampaignModal() {
+  document.getElementById('campaign-name').value = '';
+  document.getElementById('campaign-subject').value = '';
+  document.getElementById('campaign-body').value = '';
+  document.getElementById('campaign-send-date').value = '';
+  if(allClients.length) document.getElementById('campaign-client').value = allClients[0].id;
+  document.getElementById('campaign-modal-backdrop').classList.add('open');
+}
+
+function closeCampaignModal() {
+  document.getElementById('campaign-modal-backdrop').classList.remove('open');
+}
+
+async function createCampaign() {
+  const name = document.getElementById('campaign-name').value.trim();
+  const subject = document.getElementById('campaign-subject').value.trim();
+  
+  if(!name || !subject) return toast('Name and subject required', 'err');
+  
+  const data = {
+    client_id: document.getElementById('campaign-client').value,
+    name,
+    subject,
+    body: document.getElementById('campaign-body').value,
+    scheduled_date: document.getElementById('campaign-send-date').value || null,
+    created_by: session.userId
+  };
+  
+  const r = await fetch('/api/campaigns', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeCampaignModal();
+    await loadCampaigns();
+    toast('Campaign created!', 'ok');
+  } else {
+    toast('Error creating campaign', 'err');
+  }
+}
+
+async function sendCampaign(id) {
+  if(!confirm('Send this campaign now? This action cannot be undone.')) return;
+  
+  const r = await fetch(`/api/campaigns/${id}/send`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'}
+  });
+  
+  if(r.ok) {
+    const data = await r.json();
+    await loadCampaigns();
+    toast(data.message || 'Campaign sent!', 'ok');
+  }
+}
+
+async function deleteCampaign(id) {
+  if(!confirm('Delete this campaign? This cannot be undone.')) return;
+  
+  const r = await fetch(`/api/campaigns/${id}`, {method: 'DELETE'});
+  if(r.ok) {
+    await loadCampaigns();
+    toast('Campaign deleted', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD & STATS (UPDATED)
 // ═══════════════════════════════════════════════════════════════
 
 async function updateDashStats() {
   let cId = activeClientFilter;
   if(!cId && session.role!=='admin') cId = session.client_id;
+  const params = new URLSearchParams();
+  if(cId) params.append('client_id', cId);
   
-  // Calculate Stages dynamically from cache to include "New"
-  const stats = {
-      'New': allLeadsCache.filter(l => l.status === 'New').length,
-      'Contacted': allLeadsCache.filter(l => l.status === 'Contacted').length,
-      'Negotiation': allLeadsCache.filter(l => l.status === 'Negotiation').length,
-      'Offer Sent': allLeadsCache.filter(l => l.status === 'Offer Sent').length,
-      'Deal Closed': allLeadsCache.filter(l => l.status === 'Deal Closed').length
-  };
+  try {
+    const stats = await fetch(`/api/stats/dashboard?${params}`).then(r=>r.json());
+    
+    // 1. Stages Bar Chart (Local allLeadsCache to ensure 'New' is captured correctly)
+    const leadStats = {
+        'New': allLeadsCache.filter(l => l.status === 'New').length,
+        'Contacted': allLeadsCache.filter(l => l.status === 'Contacted').length,
+        'Negotiation': allLeadsCache.filter(l => l.status === 'Negotiation').length,
+        'Offer Sent': allLeadsCache.filter(l => l.status === 'Offer Sent').length,
+        'Deal Closed': allLeadsCache.filter(l => l.status === 'Deal Closed').length
+    };
 
-  const stagesCtx = document.getElementById('stages-chart').getContext('2d');
-  if(window.stagesChart) window.stagesChart.destroy();
-  
-  window.stagesChart = new Chart(stagesCtx, {
-      type: 'bar',
+    const stagesCtx = document.getElementById('stages-chart').getContext('2d');
+    if(window.stagesChart) window.stagesChart.destroy();
+    
+    window.stagesChart = new Chart(stagesCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(leadStats),
+            datasets: [{
+                label: 'Leads by Stage',
+                data: Object.values(leadStats),
+                backgroundColor: ['#9ca3af', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
+                borderRadius: 4
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: true, 
+            aspectRatio: 2, 
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 2. Top Products Chart (From API)
+    const prodCtx = document.getElementById('products-chart').getContext('2d');
+    if(window.productsChart) window.productsChart.destroy();
+    window.productsChart = new Chart(prodCtx, {
+      type: 'pie',
       data: {
-          labels: Object.keys(stats),
-          datasets: [{
-              label: 'Leads by Stage',
-              data: Object.values(stats),
-              backgroundColor: ['#9ca3af', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
-              borderRadius: 4
-          }]
+        labels: stats.products.map(p => p.name),
+        datasets: [{
+          data: stats.products.map(p => parseInt(p.count)),
+          backgroundColor: ['#d97706', '#b45309', '#92400e', '#78350f', '#451a03']
+        }]
       },
-      options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-          plugins: { legend: { display: false } }
-      }
-  });
+      options: { responsive: true, maintainAspectRatio: true, aspectRatio: 2 }
+    });
+    
+  } catch(e) {
+    console.error('Stats error:', e);
+  }
   
   renderDashTasks();
 }
@@ -1600,10 +1899,10 @@ function switchDashTaskTab(tab) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// INTERACTIVE CALENDAR
+// CALENDAR
 // ═══════════════════════════════════════════════════════════════
 
-async function renderCalendar(targetGridId = 'calendar-grid') {
+async function renderCalendar(targetGridId) {
   let cId = activeClientFilter;
   if(!cId && session.role!=='admin') cId = session.client_id;
   
@@ -1615,7 +1914,7 @@ async function renderCalendar(targetGridId = 'calendar-grid') {
       document.getElementById('cal-month-year').textContent = `${MONTHS[calMonth]} ${calYear}`;
   }
   
-  const params = new URLSearchParams({month: calMonth+1, year: calYear});
+  const params = newSearchParams({month: calMonth+1, year: calYear});
   if(cId) params.append('client_id', cId);
   
   try {
@@ -1649,7 +1948,6 @@ async function renderCalendar(targetGridId = 'calendar-grid') {
   if(!grid) return;
 
   if (targetGridId === 'mini-cal') {
-      // Mini Calendar Render
       grid.innerHTML = cells.slice(0,21).map(c => {
         const dateStr = `${c.year}-${String(c.month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
         const cellDate = new Date(c.year, c.month, c.day);
@@ -1662,7 +1960,6 @@ async function renderCalendar(targetGridId = 'calendar-grid') {
         </div>`;
       }).join('');
   } else {
-      // Main Calendar Render
       grid.innerHTML = `
         <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
         <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
@@ -1683,6 +1980,13 @@ async function renderCalendar(targetGridId = 'calendar-grid') {
   }
 }
 
+// Utility to create URLSearchParams safely
+function newSearchParams(obj) {
+    const params = new URLSearchParams();
+    for (const key in obj) { params.append(key, obj[key]); }
+    return params;
+}
+
 function changeMonth(delta) {
   calMonth += delta;
   if(calMonth < 0) { calMonth = 11; calYear--; }
@@ -1699,7 +2003,7 @@ function openDayPlan(dateStr) {
   document.getElementById('day-plan-title').textContent = formatDate(dateStr);
   document.getElementById('day-plan-body').innerHTML = `
     <div style="margin-bottom:20px;">
-      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">Events & Posts (${posts.length})</h3>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">Posts & Events (${posts.length})</h3>
       ${posts.length ? posts.map(p => `<div class="post-item" onclick="openPostDetail(${p.id})">${escHtml(p.title)}</div>`).join('') : '<p style="font-size:13px;color:var(--ink3)">No posts scheduled</p>'}
     </div>
     <div>
@@ -1715,10 +2019,9 @@ function closeDayPlan() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// OTHER EXISTING FUNCTIONS (Tasks, Pages, Campaigns, Invoices)
+// POSTS
 // ═══════════════════════════════════════════════════════════════
 
-// Post Modal functions
 function openPostModal() {
   editingPostId = null;
   document.getElementById('post-modal-title').textContent = 'New Post';
@@ -1732,7 +2035,10 @@ function openPostModal() {
   if(allClients.length) document.getElementById('m-client').value = allClients[0].id;
   document.getElementById('post-modal-backdrop').classList.add('open');
 }
-function closePostModal() { document.getElementById('post-modal-backdrop').classList.remove('open'); }
+
+function closePostModal() {
+  document.getElementById('post-modal-backdrop').classList.remove('open');
+}
 
 async function savePost() {
   const title = document.getElementById('m-title').value.trim();
@@ -1769,7 +2075,7 @@ async function savePost() {
 
 async function openPostDetail(id) {
   const post = allPostsCache.find(p => p.id === id);
-  if(!post) return toast('Event not found', 'err');
+  if(!post) return toast('Post not found', 'err');
   
   currentPostDetail = post;
   document.getElementById('pd-title').textContent = post.title;
@@ -1778,47 +2084,135 @@ async function openPostDetail(id) {
   
   document.getElementById('pd-body').innerHTML = `
     <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div>
-    <div style="margin-bottom:12px;"><strong>Details/Caption:</strong><br>${escHtml(post.caption||'None')}</div>
+    <div style="margin-bottom:12px;"><strong>Caption/Notes:</strong><br>${escHtml(post.caption||'No caption')}</div>
     <div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div>
     <div style="margin-bottom:12px;"><strong>Date & Time:</strong> ${formatDate(post.post_date)} ${post.post_time||'No time set'}</div>
     <div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${post.status}">${post.status}</span></div>
+    <div style="margin-bottom:12px;"><strong>Approval:</strong> <span class="badge badge-${post.approval_status}">${post.approval_status}</span></div>
+    ${post.rejection_reason ? `<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;"><strong>Rejection Reason:</strong><br>${escHtml(post.rejection_reason)}</div>` : ''}
+    ${post.media_link ? `<div style="margin-bottom:12px;"><strong>Media:</strong> <a href="${post.media_link}" target="_blank" style="color:var(--accent);">View Media</a></div>` : ''}
   `;
+  
   document.getElementById('post-detail-backdrop').classList.add('open');
 }
 
-function closePostDetail() { document.getElementById('post-detail-backdrop').classList.remove('open'); }
+function closePostDetail() {
+  document.getElementById('post-detail-backdrop').classList.remove('open');
+}
+
+function editCurrentPost() {
+  if(!currentPostDetail) return;
+  closePostDetail();
+  
+  editingPostId = currentPostDetail.id;
+  document.getElementById('post-modal-title').textContent = 'Edit Post';
+  document.getElementById('m-client').value = currentPostDetail.client_id;
+  document.getElementById('m-title').value = currentPostDetail.title;
+  document.getElementById('m-caption').value = currentPostDetail.caption || '';
+  document.getElementById('m-media').value = currentPostDetail.media_link || '';
+  document.getElementById('m-date').value = currentPostDetail.post_date ? currentPostDetail.post_date.substring(0,10) : '';
+  document.getElementById('m-time').value = currentPostDetail.post_time || '';
+  document.getElementById('m-status').value = currentPostDetail.status;
+  
+  const platforms = parsePlatforms(currentPostDetail.platforms);
+  document.querySelectorAll('.platform-check').forEach(cb => {
+    cb.checked = platforms.includes(cb.value);
+  });
+  
+  document.getElementById('post-modal-backdrop').classList.add('open');
+}
 
 async function deleteCurrentPost() {
   if(!currentPostDetail) return;
-  if(!confirm('Delete this item?')) return;
+  if(!confirm('Delete this post? This cannot be undone.')) return;
+  
   const r = await fetch(`/api/posts/${currentPostDetail.id}`, {method:'DELETE'});
   if(r.ok) {
     closePostDetail();
-    renderCalendar('calendar-grid');
-    renderCalendar('mini-cal');
+    await renderCalendar('calendar-grid');
+    await renderCalendar('mini-cal');
     toast('Item deleted', 'ok');
   }
 }
 
-// Tasks functions
+async function aiWriteCaption() {
+  const clientId = document.getElementById('m-client').value;
+  const title = document.getElementById('m-title').value.trim();
+  
+  if(!title) return toast('Please enter a post title first', 'err');
+  
+  const platforms = Array.from(document.querySelectorAll('.platform-check:checked')).map(cb=>cb.value);
+  const platformText = platforms.length ? platforms.join(', ') : 'social media';
+  
+  const prompt = `Write an engaging ${platformText} caption for a post titled "${title}". Make it compelling, include relevant emojis, and keep it under 200 characters.`;
+  
+  toast('AI is writing...', '');
+  
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({client_id: clientId, prompt})
+    });
+    
+    const data = await r.json();
+    if(data.success) {
+      document.getElementById('m-caption').value = data.text;
+      toast('Caption generated!', 'ok');
+    } else {
+      toast(data.error || 'AI error', 'err');
+    }
+  } catch(e) {
+    toast('AI connection error', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TASKS
+// ═══════════════════════════════════════════════════════════════
+
 async function loadTasks() {
   let cId = activeClientFilter;
   if(!cId && session.role!=='admin') cId = session.client_id;
-  const params = new URLSearchParams({ role: session.role, client_id: cId || '', user_id: session.userId });
-  try { allTasksCache = await fetch(`/api/tasks?${params}`).then(r=>r.json()); } catch(e) { allTasksCache = []; }
-  if(document.getElementById('view-tasks').classList.contains('active')) renderTasksKanban();
+  
+  const params = new URLSearchParams({
+    role: session.role,
+    client_id: cId || '',
+    user_id: session.userId
+  });
+  
+  try {
+    allTasksCache = await fetch(`/api/tasks?${params}`).then(r=>r.json());
+  } catch(e) {
+    allTasksCache = [];
+  }
+  
+  if(document.getElementById('view-tasks').classList.contains('active')) {
+    renderTasksKanban();
+  }
 }
 
 function renderTasksKanban() {
-  const filteredTasks = currentTaskFilter==='mine' ? allTasksCache.filter(t => session.role==='admin' || t.assigned_to===session.userId || t.created_by===session.userId) : allTasksCache;
+  const filteredTasks = currentTaskFilter==='mine' 
+    ? allTasksCache.filter(t => session.role==='admin' || t.assigned_to===session.userId || t.created_by===session.userId)
+    : allTasksCache;
+  
   const board = document.getElementById('tasks-kanban');
-  const cols = [{status: 'todo', title: 'To Do'},{status: 'in-progress', title: 'In Progress'},{status: 'review', title: 'Review'},{status: 'done', title: 'Done'}];
+  const cols = [
+    {status: 'todo', title: 'To Do'},
+    {status: 'in-progress', title: 'In Progress'},
+    {status: 'review', title: 'Review'},
+    {status: 'done', title: 'Done'}
+  ];
   
   board.innerHTML = cols.map(col => {
     const tasks = filteredTasks.filter(t => t.status === col.status);
     return `
       <div class="kanban-col">
-        <div class="kanban-header"><span class="kanban-title">${col.title}</span><span class="kanban-count">${tasks.length}</span></div>
+        <div class="kanban-header">
+          <span class="kanban-title">${col.title}</span>
+          <span class="kanban-count">${tasks.length}</span>
+        </div>
         <div class="kanban-cards" id="tasks-${col.status}" ondrop="dropTask(event, '${col.status}')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
           ${tasks.map(t => renderTaskCard(t)).join('')}
         </div>
@@ -1843,8 +2237,12 @@ function renderTaskCard(t) {
     </div>
   `;
 }
+
 function dragTask(ev, id) { ev.dataTransfer.setData("taskId", id); }
-function allowDrop(ev) { ev.preventDefault(); if(!ev.currentTarget.classList.contains('drag-over')) ev.currentTarget.classList.add('drag-over'); }
+function allowDrop(ev) {
+  ev.preventDefault();
+  if(!ev.currentTarget.classList.contains('drag-over')) ev.currentTarget.classList.add('drag-over');
+}
 function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
 
 async function dropTask(ev, newStatus) {
@@ -1852,70 +2250,798 @@ async function dropTask(ev, newStatus) {
   document.querySelectorAll('.kanban-cards').forEach(c => c.classList.remove('drag-over'));
   const id = ev.dataTransfer.getData("taskId");
   if(!id) return;
-  const r = await fetch(`/api/tasks/${id}/status`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: newStatus}) });
-  if(r.ok) { toast('Task moved', 'ok'); loadTasks(); }
+  
+  const task = allTasksCache.find(t => t.id == id);
+  if(newStatus==='done' && task && task.created_by !== session.userId && session.role!=='admin') {
+    return toast('Tasks must be approved by their creator', 'err');
+  }
+  
+  const r = await fetch(`/api/tasks/${id}/status`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({status: newStatus})
+  });
+  
+  if(r.ok) {
+    toast('Task moved', 'ok');
+    loadTasks();
+  } else {
+    const err = await r.json();
+    toast(err.error || 'Error moving task', 'err');
+  }
 }
 
-function setTaskFilter(f) { currentTaskFilter = f; renderTasksKanban(); }
-function openTaskModal() { document.getElementById('t-title').value = ''; document.getElementById('task-modal-backdrop').classList.add('open'); loadAssignableUsers(); }
-function closeTaskModal() { document.getElementById('task-modal-backdrop').classList.remove('open'); }
+function setTaskFilter(f) {
+  currentTaskFilter = f;
+  renderTasksKanban();
+}
+
+function openTaskModal() {
+  newSubtasks = [];
+  document.getElementById('t-title').value = '';
+  document.getElementById('t-desc').value = '';
+  document.getElementById('t-due').value = '';
+  if(allClients.length) document.getElementById('t-client').value = allClients[0].id;
+  
+  loadAssignableUsers();
+  
+  document.getElementById('subtasks-list').innerHTML = '';
+  document.getElementById('task-modal-backdrop').classList.add('open');
+}
+
+function closeTaskModal() {
+  document.getElementById('task-modal-backdrop').classList.remove('open');
+}
+
 async function loadAssignableUsers() {
   try {
     const users = await fetch('/api/users/assignable').then(r=>r.json());
-    document.getElementById('t-assign').innerHTML = '<option value="">Unassigned</option>' + users.map(u => `<option value="${u.id}">${escHtml(u.name)}</option>`).join('');
+    const select = document.getElementById('t-assign');
+    select.innerHTML = '<option value="">Unassigned</option>' + users.map(u => `<option value="${u.id}">${escHtml(u.name)} (${u.email})</option>`).join('');
   } catch(e) {}
 }
+
+function addSubtask() {
+  const text = prompt('Subtask:');
+  if(!text) return;
+  newSubtasks.push({text, completed:false});
+  renderSubtasksList();
+}
+
+function renderSubtasksList() {
+  document.getElementById('subtasks-list').innerHTML = newSubtasks.map((s,i) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <input type="checkbox" ${s.completed?'checked':''} onchange="newSubtasks[${i}].completed=this.checked">
+      <span style="flex:1;">${escHtml(s.text)}</span>
+      <button class="btn btn-ghost btn-xs" onclick="newSubtasks.splice(${i},1);renderSubtasksList()">Remove</button>
+    </div>
+  `).join('');
+}
+
 async function saveTask() {
   const title = document.getElementById('t-title').value.trim();
   if(!title) return toast('Title required', 'err');
-  const data = { client_id: document.getElementById('t-client').value, assigned_to: document.getElementById('t-assign').value || null, title, description: document.getElementById('t-desc').value, due_date: document.getElementById('t-due').value || null, created_by: session.userId, subtasks: newSubtasks };
-  const r = await fetch('/api/tasks', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-  if(r.ok) { closeTaskModal(); await loadTasks(); toast('Task created!', 'ok'); }
+  
+  const data = {
+    client_id: document.getElementById('t-client').value,
+    assigned_to: document.getElementById('t-assign').value || null,
+    title,
+    description: document.getElementById('t-desc').value,
+    due_date: document.getElementById('t-due').value || null,
+    created_by: session.userId,
+    subtasks: newSubtasks
+  };
+  
+  const r = await fetch('/api/tasks', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeTaskModal();
+    await loadTasks();
+    toast('Task created!', 'ok');
+  } else {
+    toast('Error creating task', 'err');
+  }
 }
+
 async function openTaskPreview(id) {
   const task = allTasksCache.find(t => t.id == id);
-  if(!task) return;
+  if(!task) return toast('Task not found', 'err');
+  
   currentTaskPreview = task;
+  
   document.getElementById('tp-title').textContent = task.title;
-  document.getElementById('tp-body').innerHTML = `<div style="margin-bottom:12px;"><strong>Status:</strong> ${task.status}</div><div style="margin-bottom:12px;"><strong>Description:</strong><br>${escHtml(task.description||'No description')}</div><button class="btn btn-red btn-full" style="margin-top:12px;" onclick="deleteTask(${task.id})">Delete Task</button>`;
+  
+  let subtasks = [];
+  try { subtasks = JSON.parse(task.subtasks || '[]'); } catch(e) {}
+  
+  const canApprove = task.created_by === session.userId || session.role === 'admin';
+  const isReview = task.status === 'review';
+  
+  document.getElementById('tp-body').innerHTML = `
+    <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(task.client_name||'No client')}</div>
+    <div style="margin-bottom:12px;"><strong>Assigned To:</strong> ${escHtml(task.assignee_name||'Unassigned')}</div>
+    <div style="margin-bottom:12px;"><strong>Created By:</strong> ${escHtml(task.creator_name||'Unknown')}</div>
+    <div style="margin-bottom:12px;"><strong>Due Date:</strong> <span class="${dueDateClass(task.due_date)}">${formatDate(task.due_date)}</span></div>
+    <div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${task.status}">${task.status}</span></div>
+    <div style="margin-bottom:12px;"><strong>Description:</strong><br>${escHtml(task.description||'No description')}</div>
+    ${subtasks.length>0 ? `<div style="margin-bottom:12px;"><strong>Subtasks:</strong><div id="tp-subtasks">${subtasks.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:6px 0;"><input type="checkbox" ${s.completed?'checked':''} onchange="toggleSubtask(${i},this.checked)"><span>${escHtml(s.text)}</span></div>`).join('')}</div></div>` : ''}
+    ${isReview && canApprove ? `
+      <div style="margin-top:20px;display:flex;gap:8px;">
+        <button class="btn btn-green btn-full" onclick="approveTask()">✓ Approve</button>
+        <button class="btn btn-red btn-full" onclick="sendBackTask()">✗ Send Back</button>
+      </div>
+    ` : ''}
+    <button class="btn btn-red btn-full" style="margin-top:12px;" onclick="deleteTask(${task.id})">Delete Task</button>
+  `;
+  
   document.getElementById('task-preview-backdrop').classList.add('open');
 }
-function closeTaskPreview() { document.getElementById('task-preview-backdrop').classList.remove('open'); }
-async function deleteTask(id) {
-  if(!confirm('Delete this task?')) return;
-  const r = await fetch(`/api/tasks/${id}`, {method: 'DELETE'});
-  if(r.ok) { closeTaskPreview(); await loadTasks(); toast('Task deleted', 'ok'); }
+
+function closeTaskPreview() {
+  document.getElementById('task-preview-backdrop').classList.remove('open');
 }
 
-// Other views (Landing Pages, Campaigns, Clients, Products, Approvals) remain functionally similar but abbreviated for layout compliance.
-async function loadLandingPages() { document.getElementById('pages-list').innerHTML = '<div class="empty-state"><p>Landing pages module loading...</p></div>'; }
-async function loadCampaigns() { document.getElementById('campaigns-list').innerHTML = '<div class="empty-state"><p>Campaigns module loading...</p></div>'; }
-async function loadClientsView() { document.getElementById('clients-list-full').innerHTML = '<div class="empty-state"><p>Clients module loading...</p></div>'; }
-async function loadProducts() { document.getElementById('products-list').innerHTML = '<div class="empty-state"><p>Products module loading...</p></div>'; }
-async function loadUsers() { document.getElementById('users-list').innerHTML = '<div class="empty-state"><p>Users module loading...</p></div>'; }
-async function loadApprovals() { document.getElementById('approvals-list').innerHTML = '<div class="empty-state"><p>No approvals pending</p></div>'; }
-async function loadEndCustomers() { document.getElementById('customers-list').innerHTML = '<div class="empty-state"><p>Customers module loading...</p></div>'; }
+async function toggleSubtask(idx, checked) {
+  if(!currentTaskPreview) return;
+  
+  let subtasks = [];
+  try { subtasks = JSON.parse(currentTaskPreview.subtasks || '[]'); } catch(e) {}
+  
+  subtasks[idx].completed = checked;
+  
+  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/subtasks`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({subtasks})
+  });
+  
+  if(r.ok) {
+    await loadTasks();
+    const updated = allTasksCache.find(t => t.id == currentTaskPreview.id);
+    if(updated) currentTaskPreview = updated;
+  }
+}
 
-// Open/Close Modals for minor entities
-function openPageBuilder() { document.getElementById('page-builder-backdrop').classList.add('open'); }
-function closePageBuilder() { document.getElementById('page-builder-backdrop').classList.remove('open'); }
-function openCampaignModal() { document.getElementById('campaign-modal-backdrop').classList.add('open'); }
-function closeCampaignModal() { document.getElementById('campaign-modal-backdrop').classList.remove('open'); }
-function openClientModal() { document.getElementById('client-modal-backdrop').classList.add('open'); }
-function closeClientModal() { document.getElementById('client-modal-backdrop').classList.remove('open'); }
-function openProductModal() { document.getElementById('product-modal-backdrop').classList.add('open'); }
-function closeProductModal() { document.getElementById('product-modal-backdrop').classList.remove('open'); }
-function openUserModal() { document.getElementById('user-modal-backdrop').classList.add('open'); }
-function closeUserModal() { document.getElementById('user-modal-backdrop').classList.remove('open'); }
-function openCustomerModal() { document.getElementById('customer-modal-backdrop').classList.add('open'); }
-function closeCustomerModal() { document.getElementById('customer-modal-backdrop').classList.remove('open'); }
+async function approveTask() {
+  if(!currentTaskPreview) return;
+  
+  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/approve`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({approved: true, reviewer_id: session.userId})
+  });
+  
+  if(r.ok) {
+    closeTaskPreview();
+    await loadTasks();
+    toast('Task approved!', 'ok');
+  }
+}
 
-function closeApprovalModal() { document.getElementById('approval-modal-backdrop').classList.remove('open'); }
-function closeInvoiceModal() { document.getElementById('invoice-modal-backdrop').classList.remove('open'); }
-function openInvoiceModal(clientId) { document.getElementById('invoice-modal-backdrop').classList.add('open'); }
-function addInvoiceItem() { /* Item Add Logic */ }
-function addDeduction() { /* Deduction Add Logic */ }
-function generateInvoicePDF() { /* PDF generation logic via jsPDF */ toast('Invoice Generated', 'ok'); closeInvoiceModal(); }
+async function sendBackTask() {
+  const feedback = prompt('Feedback for assignee:');
+  if(!feedback) return;
+  
+  if(!currentTaskPreview) return;
+  
+  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/approve`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({approved: false, feedback, reviewer_id: session.userId})
+  });
+  
+  if(r.ok) {
+    closeTaskPreview();
+    await loadTasks();
+    toast('Task sent back', 'ok');
+  }
+}
+
+async function deleteTask(id) {
+  if(!confirm('Delete this task?')) return;
+  
+  const r = await fetch(`/api/tasks/${id}`, {method: 'DELETE'});
+  if(r.ok) {
+    closeTaskPreview();
+    await loadTasks();
+    toast('Task deleted', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APPROVALS
+// ═══════════════════════════════════════════════════════════════
+
+async function loadApprovals() {
+  let cId = activeClientFilter;
+  if(!cId && session.role!=='admin') cId = session.client_id;
+  
+  const params = new URLSearchParams();
+  if(cId) params.append('client_id', cId);
+  
+  try {
+    const posts = await fetch(`/api/posts/pending-approval?${params}`).then(r=>r.json());
+    const el = document.getElementById('approvals-list');
+    
+    if(!posts.length) {
+      el.innerHTML = '<div class="empty-state"><p>No posts pending approval</p></div>';
+      return;
+    }
+    
+    el.innerHTML = posts.map(p => {
+      const platforms = parsePlatforms(p.platforms);
+      return `
+        <div class="post-item approval-pending" onclick="openApprovalModal(${p.id})">
+          <div class="post-item-title">${escHtml(p.title)}</div>
+          <div class="post-item-meta">
+            <span>${p.client_name||'No client'}</span>
+            <span>${platforms.map(pl => `<span class="platform-tag">${pl}</span>`).join(' ')}</span>
+            <span>${formatDate(p.post_date)}</span>
+            <span>By: ${p.creator_name||'Unknown'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    toast('Error loading approvals', 'err');
+  }
+}
+
+async function openApprovalModal(id) {
+  const r = await fetch(`/api/posts?month=&year=`);
+  const allPosts = await r.json();
+  const post = allPosts.find(p => p.id === id);
+  if(!post) return toast('Post not found', 'err');
+  
+  currentApprovalPost = post;
+  
+  document.getElementById('appr-title').textContent = post.title;
+  
+  const platforms = parsePlatforms(post.platforms);
+  
+  document.getElementById('appr-body').innerHTML = `
+    <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div>
+    <div style="margin-bottom:12px;"><strong>Caption:</strong><br>${escHtml(post.caption||'No caption')}</div>
+    <div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div>
+    <div style="margin-bottom:12px;"><strong>Date:</strong> ${formatDate(post.post_date)} ${post.post_time||''}</div>
+    ${post.media_link ? `<div style="margin-bottom:12px;"><strong>Media:</strong> <a href="${post.media_link}" target="_blank" style="color:var(--accent);">View</a></div>` : ''}
+  `;
+  
+  document.getElementById('reject-reason-field').style.display = 'none';
+  document.getElementById('approval-modal-backdrop').classList.add('open');
+}
+
+function closeApprovalModal() {
+  document.getElementById('approval-modal-backdrop').classList.remove('open');
+  currentApprovalPost = null;
+}
+
+async function approvePost() {
+  if(!currentApprovalPost) return;
+  
+  const r = await fetch(`/api/posts/${currentApprovalPost.id}/approve`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({approved: true})
+  });
+  
+  if(r.ok) {
+    closeApprovalModal();
+    await loadApprovals();
+    toast('Post approved!', 'ok');
+  }
+}
+
+function rejectPost() {
+  document.getElementById('reject-reason-field').style.display = 'block';
+}
+
+async function submitRejection() {
+  const reason = document.getElementById('reject-reason').value.trim();
+  if(!reason) return toast('Please provide a reason', 'err');
+  
+  if(!currentApprovalPost) return;
+  
+  const r = await fetch(`/api/posts/${currentApprovalPost.id}/approve`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({approved: false, rejection_reason: reason})
+  });
+  
+  if(r.ok) {
+    closeApprovalModal();
+    await loadApprovals();
+    toast('Post rejected', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOMERS
+// ═══════════════════════════════════════════════════════════════
+
+async function loadEndCustomers() {
+  let cId = activeClientFilter;
+  if(!cId && session.role!=='admin') cId = session.client_id;
+  
+  const params = new URLSearchParams();
+  if(cId) params.append('client_id', cId);
+  
+  try {
+    const customers = await fetch(`/api/end-customers?${params}`).then(r=>r.json());
+    const el = document.getElementById('customers-list');
+    
+    if(!customers.length) {
+      el.innerHTML = '<div class="empty-state"><p>No customers yet</p></div>';
+      return;
+    }
+    
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Product</th><th>Price</th><th>Stage</th><th>Sign-up Date</th></tr>
+          </thead>
+          <tbody>
+            ${customers.map(c => `
+              <tr>
+                <td><strong>${escHtml(c.name)}</strong></td>
+                <td>${escHtml(c.email||'N/A')}</td>
+                <td>${escHtml(c.product_name||'No product')}</td>
+                <td>R${c.product_price ? parseFloat(c.product_price).toFixed(2) : '0.00'}</td>
+                <td><span class="badge badge-${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
+                <td>${formatDate(c.sign_up_date)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch(e) {
+    toast('Error loading customers', 'err');
+  }
+}
+
+function openCustomerModal() {
+  document.getElementById('ec-name').value = '';
+  document.getElementById('ec-email').value = '';
+  document.getElementById('ec-status').value = 'Contract Review';
+  if(allClients.length) document.getElementById('ec-client').value = allClients[0].id;
+  loadProductsForModal();
+  document.getElementById('customer-modal-backdrop').classList.add('open');
+}
+
+function closeCustomerModal() {
+  document.getElementById('customer-modal-backdrop').classList.remove('open');
+}
+
+async function loadProductsForModal() {
+  const cId = document.getElementById('ec-client').value;
+  if(!cId) return;
+  
+  try {
+    const products = await fetch(`/api/products?client_id=${cId}`).then(r=>r.json());
+    const select = document.getElementById('ec-product');
+    select.innerHTML = products.length 
+      ? products.map(p => `<option value="${p.id}">${escHtml(p.name)} - R${parseFloat(p.price).toFixed(2)}</option>`).join('')
+      : '<option value="">No products for this client</option>';
+  } catch(e) {}
+}
+
+async function saveCustomer() {
+  const name = document.getElementById('ec-name').value.trim();
+  if(!name) return toast('Name required', 'err');
+  
+  const data = {
+    client_id: document.getElementById('ec-client').value,
+    product_id: document.getElementById('ec-product').value,
+    name,
+    email: document.getElementById('ec-email').value,
+    status: document.getElementById('ec-status').value
+  };
+  
+  const r = await fetch('/api/end-customers', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeCustomerModal();
+    await loadEndCustomers();
+    toast('Customer added!', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENTS, PRODUCTS, USERS (Admin/Client Owner Views)
+// ═══════════════════════════════════════════════════════════════
+
+async function loadClientsView() {
+  try {
+    const clients = await fetch('/api/clients?role=admin').then(r=>r.json());
+    const el = document.getElementById('clients-list-full');
+    
+    el.innerHTML = clients.length
+      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody>${clients.map(c => `<tr><td><strong>${escHtml(c.name)}</strong></td><td>${escHtml(c.email)}</td><td><span class="badge badge-${c.status==='Active'?'active':'inactive'}">${c.status||'Active'}</span></td><td><button class="btn btn-ghost btn-xs" onclick="openInvoiceModal(${c.id})">Generate Invoice</button></td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty-state"><p>No clients</p></div>';
+  } catch(e) {
+    toast('Error loading clients', 'err');
+  }
+}
+
+function openClientModal() {
+  document.getElementById('nc-name').value = '';
+  document.getElementById('nc-email').value = '';
+  document.getElementById('nc-address').value = '';
+  document.getElementById('nc-desc').value = '';
+  document.getElementById('client-modal-backdrop').classList.add('open');
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal-backdrop').classList.remove('open');
+}
+
+async function saveClient() {
+  const name = document.getElementById('nc-name').value.trim();
+  const email = document.getElementById('nc-email').value.trim();
+  if(!name || !email) return toast('Name and email required', 'err');
+  
+  const data = {
+    name,
+    email,
+    address: document.getElementById('nc-address').value,
+    description: document.getElementById('nc-desc').value
+  };
+  
+  const r = await fetch('/api/clients', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeClientModal();
+    await loadClients();
+    await loadClientsView();
+    toast('Client added!', 'ok');
+  } else {
+    const err = await r.json();
+    toast(err.error || 'Error adding client', 'err');
+  }
+}
+
+async function loadProducts() {
+  try {
+    const products = await fetch('/api/products').then(r=>r.json());
+    const el = document.getElementById('products-list');
+    
+    el.innerHTML = products.length
+      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>Price</th><th>Billing</th><th>Duration</th></tr></thead><tbody>${products.map(p => `<tr><td><strong>${escHtml(p.name)}</strong></td><td>R${parseFloat(p.price).toFixed(2)}</td><td>${p.billing_type}</td><td>${p.duration_months||0} months</td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty-state"><p>No products</p></div>';
+  } catch(e) {
+    toast('Error loading products', 'err');
+  }
+}
+
+function openProductModal() {
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-price').value = '';
+  document.getElementById('prod-billing').value = 'one-off';
+  if(allClients.length) document.getElementById('prod-client-filter').value = allClients[0].id;
+  document.getElementById('product-modal-backdrop').classList.add('open');
+}
+
+function closeProductModal() {
+  document.getElementById('product-modal-backdrop').classList.remove('open');
+}
+
+async function saveProduct() {
+  const name = document.getElementById('prod-name').value.trim();
+  const price = document.getElementById('prod-price').value;
+  if(!name || !price) return toast('Name and price required', 'err');
+  
+  const data = {
+    client_id: document.getElementById('prod-client-filter').value,
+    name,
+    price: parseFloat(price),
+    billing_type: document.getElementById('prod-billing').value,
+    duration_months: 0
+  };
+  
+  const r = await fetch('/api/products', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeProductModal();
+    await loadProducts();
+    toast('Product added!', 'ok');
+  }
+}
+
+async function loadUsers() {
+  try {
+    const users = await fetch('/api/admin/users').then(r=>r.json());
+    const el = document.getElementById('users-list');
+    
+    el.innerHTML = users.length
+      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Actions</th></tr></thead><tbody>${users.map(u => `<tr><td><strong>${escHtml(u.name)}</strong></td><td>${escHtml(u.email)}</td><td>${u.role}</td><td>${escHtml(u.client_name||'N/A')}</td><td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${u.id})">Delete</button></td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty-state"><p>No users</p></div>';
+  } catch(e) {
+    toast('Error loading users', 'err');
+  }
+}
+
+function openUserModal() {
+  document.getElementById('nu-name').value = '';
+  document.getElementById('nu-email').value = '';
+  document.getElementById('nu-pass').value = '';
+  document.getElementById('nu-role').value = 'user';
+  populateClientDropdowns();
+  document.getElementById('user-modal-backdrop').classList.add('open');
+}
+
+function closeUserModal() {
+  document.getElementById('user-modal-backdrop').classList.remove('open');
+}
+
+async function saveUser() {
+  const name = document.getElementById('nu-name').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  if(!name || !email) return toast('Name and email required', 'err');
+  
+  const data = {
+    name,
+    email,
+    password: document.getElementById('nu-pass').value,
+    role: document.getElementById('nu-role').value,
+    client_id: document.getElementById('nu-client').value || null
+  };
+  
+  const r = await fetch('/api/admin/add-user', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  
+  if(r.ok) {
+    closeUserModal();
+    await loadUsers();
+    toast('User created!', 'ok');
+  } else {
+    const err = await r.json();
+    toast(err.error || 'Error creating user', 'err');
+  }
+}
+
+async function deleteUser(id) {
+  if(!confirm('Delete this user?')) return;
+  
+  const r = await fetch(`/api/admin/users/${id}`, {method: 'DELETE'});
+  if(r.ok) {
+    await loadUsers();
+    toast('User deleted', 'ok');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INVOICE GENERATION
+// ═══════════════════════════════════════════════════════════════
+
+let invoiceItems = [];
+let invoiceDeductions = [];
+
+function openInvoiceModal(clientId) {
+  invoiceItems = [];
+  invoiceDeductions = [];
+  
+  if(clientId) {
+    document.getElementById('inv-client').value = clientId;
+  }
+  
+  fetch('/api/invoices/next-number')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('inv-number').value = data.next_invoice_number;
+    });
+  
+  document.getElementById('invoice-items-list').innerHTML = '<div class="two-col" style="margin-bottom:8px;"><input type="text" placeholder="Description" class="item-desc"><input type="number" placeholder="Amount (R)" class="item-amount"></div>';
+  document.getElementById('invoice-deductions-list').innerHTML = '';
+  document.getElementById('invoice-modal-backdrop').classList.add('open');
+}
+
+function closeInvoiceModal() {
+  document.getElementById('invoice-modal-backdrop').classList.remove('open');
+}
+
+function addInvoiceItem() {
+  const container = document.getElementById('invoice-items-list');
+  const div = document.createElement('div');
+  div.className = 'two-col';
+  div.style.marginBottom = '8px';
+  div.innerHTML = '<input type="text" placeholder="Description" class="item-desc"><input type="number" placeholder="Amount (R)" class="item-amount">';
+  container.appendChild(div);
+}
+
+function addDeduction() {
+  const container = document.getElementById('invoice-deductions-list');
+  const div = document.createElement('div');
+  div.className = 'two-col';
+  div.style.marginBottom = '8px';
+  div.innerHTML = '<input type="text" placeholder="Description" class="ded-desc"><input type="number" placeholder="Amount (R)" class="ded-amount">';
+  container.appendChild(div);
+}
+
+async function generateInvoicePDF() {
+  const clientId = document.getElementById('inv-client').value;
+  const invoiceNumber = document.getElementById('inv-number').value.trim();
+  const dueDays = parseInt(document.getElementById('inv-due-days').value) || 1;
+  
+  if(!clientId || !invoiceNumber) return toast('Client and invoice number required', 'err');
+  
+  // Collect items
+  const items = [];
+  document.querySelectorAll('#invoice-items-list .two-col').forEach(row => {
+    const desc = row.querySelector('.item-desc').value.trim();
+    const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
+    if(desc && amount > 0) {
+      items.push({description: desc, rate: amount, amount});
+    }
+  });
+  
+  // Collect deductions
+  const deductions = [];
+  document.querySelectorAll('#invoice-deductions-list .two-col').forEach(row => {
+    const desc = row.querySelector('.ded-desc').value.trim();
+    const amount = parseFloat(row.querySelector('.ded-amount').value) || 0;
+    if(desc && amount > 0) {
+      deductions.push({description: desc, rate: amount, amount});
+    }
+  });
+  
+  if(items.length === 0) return toast('Add at least one line item', 'err');
+  
+  // Save to backend
+  const r = await fetch('/api/invoices', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      client_id: clientId,
+      invoice_number: invoiceNumber,
+      due_days: dueDays,
+      items,
+      deductions,
+      created_by: session.userId
+    })
+  });
+  
+  if(!r.ok) return toast('Error saving invoice', 'err');
+  
+  // Generate PDF
+  const client = allClients.find(c => c.id == clientId);
+  if(!client) return toast('Client not found', 'err');
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Header with wavy design
+  doc.setFillColor(26, 22, 20); // Dark background
+  doc.rect(0, 0, 210, 40, 'F');
+  
+  doc.setTextColor(217, 119, 6); // Gold
+  doc.setFontSize(28);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MEU GLOBAL', 20, 25);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Social Media Management & CRM', 20, 32);
+  
+  // Invoice number and date
+  doc.setFontSize(16);
+  doc.setTextColor(26, 22, 20);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`INVOICE #${invoiceNumber}`, 140, 25);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const today = new Date().toLocaleDateString();
+  doc.text(`Date: ${today}`, 140, 32);
+  doc.text(`Due: ${dueDays} ${dueDays===1?'day':'days'}`, 140, 37);
+  
+  // Bill To
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BILL TO:', 20, 55);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(client.name, 20, 62);
+  if(client.email) doc.text(client.email, 20, 68);
+  if(client.address) {
+    const lines = doc.splitTextToSize(client.address, 80);
+    doc.text(lines, 20, 74);
+  }
+  
+  // Line items table
+  let yPos = 95;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFillColor(245, 243, 240);
+  doc.rect(20, yPos, 170, 8, 'F');
+  doc.text('Description', 25, yPos + 5);
+  doc.text('Amount', 165, yPos + 5);
+  
+  yPos += 12;
+  doc.setFont('helvetica', 'normal');
+  
+  let subtotal = 0;
+  items.forEach(item => {
+    doc.text(item.description, 25, yPos);
+    doc.text(`R${item.amount.toFixed(2)}`, 165, yPos);
+    subtotal += item.amount;
+    yPos += 7;
+  });
+  
+  // Deductions
+  let totalDeductions = 0;
+  if(deductions.length > 0) {
+    yPos += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Deductions:', 25, yPos);
+    yPos += 7;
+    doc.setFont('helvetica', 'normal');
+    
+    deductions.forEach(ded => {
+      doc.text(`- ${ded.description}`, 25, yPos);
+      doc.text(`-R${ded.amount.toFixed(2)}`, 165, yPos);
+      totalDeductions += ded.amount;
+      yPos += 7;
+    });
+  }
+  
+  // Totals
+  yPos += 5;
+  doc.setDrawColor(232, 228, 222);
+  doc.line(20, yPos, 190, yPos);
+  yPos += 8;
+  
+  doc.setFont('helvetica', 'normal');
+  doc.text('Subtotal:', 135, yPos);
+  doc.text(`R${subtotal.toFixed(2)}`, 165, yPos);
+  
+  if(totalDeductions > 0) {
+    yPos += 7;
+    doc.text('Deductions:', 135, yPos);
+    doc.text(`-R${totalDeductions.toFixed(2)}`, 165, yPos);
+  }
+  
+  yPos += 10;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(217, 119, 6);
+  doc.text('TOTAL:', 135, yPos);
+  doc.text(`R${(subtotal - totalDeductions).toFixed(2)}`, 165, yPos);
+  
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(138, 131, 120);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Thank you for your business!', 105, 280, {align: 'center'});
+  doc.text('Payment due within specified days | MEU Global', 105, 285, {align: 'center'});
+  
+  // Save
+  doc.save(`${invoiceNumber}.pdf`);
+  
+  closeInvoiceModal();
+  toast('Invoice generated!', 'ok');
+}
 
 </script>
 
