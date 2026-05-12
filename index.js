@@ -574,75 +574,11 @@ app.get('/api/pages', async (req, res) => {
 });
 
 app.post('/api/pages', async (req, res) => {
-  const { client_id, name, slug, headline, subheadline, cta_text, created_by } = req.body;
+  const { client_id, name, slug, html_content, created_by } = req.body;
   if (!name || !slug) return res.status(400).json({ error: 'Name and slug required' });
 
-  // Generate basic HTML template
-  const html_content = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${name}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
-    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 40px 20px; }
-    .container { max-width: 600px; }
-    h1 { font-size: 48px; margin-bottom: 20px; }
-    p { font-size: 20px; margin-bottom: 30px; opacity: 0.9; }
-    .cta-form { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 16px; }
-    button { width: 100%; padding: 15px; background: #667eea; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: 600; cursor: pointer; }
-    button:hover { background: #5568d3; }
-    .success { display: none; padding: 20px; background: #10b981; color: white; border-radius: 5px; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="hero">
-    <div class="container">
-      <h1>${headline || 'Transform Your Business Today'}</h1>
-      <p>${subheadline || 'Join thousands of satisfied customers and start your journey.'}</p>
-      <div class="cta-form" id="form-container">
-        <form id="lead-form">
-          <input type="text" name="name" placeholder="Your Name" required>
-          <input type="email" name="email" placeholder="Your Email" required>
-          <input type="tel" name="phone" placeholder="Phone Number">
-          <button type="submit">${cta_text || 'Get Started Now'}</button>
-        </form>
-        <div class="success" id="success-message">
-          Thank you! We'll be in touch soon.
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-    document.getElementById('lead-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData);
-
-      try {
-        const response = await fetch('/api/pages/${slug}/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-          document.getElementById('lead-form').style.display = 'none';
-          document.getElementById('success-message').style.display = 'block';
-        }
-      } catch (err) {
-        alert('Error submitting form. Please try again.');
-      }
-    });
-  </script>
-</body>
-</html>`;
-
   try {
-    const { rows } = await pool.query(`INSERT INTO landing_pages (client_id, name, slug, headline, subheadline, cta_text, html_content, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`, [client_id, name, slug, headline, subheadline, cta_text, html_content, created_by]);
+    const { rows } = await pool.query(`INSERT INTO landing_pages (client_id, name, slug, html_content, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *`, [client_id, name, slug, html_content, created_by]);
 
     res.json(rows[0]);
 
