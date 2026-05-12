@@ -94,7 +94,7 @@ button { cursor:pointer; }
 
 /* DASHBOARD & PIPELINE */
 .dash-pipeline-section { grid-column: 1 / -1; margin-bottom: 24px; }
-.appointment-btn { margin-top: 10px; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; width: 100%; text-align: center; display: block; transition: all 0.2s; }
+.appointment-btn { margin-top: 10px; background: var(--surface2); color: var(--accent); border: 1px solid var(--border); padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 700; width: 100%; text-align: center; display: block; transition: all 0.2s; }
 .appointment-btn:hover { background: var(--accent); color: #fff; }
 
 .dash-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:24px; }
@@ -102,7 +102,7 @@ button { cursor:pointer; }
 .dash-card-title { font-size:12px; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; }
 .dash-card-value { font-size:32px; font-weight:700; color:var(--ink); }
 
-/* THIS IS THE FIX FOR THE CHART.JS INFINITE SCROLL BUG */
+/* CSS FIX FOR CHART JS BUG */
 .dash-card canvas { margin-top:16px; width: 100% !important; max-height: 250px; }
 
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:16px; }
@@ -361,16 +361,6 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <span class="tooltip">Dashboard</span>
     </button>
 
-    <button class="nav-btn" id="nav-leads" onclick="showView('leads')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      <span class="tooltip">Leads</span>
-    </button>
-
     <button class="nav-btn" id="nav-customers" onclick="showView('customers')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -405,46 +395,12 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <span class="tooltip">Approvals</span>
     </button>
 
-    <button class="nav-btn" id="nav-pages" style="display:none" onclick="showView('pages')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <line x1="8" y1="21" x2="16" y2="21"/>
-        <line x1="12" y1="17" x2="12" y2="21"/>
-      </svg>
-      <span class="tooltip">Landing Pages</span>
-    </button>
-
     <button class="nav-btn" id="nav-campaigns" style="display:none" onclick="showView('campaigns')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <rect x="3" y="11" width="18" height="11" rx="2"/>
         <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
       </svg>
       <span class="tooltip">Email Campaigns</span>
-    </button>
-
-    <button class="nav-btn" id="nav-clients" style="display:none" onclick="showView('clients')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      <span class="tooltip">Clients</span>
-    </button>
-
-    <button class="nav-btn" id="nav-products" style="display:none" onclick="showView('products')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-      </svg>
-      <span class="tooltip">Products</span>
-    </button>
-
-    <button class="nav-btn" id="nav-users" style="display:none" onclick="showView('users')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      <span class="tooltip">Users</span>
     </button>
 
     <div class="spacer"></div>
@@ -484,9 +440,10 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <div class="view active" id="view-dash">
         <div class="section-header">
           <span class="section-title">Admin Command Center</span>
+          <button class="btn btn-dark btn-sm" id="dash-add-lead-btn" style="display:none" onclick="openLeadModal()">+ Add Lead</button>
         </div>
 
-        <!-- 1. SALES PIPELINE (Admin Only - Rendered via JS) -->
+        <!-- 1. SALES PIPELINE (Admin Only) -->
         <div id="dash-pipeline-container" class="dash-pipeline-section" style="display:none">
            <div class="dash-card">
               <div class="dash-card-title">Active Sales Pipeline (MEU Software)</div>
@@ -501,10 +458,10 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
             <canvas id="stages-chart"></canvas>
           </div>
           
-          <!-- 3. TOP PRODUCTS (Restored) -->
+          <!-- 3. RECENT LEAD ACTIVITY -->
           <div class="dash-card">
-            <div class="dash-card-title">Top Products</div>
-            <canvas id="products-chart"></canvas>
+            <div class="dash-card-title">Recent Lead Activity</div>
+            <div id="recent-lead-activity" style="max-height: 250px; overflow-y: auto;"></div>
           </div>
         </div>
 
@@ -527,15 +484,6 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
             <div class="cal-grid" id="mini-cal"></div>
           </div>
         </div>
-      </div>
-
-      <!-- LEADS VIEW -->
-      <div class="view" id="view-leads">
-        <div class="section-header">
-          <span class="section-title">Full Sales Pipeline</span>
-          <button class="btn btn-dark btn-sm" onclick="openLeadModal()">+ Add Lead</button>
-        </div>
-        <div class="kanban-board" id="leads-board"></div>
       </div>
 
       <!-- CUSTOMERS VIEW -->
@@ -651,18 +599,24 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Tasks</span>
       </button>
-      <button class="bottom-nav-btn" id="bnav-approvals" style="display:none" onclick="showView('approvals')">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        <span>Approvals</span>
-      </button>
     </div>
   </div>
 
 </div>
 
-<!-- USER PANEL -->
+<!-- USER PANEL (NOW CONTAINS ADMIN SETTINGS) -->
 <div id="user-panel">
   <div id="session-info"></div>
+
+  <!-- Admin Settings Popup Menu -->
+  <div id="admin-menu-items" style="display:none; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+    <div style="font-size:11px; font-weight:800; color:var(--ink3); text-transform:uppercase; margin-bottom:8px;">Admin Settings</div>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-bottom:4px; justify-content:flex-start;" onclick="showView('pages'); document.getElementById('user-panel').classList.remove('open')">Landing Pages</button>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-bottom:4px; justify-content:flex-start;" onclick="showView('clients'); document.getElementById('user-panel').classList.remove('open')">Clients</button>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-bottom:4px; justify-content:flex-start;" onclick="showView('products'); document.getElementById('user-panel').classList.remove('open')">Products</button>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-bottom:4px; justify-content:flex-start;" onclick="showView('users'); document.getElementById('user-panel').classList.remove('open')">Users</button>
+  </div>
+
   <div class="field">
     <label>New Password</label>
     <input type="password" id="my-new-pw" placeholder="At least 8 characters" />
@@ -702,7 +656,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
 
 <!-- MODALS -->
 
-<!-- APPOINTMENT MODAL (NEW) -->
+<!-- APPOINTMENT MODAL -->
 <div class="modal-backdrop" id="appointment-modal-backdrop">
   <div class="modal">
     <div class="modal-head">
@@ -746,7 +700,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
     </div>
     <div class="two-col">
       <div class="field"><label>Annual Revenue (R)</label><input type="number" id="lead-revenue" placeholder="5000"></div>
-      <div class="field"><label>Client</label><select id="lead-client"></select></div>
+      <div class="field"><label>Client (Optional)</label><select id="lead-client"><option value="">None</option></select></div>
     </div>
     <div class="field">
       <label>Stage</label>
@@ -756,7 +710,6 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
         <option value="Negotiation">Negotiation</option>
         <option value="Offer Sent">Offer Sent</option>
         <option value="Deal Closed">Deal Closed</option>
-        <option value="Lost">Lost</option>
       </select>
     </div>
     <button class="btn btn-dark btn-full" onclick="saveLead()">Save Lead</button>
@@ -1158,6 +1111,7 @@ async function changeMyPassword() {
   if(r.ok){
     toast('Password updated!','ok');
     document.getElementById('my-new-pw').value='';
+    document.getElementById('user-panel').classList.remove('open');
   } else {
     toast('Error updating password','err');
   }
@@ -1180,26 +1134,28 @@ function setupRoleUI() {
   document.getElementById('user-initials').textContent=(session.name||'?')[0].toUpperCase();
   document.getElementById('session-info').innerHTML=`<div style="font-weight:700">${escHtml(session.name)}</div><div style="font-size:12px;color:var(--ink3);margin-top:3px">${escHtml(session.email)} · ${session.role}</div>`;
 
-  if(session.role==='admin'){
-    document.getElementById('nav-clients').style.display='flex';
-    document.getElementById('nav-products').style.display='flex';
-    document.getElementById('nav-users').style.display='flex';
+  // Hide conditional elements first
+  document.getElementById('admin-menu-items').style.display = 'none';
+  if(document.getElementById('dash-add-lead-btn')) document.getElementById('dash-add-lead-btn').style.display = 'none';
+  if(document.getElementById('nav-approvals')) document.getElementById('nav-approvals').style.display='none';
+  if(document.getElementById('bnav-approvals')) document.getElementById('bnav-approvals').style.display='none';
+  if(document.getElementById('nav-campaigns')) document.getElementById('nav-campaigns').style.display='none';
+
+  if(session.role === 'admin'){
+    document.getElementById('admin-menu-items').style.display = 'block';
+    if(document.getElementById('dash-add-lead-btn')) document.getElementById('dash-add-lead-btn').style.display = 'inline-flex';
     document.getElementById('add-task-btn').style.display='inline-flex';
     document.getElementById('task-filter-mine').style.display='inline-flex';
     document.getElementById('task-filter-all').style.display='inline-flex';
-    document.getElementById('nav-approvals').style.display='flex';
-    document.getElementById('bnav-approvals').style.display='flex';
-    document.getElementById('nav-pages').style.display='flex';
-    document.getElementById('nav-campaigns').style.display='flex';
-    const addClientBtn = document.getElementById('panel-add-client-btn');
-    if(addClientBtn) addClientBtn.style.display='inline-flex';
-  } else if(session.role==='client_owner'){
-    document.getElementById('nav-approvals').style.display='flex';
-    document.getElementById('bnav-approvals').style.display='flex';
-    document.getElementById('panel-add-client-btn').style.display='none';
+    
+    if(document.getElementById('nav-approvals')) document.getElementById('nav-approvals').style.display='flex';
+    if(document.getElementById('bnav-approvals')) document.getElementById('bnav-approvals').style.display='flex';
+    if(document.getElementById('nav-campaigns')) document.getElementById('nav-campaigns').style.display='flex';
+  } else if(session.role === 'client_owner'){
+    if(document.getElementById('nav-approvals')) document.getElementById('nav-approvals').style.display='flex';
+    if(document.getElementById('bnav-approvals')) document.getElementById('bnav-approvals').style.display='flex';
     document.getElementById('add-task-btn').style.display='inline-flex';
-    document.getElementById('nav-pages').style.display='flex';
-    document.getElementById('nav-campaigns').style.display='flex';
+    if(document.getElementById('nav-campaigns')) document.getElementById('nav-campaigns').style.display='flex';
   } else {
     currentTaskFilter='mine';
   }
@@ -1222,11 +1178,18 @@ async function loadClients(){
 }
 
 function populateClientDropdowns(){
-  const opts=allClients.map(c=>`<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
-  ['m-client','nu-client','ec-client','prod-client-filter','t-client','lead-client','page-client','campaign-client','inv-client'].forEach(id=>{
+  // Add placeholder "None" for leads specifically
+  const leadOpts = '<option value="">None</option>' + allClients.map(c=>`<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+  const standardOpts = allClients.map(c=>`<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+  
+  ['m-client','nu-client','ec-client','prod-client-filter','t-client','page-client','campaign-client','inv-client'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.innerHTML=opts;
+    if(el) el.innerHTML=standardOpts;
   });
+  
+  if(document.getElementById('lead-client')) {
+      document.getElementById('lead-client').innerHTML = leadOpts;
+  }
 }
 
 function renderClientPanelList(filter=''){
@@ -1249,7 +1212,7 @@ function selectClient(id){
 function handleLogoClick(){document.getElementById('client-panel').classList.toggle('open');}
 
 // ─── VIEW SWITCHING ──────────────────────────────────────────────
-const VIEW_LABELS={dash:'Dashboard',leads:'Full Pipeline',customers:'Customers',calendar:'Calendar',tasks:'Tasks',approvals:'Approvals',pages:'Landing Pages',campaigns:'Campaigns',clients:'Clients',products:'Products',users:'Users'};
+const VIEW_LABELS={dash:'Dashboard', customers:'Customers', calendar:'Calendar', tasks:'Tasks', approvals:'Approvals', pages:'Landing Pages', campaigns:'Campaigns', clients:'Clients', products:'Products', users:'Users'};
 
 function showView(v){
   document.getElementById('client-panel').classList.remove('open');
@@ -1278,7 +1241,6 @@ function showView(v){
   if(v==='tasks') renderTasksKanban();
   if(v==='approvals') loadApprovals();
   if(v==='customers') loadEndCustomers();
-  if(v==='leads') renderLeadsKanban('leads-board');
   if(v==='pages') loadLandingPages();
   if(v==='campaigns') loadCampaigns();
   if(v==='clients') loadClientsView();
@@ -1287,14 +1249,18 @@ function showView(v){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LEADS PIPELINE (NEW FEATURE INTEGRATION)
+// LEADS PIPELINE & APPOINTMENTS
 // ═══════════════════════════════════════════════════════════════
 
 async function loadLeads() {
   let cId = activeClientFilter; 
-  if (!cId && session.role !== 'admin') cId = session.client_id;
   const params = new URLSearchParams();
-  if(cId) params.append('client_id', cId);
+  
+  // Rule: Admin sees Global Leads on Dashboard. Do not filter by client if Admin.
+  if (session.role !== 'admin') {
+      if (!cId) cId = session.client_id;
+      if (cId) params.append('client_id', cId);
+  }
   
   try {
     allLeadsCache = await fetch(`/api/leads?${params}`).then(r=>r.json());
@@ -1302,9 +1268,6 @@ async function loadLeads() {
     allLeadsCache = [];
   }
   
-  if(document.getElementById('view-leads').classList.contains('active')) {
-    renderLeadsKanban('leads-board');
-  }
   if(document.getElementById('view-dash').classList.contains('active') && session.role === 'admin') {
     renderLeadsKanban('dash-leads-board');
     updateDashStats();
@@ -1315,13 +1278,18 @@ function renderLeadsKanban(targetId) {
   const board = document.getElementById(targetId);
   if (!board) return;
 
-  const stages = [
+  let stages = [
     { key: 'New', title: 'New Leads', color: 'gray' },
     { key: 'Contacted', title: 'Contacted', color: 'blue' },
     { key: 'Negotiation', title: 'Negotiation', color: 'purple' },
     { key: 'Offer Sent', title: 'Offer Sent', color: 'amber' },
     { key: 'Deal Closed', title: 'Deal Closed', color: 'green' }
   ];
+  
+  // Rule: Remove Deal Closed from Admin Dashboard Kanban view
+  if (targetId === 'dash-leads-board') {
+      stages = stages.filter(s => s.key !== 'Deal Closed');
+  }
   
   board.innerHTML = stages.map(stage => {
     const leads = allLeadsCache.filter(l => l.status === stage.key);
@@ -1359,14 +1327,8 @@ function renderLeadCard(lead) {
         </div>
       </div>
       ${lead.company ? `<div class="lead-company">${escHtml(lead.company)}</div>` : ''}
-      ${lead.job_title ? `<div class="lead-meta" style="margin-bottom:6px">${escHtml(lead.job_title)}</div>` : ''}
       ${lead.annual_revenue ? `<div class="lead-revenue">R${parseFloat(lead.annual_revenue).toLocaleString()}</div>` : ''}
-      <div class="lead-meta" style="margin-top:8px;">
-        ${lead.client_name ? `📊 ${escHtml(lead.client_name)}` : ''}
-        ${lead.owner_name ? ` · 👤 ${escHtml(lead.owner_name)}` : ''}
-      </div>
       
-      <!-- Interactive Appointment Button -->
       <button class="appointment-btn" onclick="openAppointmentModal(${lead.id})">
         📅 Schedule Appointment
       </button>
@@ -1393,6 +1355,38 @@ async function dropLead(ev, newStatus) {
   const id = ev.dataTransfer.getData("leadId");
   if (!id) return;
   
+  const lead = allLeadsCache.find(l => l.id == id);
+  if (!lead) return;
+  
+  // Rule: Cannot move backwards to New
+  if (lead.status !== 'New' && newStatus === 'New') {
+      return toast('Cannot move a contacted lead back to New', 'err');
+  }
+
+  // Rule: Automate Client Creation on "Deal Closed"
+  if (newStatus === 'Deal Closed' && lead.status !== 'Deal Closed') {
+      try {
+          const res = await fetch('/api/clients', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ 
+                  name: lead.name, 
+                  email: lead.email || `closed_${lead.id}@placeholder.com`,
+                  description: `Auto-converted from lead. Company: ${lead.company||'N/A'}`
+              })
+          });
+          if (!res.ok) {
+              const err = await res.json();
+              toast(`Lead closed, but Client creation warning: ${err.error}`, 'err');
+          } else {
+              toast('Deal Closed! Client Account Automatically Created.', 'ok');
+              await loadClients(); // Refresh client list
+          }
+      } catch (e) {
+          console.error('Automation Error:', e);
+      }
+  }
+  
   const r = await fetch(`/api/leads/${id}/status`, {
     method: 'PUT', 
     headers: { 'Content-Type': 'application/json' }, 
@@ -1400,12 +1394,12 @@ async function dropLead(ev, newStatus) {
   });
   
   if (r.ok) {
-    toast('Lead moved', 'ok');
+    if (newStatus !== 'Deal Closed') toast('Lead moved', 'ok');
     await loadLeads();
   }
 }
 
-// ─── APPOINTMENT MODAL LOGIC (NEW) ───────────────────────────────
+// ─── APPOINTMENT MODAL LOGIC ─────────────────────────────────────
 function openAppointmentModal(leadId) {
     const lead = allLeadsCache.find(l => l.id === leadId);
     if (!lead) return;
@@ -1434,7 +1428,7 @@ async function saveAppointment() {
     if (!date || !time) return toast('Please select date and time', 'err');
 
     const data = {
-        client_id: selectedLeadForAppt.client_id,
+        client_id: selectedLeadForAppt.client_id || null,
         title: `[APPOINTMENT] ${title}`,
         caption: notes,
         post_date: date,
@@ -1453,6 +1447,15 @@ async function saveAppointment() {
     if (r.ok) {
         toast('Appointment added to Calendar!', 'ok');
         closeAppointmentModal();
+        
+        // Touch the lead to bump its updated_at timestamp for the Recent Activity list
+        await fetch(`/api/leads/${selectedLeadForAppt.id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(selectedLeadForAppt) 
+        });
+
+        await loadLeads(); // refreshes activity list
         renderCalendar('mini-cal'); 
         renderCalendar('calendar-grid');
     } else {
@@ -1467,7 +1470,7 @@ function openLeadModal() {
   document.getElementById('lead-jobtitle').value = '';
   document.getElementById('lead-revenue').value = '';
   document.getElementById('lead-status').value = 'New';
-  if(allClients.length) document.getElementById('lead-client').value = allClients[0].id;
+  if(allClients.length) document.getElementById('lead-client').value = '';
   document.getElementById('lead-modal-backdrop').classList.add('open');
 }
 
@@ -1480,7 +1483,7 @@ async function saveLead() {
   if(!name) return toast('Name required', 'err');
   
   const data = {
-    client_id: document.getElementById('lead-client').value,
+    client_id: document.getElementById('lead-client').value || null,
     name,
     email: document.getElementById('lead-email').value,
     company: document.getElementById('lead-company').value,
@@ -1564,319 +1567,64 @@ async function deleteCurrentLead() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LANDING PAGES
-// ═══════════════════════════════════════════════════════════════
-
-async function loadLandingPages() {
-  let cId = activeClientFilter; 
-  if (!cId && session.role !== 'admin') cId = session.client_id;
-  const params = new URLSearchParams();
-  if(cId) params.append('client_id', cId);
-  
-  try {
-    const pages = await fetch(`/api/pages?${params}`).then(r=>r.json());
-    const el = document.getElementById('pages-list');
-    
-    if(!pages.length) {
-      el.innerHTML = '<div class="empty-state"><p>No landing pages yet. Create your first one!</p></div>';
-      return;
-    }
-    
-    el.innerHTML = `
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Page Name</th>
-              <th>Slug</th>
-              <th>Client</th>
-              <th>Views</th>
-              <th>Submissions</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${pages.map(p => `
-              <tr>
-                <td><strong>${escHtml(p.name)}</strong></td>
-                <td><code>/${p.slug}</code></td>
-                <td>${escHtml(p.client_name || 'N/A')}</td>
-                <td>${p.views || 0}</td>
-                <td>${p.submissions || 0}</td>
-                <td><span class="badge badge-${p.is_published ? 'active' : 'inactive'}">${p.is_published ? 'Published' : 'Draft'}</span></td>
-                <td>
-                  <button class="btn btn-ghost btn-xs" onclick="window.open('/api/pages/${p.slug}', '_blank')">Preview</button>
-                  <button class="btn btn-ghost btn-xs" onclick="togglePagePublish(${p.id}, ${!p.is_published})">${p.is_published ? 'Unpublish' : 'Publish'}</button>
-                  <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deletePage(${p.id})">Delete</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  } catch(e) {
-    toast('Error loading pages', 'err');
-  }
-}
-
-function openPageBuilder() {
-  document.getElementById('page-name').value = '';
-  document.getElementById('page-slug').value = '';
-  document.getElementById('page-headline').value = '';
-  document.getElementById('page-subheadline').value = '';
-  document.getElementById('page-cta').value = '';
-  if(allClients.length) document.getElementById('page-client').value = allClients[0].id;
-  document.getElementById('page-builder-backdrop').classList.add('open');
-}
-
-function closePageBuilder() {
-  document.getElementById('page-builder-backdrop').classList.remove('open');
-}
-
-async function createLandingPage() {
-  const name = document.getElementById('page-name').value.trim();
-  const slug = document.getElementById('page-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
-  
-  if(!name || !slug) return toast('Name and slug required', 'err');
-  
-  const data = {
-    client_id: document.getElementById('page-client').value,
-    name,
-    slug,
-    headline: document.getElementById('page-headline').value,
-    subheadline: document.getElementById('page-subheadline').value,
-    cta_text: document.getElementById('page-cta').value,
-    created_by: session.userId
-  };
-  
-  const r = await fetch('/api/pages', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closePageBuilder();
-    await loadLandingPages();
-    toast('Landing page created!', 'ok');
-  } else {
-    const err = await r.json();
-    toast(err.error || 'Error creating page', 'err');
-  }
-}
-
-async function togglePagePublish(id, publish) {
-  const r = await fetch(`/api/pages/${id}/publish`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ is_published: publish })
-  });
-  
-  if(r.ok) {
-    await loadLandingPages();
-    toast(publish ? 'Page published!' : 'Page unpublished', 'ok');
-  }
-}
-
-async function deletePage(id) {
-  if(!confirm('Delete this page? This cannot be undone.')) return;
-  
-  const r = await fetch(`/api/pages/${id}`, {method: 'DELETE'});
-  if(r.ok) {
-    await loadLandingPages();
-    toast('Page deleted', 'ok');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// EMAIL CAMPAIGNS
-// ═══════════════════════════════════════════════════════════════
-
-async function loadCampaigns() {
-  let cId = activeClientFilter; 
-  if (!cId && session.role !== 'admin') cId = session.client_id;
-  const params = new URLSearchParams();
-  if(cId) params.append('client_id', cId);
-  
-  try {
-    const campaigns = await fetch(`/api/campaigns?${params}`).then(r=>r.json());
-    const el = document.getElementById('campaigns-list');
-    
-    if(!campaigns.length) {
-      el.innerHTML = '<div class="empty-state"><p>No campaigns yet. Create your first one!</p></div>';
-      return;
-    }
-    
-    el.innerHTML = `
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Campaign Name</th>
-              <th>Subject</th>
-              <th>Client</th>
-              <th>Recipients</th>
-              <th>Status</th>
-              <th>Scheduled</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${campaigns.map(c => `
-              <tr>
-                <td><strong>${escHtml(c.name)}</strong></td>
-                <td>${escHtml(c.subject)}</td>
-                <td>${escHtml(c.client_name || 'N/A')}</td>
-                <td>${c.recipients_count || 0}</td>
-                <td><span class="badge badge-${c.status}">${c.status}</span></td>
-                <td>${c.scheduled_date ? new Date(c.scheduled_date).toLocaleDateString() : 'Not scheduled'}</td>
-                <td>
-                  ${c.status === 'draft' ? `<button class="btn btn-green btn-xs" onclick="sendCampaign(${c.id})">Send</button>` : ''}
-                  <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteCampaign(${c.id})">Delete</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  } catch(e) {
-    toast('Error loading campaigns', 'err');
-  }
-}
-
-function openCampaignModal() {
-  document.getElementById('campaign-name').value = '';
-  document.getElementById('campaign-subject').value = '';
-  document.getElementById('campaign-body').value = '';
-  document.getElementById('campaign-send-date').value = '';
-  if(allClients.length) document.getElementById('campaign-client').value = allClients[0].id;
-  document.getElementById('campaign-modal-backdrop').classList.add('open');
-}
-
-function closeCampaignModal() {
-  document.getElementById('campaign-modal-backdrop').classList.remove('open');
-}
-
-async function createCampaign() {
-  const name = document.getElementById('campaign-name').value.trim();
-  const subject = document.getElementById('campaign-subject').value.trim();
-  
-  if(!name || !subject) return toast('Name and subject required', 'err');
-  
-  const data = {
-    client_id: document.getElementById('campaign-client').value,
-    name,
-    subject,
-    body: document.getElementById('campaign-body').value,
-    scheduled_date: document.getElementById('campaign-send-date').value || null,
-    created_by: session.userId
-  };
-  
-  const r = await fetch('/api/campaigns', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closeCampaignModal();
-    await loadCampaigns();
-    toast('Campaign created!', 'ok');
-  } else {
-    toast('Error creating campaign', 'err');
-  }
-}
-
-async function sendCampaign(id) {
-  if(!confirm('Send this campaign now? This action cannot be undone.')) return;
-  
-  const r = await fetch(`/api/campaigns/${id}/send`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'}
-  });
-  
-  if(r.ok) {
-    const data = await r.json();
-    await loadCampaigns();
-    toast(data.message || 'Campaign sent!', 'ok');
-  }
-}
-
-async function deleteCampaign(id) {
-  if(!confirm('Delete this campaign? This cannot be undone.')) return;
-  
-  const r = await fetch(`/api/campaigns/${id}`, {method: 'DELETE'});
-  if(r.ok) {
-    await loadCampaigns();
-    toast('Campaign deleted', 'ok');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DASHBOARD & STATS (UPDATED)
+// DASHBOARD & STATS (WITH RECENT LEADS)
 // ═══════════════════════════════════════════════════════════════
 
 async function updateDashStats() {
-  let cId = activeClientFilter;
-  if(!cId && session.role!=='admin') cId = session.client_id;
-  const params = new URLSearchParams();
-  if(cId) params.append('client_id', cId);
   
-  try {
-    const stats = await fetch(`/api/stats/dashboard?${params}`).then(r=>r.json());
-    
-    // 1. Stages Bar Chart (Local allLeadsCache to ensure 'New' is captured correctly)
-    const leadStats = {
-        'New': allLeadsCache.filter(l => l.status === 'New').length,
-        'Contacted': allLeadsCache.filter(l => l.status === 'Contacted').length,
-        'Negotiation': allLeadsCache.filter(l => l.status === 'Negotiation').length,
-        'Offer Sent': allLeadsCache.filter(l => l.status === 'Offer Sent').length,
-        'Deal Closed': allLeadsCache.filter(l => l.status === 'Deal Closed').length
-    };
+  // 1. Calculate Stages dynamically from cache to include "New"
+  const leadStats = {
+      'New': allLeadsCache.filter(l => l.status === 'New').length,
+      'Contacted': allLeadsCache.filter(l => l.status === 'Contacted').length,
+      'Negotiation': allLeadsCache.filter(l => l.status === 'Negotiation').length,
+      'Offer Sent': allLeadsCache.filter(l => l.status === 'Offer Sent').length,
+      'Deal Closed': allLeadsCache.filter(l => l.status === 'Deal Closed').length
+  };
 
-    const stagesCtx = document.getElementById('stages-chart').getContext('2d');
-    if(window.stagesChart) window.stagesChart.destroy();
-    
-    window.stagesChart = new Chart(stagesCtx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(leadStats),
-            datasets: [{
-                label: 'Leads by Stage',
-                data: Object.values(leadStats),
-                backgroundColor: ['#9ca3af', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
-                borderRadius: 4
-            }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: true, 
-            aspectRatio: 2, 
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // 2. Top Products Chart (From API)
-    const prodCtx = document.getElementById('products-chart').getContext('2d');
-    if(window.productsChart) window.productsChart.destroy();
-    window.productsChart = new Chart(prodCtx, {
-      type: 'pie',
+  const stagesCtx = document.getElementById('stages-chart').getContext('2d');
+  if(window.stagesChart) window.stagesChart.destroy();
+  
+  window.stagesChart = new Chart(stagesCtx, {
+      type: 'bar',
       data: {
-        labels: stats.products.map(p => p.name),
-        datasets: [{
-          data: stats.products.map(p => parseInt(p.count)),
-          backgroundColor: ['#d97706', '#b45309', '#92400e', '#78350f', '#451a03']
-        }]
+          labels: Object.keys(leadStats),
+          datasets: [{
+              label: 'Leads by Stage',
+              data: Object.values(leadStats),
+              backgroundColor: ['#9ca3af', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
+              borderRadius: 4
+          }]
       },
-      options: { responsive: true, maintainAspectRatio: true, aspectRatio: 2 }
-    });
-    
-  } catch(e) {
-    console.error('Stats error:', e);
+      options: { 
+          responsive: true, 
+          maintainAspectRatio: true, 
+          aspectRatio: 2, 
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          plugins: { legend: { display: false } }
+      }
+  });
+
+  // 2. Rule: Recent Lead Activity List (replaces products chart context on dash)
+  let activeLeads = allLeadsCache.filter(l => l.status !== 'Deal Closed');
+  
+  // Sort: 'New' status comes first, then by most recently updated
+  activeLeads.sort((a, b) => {
+      if(a.status === 'New' && b.status !== 'New') return -1;
+      if(a.status !== 'New' && b.status === 'New') return 1;
+      return new Date(b.updated_at) - new Date(a.updated_at);
+  });
+
+  const activityList = document.getElementById('recent-lead-activity');
+  if (activityList) {
+      activityList.innerHTML = activeLeads.length ? activeLeads.slice(0, 10).map(l => `
+          <div class="mini-task-item" onclick="openLeadDetail(${l.id})">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                  <span class="mini-task-title">${escHtml(l.name)}</span>
+                  <span class="badge badge-${l.status.toLowerCase().replace(' ', '_')}">${l.status}</span>
+              </div>
+              <div class="mini-task-meta">${escHtml(l.company||'Personal')} · Updated: ${formatDate(l.updated_at)}</div>
+          </div>
+      `).join('') : '<div class="empty-state" style="padding:20px;">No active leads</div>';
   }
   
   renderDashTasks();
@@ -1901,6 +1649,13 @@ function switchDashTaskTab(tab) {
 // ═══════════════════════════════════════════════════════════════
 // CALENDAR
 // ═══════════════════════════════════════════════════════════════
+
+// Utility to create URLSearchParams safely
+function newSearchParams(obj) {
+    const params = new URLSearchParams();
+    for (const key in obj) { params.append(key, obj[key]); }
+    return params;
+}
 
 async function renderCalendar(targetGridId) {
   let cId = activeClientFilter;
@@ -1952,7 +1707,12 @@ async function renderCalendar(targetGridId) {
         const dateStr = `${c.year}-${String(c.month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
         const cellDate = new Date(c.year, c.month, c.day);
         const isToday = cellDate.getTime() === today.getTime();
-        const posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
+        
+        let posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
+        // Rule: Admin dashboard mini-cal only shows scheduled appointments
+        if (session.role === 'admin') {
+            posts = posts.filter(p => p.status === 'scheduled');
+        }
         
         return `<div class="cal-day${c.otherMonth?' other-month':''}${isToday?' today':''}" style="min-height:40px;padding:4px;" onclick="openDayPlan('${dateStr}')">
           <div class="cal-day-num">${c.day}</div>
@@ -1980,13 +1740,6 @@ async function renderCalendar(targetGridId) {
   }
 }
 
-// Utility to create URLSearchParams safely
-function newSearchParams(obj) {
-    const params = new URLSearchParams();
-    for (const key in obj) { params.append(key, obj[key]); }
-    return params;
-}
-
 function changeMonth(delta) {
   calMonth += delta;
   if(calMonth < 0) { calMonth = 11; calYear--; }
@@ -1997,14 +1750,19 @@ function changeMonth(delta) {
 
 function openDayPlan(dateStr) {
   currentDayPlanDate = dateStr;
-  const posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
+  let posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
   const tasks = allTasksCache.filter(t => t.due_date && t.due_date.substring(0,10) === dateStr);
+  
+  // Follow same Admin filter rule for the pop up if opened from Dashboard
+  if (document.getElementById('view-dash').classList.contains('active') && session.role === 'admin') {
+      posts = posts.filter(p => p.status === 'scheduled');
+  }
   
   document.getElementById('day-plan-title').textContent = formatDate(dateStr);
   document.getElementById('day-plan-body').innerHTML = `
     <div style="margin-bottom:20px;">
       <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">Posts & Events (${posts.length})</h3>
-      ${posts.length ? posts.map(p => `<div class="post-item" onclick="openPostDetail(${p.id})">${escHtml(p.title)}</div>`).join('') : '<p style="font-size:13px;color:var(--ink3)">No posts scheduled</p>'}
+      ${posts.length ? posts.map(p => `<div class="post-item" onclick="openPostDetail(${p.id})">${escHtml(p.title)}</div>`).join('') : '<p style="font-size:13px;color:var(--ink3)">No events scheduled</p>'}
     </div>
     <div>
       <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;">Tasks (${tasks.length})</h3>
@@ -2075,7 +1833,7 @@ async function savePost() {
 
 async function openPostDetail(id) {
   const post = allPostsCache.find(p => p.id === id);
-  if(!post) return toast('Post not found', 'err');
+  if(!post) return toast('Event not found', 'err');
   
   currentPostDetail = post;
   document.getElementById('pd-title').textContent = post.title;
@@ -2084,7 +1842,7 @@ async function openPostDetail(id) {
   
   document.getElementById('pd-body').innerHTML = `
     <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div>
-    <div style="margin-bottom:12px;"><strong>Caption/Notes:</strong><br>${escHtml(post.caption||'No caption')}</div>
+    <div style="margin-bottom:12px;"><strong>Details/Caption:</strong><br>${escHtml(post.caption||'None')}</div>
     <div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div>
     <div style="margin-bottom:12px;"><strong>Date & Time:</strong> ${formatDate(post.post_date)} ${post.post_time||'No time set'}</div>
     <div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${post.status}">${post.status}</span></div>
@@ -2124,13 +1882,12 @@ function editCurrentPost() {
 
 async function deleteCurrentPost() {
   if(!currentPostDetail) return;
-  if(!confirm('Delete this post? This cannot be undone.')) return;
-  
+  if(!confirm('Delete this item?')) return;
   const r = await fetch(`/api/posts/${currentPostDetail.id}`, {method:'DELETE'});
   if(r.ok) {
     closePostDetail();
-    await renderCalendar('calendar-grid');
-    await renderCalendar('mini-cal');
+    renderCalendar('calendar-grid');
+    renderCalendar('mini-cal');
     toast('Item deleted', 'ok');
   }
 }
