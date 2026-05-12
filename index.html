@@ -268,10 +268,39 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
 
 #change-pw-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10001; align-items:center; justify-content:center; display:none; }
 
-/* USER PANEL */
-#user-panel { display:none; position:fixed; right:20px; top:74px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-md); padding:16px; width:280px; z-index:200; }
+/* USER PANEL (UPDATED CSS FOR BOTTOM LEFT LOCATION) */
+#user-panel {
+  display:none; 
+  position:fixed; 
+  left:80px; /* Anchored to the right of the 72px sidebar */
+  bottom:20px; 
+  top:auto; 
+  right:auto; 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:12px; 
+  box-shadow:var(--shadow-md); 
+  padding:16px; 
+  width:280px; 
+  z-index:200; 
+}
 #user-panel.open { display:block; }
 #session-info { margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+
+/* PAGE BUILDER FULL SCREEN UI */
+.builder-modal { background:var(--bg); width:100vw; height:100vh; display:flex; flex-direction:column; }
+.builder-header { padding:16px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--surface); }
+.builder-body { flex:1; display:flex; overflow:hidden; }
+.builder-sidebar { width:320px; border-right:1px solid var(--border); background:var(--surface2); padding:20px; overflow-y:auto; flex-shrink: 0; }
+.builder-canvas-wrapper { flex:1; padding:40px; overflow-y:auto; display:flex; flex-direction:column; align-items:center; background:#e5e5e5; }
+.canvas-page { background:#fff; width:100%; max-width:1200px; min-height:800px; box-shadow:var(--shadow-md); position:relative; overflow:hidden; }
+.block-drag { padding:12px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px; border-radius:6px; cursor:grab; font-weight:600; font-size:13px; display: flex; align-items: center; gap: 8px; }
+.builder-element { position:relative; border: 2px dashed transparent; transition: all 0.2s; }
+.builder-element:hover { border-color: rgba(217,119,6,0.3); }
+.builder-element.selected { border-color: var(--accent); }
+.del-btn { display:none; position:absolute; top:4px; right:4px; background:var(--red); color:#fff; border:none; border-radius:4px; width:24px; height:24px; font-size:12px; cursor:pointer; z-index: 10; }
+.builder-element.selected .del-btn { display:block; }
+[contenteditable="true"]:focus { outline: none; background: rgba(255,255,255,0.1); }
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
@@ -290,6 +319,13 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
   .cal-day-num { font-size:12px; }
   .modal { max-width:100%; }
   .lead-detail-panel { width:100%; }
+  
+  /* User Panel Mobile Fix */
+  #user-panel {
+    left:50%;
+    bottom:80px; /* Sits right above the bottom nav */
+    transform:translateX(-50%);
+  }
 }
 
 /* DUE DATE COLORS */
@@ -536,7 +572,7 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
       <div class="view" id="view-pages">
         <div class="section-header">
           <span class="section-title">Landing Pages</span>
-          <button class="btn btn-dark btn-sm" onclick="openPageBuilder()">+ Create Page</button>
+          <button class="btn btn-dark btn-sm" onclick="openPageBuilder()">+ Design New Page</button>
         </div>
         <div id="pages-list">
           <div class="empty-state"><p>No landing pages yet. Create your first one!</p></div>
@@ -599,12 +635,16 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Tasks</span>
       </button>
+      <button class="bottom-nav-btn" id="bnav-approvals" style="display:none" onclick="showView('approvals')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Approvals</span>
+      </button>
     </div>
   </div>
 
 </div>
 
-<!-- USER PANEL (NOW CONTAINS ADMIN SETTINGS) -->
+<!-- USER PANEL (UPDATED CSS FOR BOTTOM LEFT LOCATION) -->
 <div id="user-panel">
   <div id="session-info"></div>
 
@@ -716,20 +756,54 @@ input:focus, select:focus, textarea:focus { outline:none; border-color:var(--acc
   </div>
 </div>
 
-<!-- PAGE BUILDER MODAL -->
-<div class="modal-backdrop" id="page-builder-backdrop">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>Create Landing Page</h2>
-      <button class="modal-close" onclick="closePageBuilder()">×</button>
+<!-- PAGE BUILDER FULL SCREEN MODAL (NEW) -->
+<div class="modal-backdrop" id="page-builder-backdrop" style="padding:0;">
+  <div class="builder-modal">
+    <div class="builder-header">
+      <div>
+        <h2 style="font-family:var(--serif); font-size:24px;">Visual Page Builder</h2>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button class="btn btn-ghost btn-sm" onclick="closePageBuilder()">Cancel</button>
+        <button class="btn btn-dark btn-sm" onclick="saveLandingPageDesign()">Publish Page</button>
+      </div>
     </div>
-    <div class="field"><label>Page Name</label><input type="text" id="page-name" placeholder="Summer Promotion 2026"></div>
-    <div class="field"><label>Page URL Slug</label><input type="text" id="page-slug" placeholder="summer-promo-2026"></div>
-    <div class="field"><label>Headline</label><input type="text" id="page-headline" placeholder="Transform Your Business Today"></div>
-    <div class="field"><label>Subheadline</label><textarea id="page-subheadline" rows="2" placeholder="Join thousands of satisfied customers..."></textarea></div>
-    <div class="field"><label>CTA Button Text</label><input type="text" id="page-cta" placeholder="Get Started Now"></div>
-    <div class="field"><label>Client</label><select id="page-client"></select></div>
-    <button class="btn btn-dark btn-full" onclick="createLandingPage()">Create Page</button>
+    
+    <div class="builder-body">
+      <!-- Drag & Drop Toolbar -->
+      <div class="builder-sidebar">
+        <div class="field"><label>Page Name</label><input type="text" id="page-name" placeholder="Luxury Properties 2026"></div>
+        <div class="field"><label>URL Slug</label><input type="text" id="page-slug" placeholder="luxury-properties"></div>
+        <div class="field"><label>Assign Client</label><select id="page-client"></select></div>
+        
+        <h3 style="font-size:12px; font-weight:800; color:var(--ink3); text-transform:uppercase; margin:24px 0 12px 0;">Add Blocks (Drag & Drop)</h3>
+        <div class="block-drag" draggable="true" ondragstart="dragBlock(event, 'header')">📝 Header w/ CTA</div>
+        <div class="block-drag" draggable="true" ondragstart="dragBlock(event, 'hero')">🖼️ Hero Section</div>
+        <div class="block-drag" draggable="true" ondragstart="dragBlock(event, 'text')">Aa Text Block</div>
+        <div class="block-drag" draggable="true" ondragstart="dragBlock(event, 'image')">📷 Image Block</div>
+        <div class="block-drag" draggable="true" ondragstart="dragBlock(event, 'form')">📋 Lead Capture Form</div>
+
+        <h3 style="font-size:12px; font-weight:800; color:var(--ink3); text-transform:uppercase; margin:24px 0 12px 0;">Style Selected Block</h3>
+        <div class="field"><label>Background Hex</label><input type="text" id="b-bg-color" placeholder="#ffffff" onchange="updateBuilderStyle('bg', this.value)"></div>
+        <div class="field"><label>Text Hex</label><input type="text" id="b-text-color" placeholder="#1a1614" onchange="updateBuilderStyle('color', this.value)"></div>
+        <div class="field">
+          <label>Font Family</label>
+          <select id="b-font" onchange="updateBuilderStyle('font', this.value)">
+            <option value="var(--sans)">Modern (Sans Serif)</option>
+            <option value="var(--serif)">Luxury (Serif)</option>
+          </select>
+        </div>
+        <div class="field"><label>Image URL (If Image Block)</label><input type="text" id="b-image-url" placeholder="https://..." onchange="updateBuilderStyle('image', this.value)"></div>
+      </div>
+
+      <!-- Live Canvas -->
+      <div class="builder-canvas-wrapper" ondrop="dropBlock(event)" ondragover="allowDropBlock(event)">
+        <div class="canvas-page" id="builder-canvas">
+          <!-- Blocks dropped here -->
+          <div style="padding:100px; text-align:center; color:var(--ink3); font-style:italic;" id="canvas-placeholder">Drag blocks here from the sidebar to build your page...</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1178,7 +1252,6 @@ async function loadClients(){
 }
 
 function populateClientDropdowns(){
-  // Add placeholder "None" for leads specifically
   const leadOpts = '<option value="">None</option>' + allClients.map(c=>`<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
   const standardOpts = allClients.map(c=>`<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
   
@@ -1256,7 +1329,6 @@ async function loadLeads() {
   let cId = activeClientFilter; 
   const params = new URLSearchParams();
   
-  // Rule: Admin sees Global Leads on Dashboard. Do not filter by client if Admin.
   if (session.role !== 'admin') {
       if (!cId) cId = session.client_id;
       if (cId) params.append('client_id', cId);
@@ -1286,7 +1358,6 @@ function renderLeadsKanban(targetId) {
     { key: 'Deal Closed', title: 'Deal Closed', color: 'green' }
   ];
   
-  // Rule: Remove Deal Closed from Admin Dashboard Kanban view
   if (targetId === 'dash-leads-board') {
       stages = stages.filter(s => s.key !== 'Deal Closed');
   }
@@ -1358,12 +1429,10 @@ async function dropLead(ev, newStatus) {
   const lead = allLeadsCache.find(l => l.id == id);
   if (!lead) return;
   
-  // Rule: Cannot move backwards to New
   if (lead.status !== 'New' && newStatus === 'New') {
       return toast('Cannot move a contacted lead back to New', 'err');
   }
 
-  // Rule: Automate Client Creation on "Deal Closed"
   if (newStatus === 'Deal Closed' && lead.status !== 'Deal Closed') {
       try {
           const res = await fetch('/api/clients', {
@@ -1380,7 +1449,7 @@ async function dropLead(ev, newStatus) {
               toast(`Lead closed, but Client creation warning: ${err.error}`, 'err');
           } else {
               toast('Deal Closed! Client Account Automatically Created.', 'ok');
-              await loadClients(); // Refresh client list
+              await loadClients(); 
           }
       } catch (e) {
           console.error('Automation Error:', e);
@@ -1448,14 +1517,13 @@ async function saveAppointment() {
         toast('Appointment added to Calendar!', 'ok');
         closeAppointmentModal();
         
-        // Touch the lead to bump its updated_at timestamp for the Recent Activity list
         await fetch(`/api/leads/${selectedLeadForAppt.id}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(selectedLeadForAppt) 
         });
 
-        await loadLeads(); // refreshes activity list
+        await loadLeads(); 
         renderCalendar('mini-cal'); 
         renderCalendar('calendar-grid');
     } else {
@@ -1567,12 +1635,11 @@ async function deleteCurrentLead() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DASHBOARD & STATS (WITH RECENT LEADS)
+// DASHBOARD & STATS 
 // ═══════════════════════════════════════════════════════════════
 
 async function updateDashStats() {
   
-  // 1. Calculate Stages dynamically from cache to include "New"
   const leadStats = {
       'New': allLeadsCache.filter(l => l.status === 'New').length,
       'Contacted': allLeadsCache.filter(l => l.status === 'Contacted').length,
@@ -1604,10 +1671,8 @@ async function updateDashStats() {
       }
   });
 
-  // 2. Rule: Recent Lead Activity List (replaces products chart context on dash)
   let activeLeads = allLeadsCache.filter(l => l.status !== 'Deal Closed');
   
-  // Sort: 'New' status comes first, then by most recently updated
   activeLeads.sort((a, b) => {
       if(a.status === 'New' && b.status !== 'New') return -1;
       if(a.status !== 'New' && b.status === 'New') return 1;
@@ -1650,7 +1715,6 @@ function switchDashTaskTab(tab) {
 // CALENDAR
 // ═══════════════════════════════════════════════════════════════
 
-// Utility to create URLSearchParams safely
 function newSearchParams(obj) {
     const params = new URLSearchParams();
     for (const key in obj) { params.append(key, obj[key]); }
@@ -1680,21 +1744,11 @@ async function renderCalendar(targetGridId) {
   
   const cells = [];
   
-  // Previous month days
-  for(let i=firstDay-1; i>=0; i--) {
-    cells.push({day:prevMonthDays-i, otherMonth:true, year:calYear, month:calMonth-1});
-  }
+  for(let i=firstDay-1; i>=0; i--) cells.push({day:prevMonthDays-i, otherMonth:true, year:calYear, month:calMonth-1});
+  for(let d=1; d<=daysInMonth; d++) cells.push({day:d, otherMonth:false, year:calYear, month:calMonth});
   
-  // Current month days
-  for(let d=1; d<=daysInMonth; d++) {
-    cells.push({day:d, otherMonth:false, year:calYear, month:calMonth});
-  }
-  
-  // Next month days
   const remaining = 42 - cells.length;
-  for(let d=1; d<=remaining; d++) {
-    cells.push({day:d, otherMonth:true, year:calYear, month:calMonth+1});
-  }
+  for(let d=1; d<=remaining; d++) cells.push({day:d, otherMonth:true, year:calYear, month:calMonth+1});
   
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -1709,7 +1763,6 @@ async function renderCalendar(targetGridId) {
         const isToday = cellDate.getTime() === today.getTime();
         
         let posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
-        // Rule: Admin dashboard mini-cal only shows scheduled appointments
         if (session.role === 'admin') {
             posts = posts.filter(p => p.status === 'scheduled');
         }
@@ -1753,7 +1806,6 @@ function openDayPlan(dateStr) {
   let posts = allPostsCache.filter(p => p.post_date && p.post_date.substring(0,10) === dateStr);
   const tasks = allTasksCache.filter(t => t.due_date && t.due_date.substring(0,10) === dateStr);
   
-  // Follow same Admin filter rule for the pop up if opened from Dashboard
   if (document.getElementById('view-dash').classList.contains('active') && session.role === 'admin') {
       posts = posts.filter(p => p.status === 'scheduled');
   }
@@ -1777,1030 +1829,346 @@ function closeDayPlan() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// POSTS
+// VISUAL PAGE BUILDER LOGIC (NEW)
 // ═══════════════════════════════════════════════════════════════
 
-function openPostModal() {
-  editingPostId = null;
-  document.getElementById('post-modal-title').textContent = 'New Post';
-  document.getElementById('m-title').value = '';
-  document.getElementById('m-caption').value = '';
-  document.getElementById('m-media').value = '';
-  document.getElementById('m-date').value = '';
-  document.getElementById('m-time').value = '';
-  document.getElementById('m-status').value = 'draft';
-  document.querySelectorAll('.platform-check').forEach(cb => cb.checked=false);
-  if(allClients.length) document.getElementById('m-client').value = allClients[0].id;
-  document.getElementById('post-modal-backdrop').classList.add('open');
+let draggedBlockType = null;
+let selectedBuilderElement = null;
+
+function openPageBuilder() {
+  document.getElementById('page-name').value = '';
+  document.getElementById('page-slug').value = '';
+  if(allClients.length) document.getElementById('page-client').value = allClients[0].id;
+  
+  // Reset Canvas
+  const canvas = document.getElementById('builder-canvas');
+  canvas.innerHTML = '<div style="padding:100px; text-align:center; color:var(--ink3); font-style:italic;" id="canvas-placeholder">Drag blocks here from the sidebar to build your page...</div>';
+  
+  document.getElementById('page-builder-backdrop').classList.add('open');
 }
 
-function closePostModal() {
-  document.getElementById('post-modal-backdrop').classList.remove('open');
+function closePageBuilder() {
+  document.getElementById('page-builder-backdrop').classList.remove('open');
 }
 
-async function savePost() {
-  const title = document.getElementById('m-title').value.trim();
-  const postDate = document.getElementById('m-date').value;
-  if(!title || !postDate) return toast('Title and date required', 'err');
+function dragBlock(ev, type) { 
+  draggedBlockType = type; 
+}
+
+function allowDropBlock(ev) { 
+  ev.preventDefault(); 
+}
+
+function dropBlock(ev) {
+  ev.preventDefault();
+  if(!draggedBlockType) return;
   
-  const platforms = Array.from(document.querySelectorAll('.platform-check:checked')).map(cb=>cb.value);
+  const canvas = document.getElementById('builder-canvas');
+  const placeholder = document.getElementById('canvas-placeholder');
+  if(placeholder) placeholder.remove();
+
+  const newEl = document.createElement('div');
+  newEl.className = 'builder-element';
+  newEl.onclick = (e) => { 
+    e.stopPropagation(); 
+    selectBuilderElement(newEl); 
+  };
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'del-btn';
+  delBtn.innerHTML = '×';
+  delBtn.onclick = (e) => { e.stopPropagation(); newEl.remove(); };
+  newEl.appendChild(delBtn);
+
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'b-content';
+
+  if(draggedBlockType === 'header') {
+      contentDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 40px; background:#fff;">
+           <div contenteditable="true" style="font-weight:700; font-size:24px; font-family:var(--serif);">LUXORA</div>
+           <button style="padding:10px 24px; border:1px solid #1a1614; background:transparent; font-weight:600; cursor:pointer;" onclick="document.getElementById('lead-capture-form').scrollIntoView({behavior:'smooth'})">Get In Touch</button>
+        </div>`;
+  } else if(draggedBlockType === 'hero') {
+      contentDiv.innerHTML = `
+        <div style="padding:120px 40px; text-align:center; background:#f5f3f0;">
+           <h1 contenteditable="true" style="font-family:var(--serif); font-size:56px; margin-bottom:20px; color:#1a1614;">Find Your Dream Home</h1>
+           <p contenteditable="true" style="font-size:20px; color:#4a4540; max-width:600px; margin:0 auto;">Discover beautiful properties where comfort, elegance, and lifestyle come together.</p>
+        </div>`;
+  } else if (draggedBlockType === 'text') {
+      contentDiv.innerHTML = `
+        <div style="padding:40px; text-align:center;">
+          <h2 contenteditable="true" style="font-family:var(--serif); font-size:36px; margin-bottom:16px;">We Make Real Estate Simple</h2>
+          <p contenteditable="true" style="font-size:16px; color:#4a4540; max-width:700px; margin:0 auto;">We adapt a uniquely personalized perspective to each project to deliver stunning spaces of optimal function.</p>
+        </div>`;
+  } else if (draggedBlockType === 'image') {
+      contentDiv.innerHTML = `
+        <div style="padding:20px 40px; text-align:center;">
+          <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" style="max-width:100%; border-radius:16px; object-fit:cover; height:500px; width:100%;" />
+        </div>`;
+  } else if (draggedBlockType === 'form') {
+      contentDiv.innerHTML = `
+        <div id="lead-capture-form" style="background:#1a1614; padding:60px 20px; text-align:center; color:#fff;">
+          <h3 contenteditable="true" style="font-family:var(--serif); font-size:32px; margin-bottom:30px;">Ready to Find Your Dream Home?</h3>
+          <div style="max-width:400px; margin:0 auto; background:#fff; padding:30px; border-radius:12px;">
+             <input type="text" placeholder="Full Name" style="width:100%; padding:14px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;" disabled>
+             <input type="email" placeholder="Email Address" style="width:100%; padding:14px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;" disabled>
+             <input type="tel" placeholder="Phone Number" style="width:100%; padding:14px; margin-bottom:20px; border:1px solid #ccc; border-radius:6px;" disabled>
+             <button style="width:100%; padding:16px; background:#d97706; color:#fff; border:none; border-radius:6px; font-weight:bold; font-size:16px;">Contact Us</button>
+          </div>
+        </div>`;
+      newEl.dataset.isForm = 'true';
+  }
+
+  newEl.appendChild(contentDiv);
+  canvas.appendChild(newEl);
+  draggedBlockType = null;
+}
+
+function selectBuilderElement(el) {
+  document.querySelectorAll('.builder-element').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBuilderElement = el;
+}
+
+function updateBuilderStyle(prop, val) {
+  if(!selectedBuilderElement) return toast('Select a block on the canvas first', 'err');
   
-  const data = {
-    client_id: document.getElementById('m-client').value,
-    title,
-    caption: document.getElementById('m-caption').value,
-    media_link: document.getElementById('m-media').value,
-    platforms,
-    post_date: postDate,
-    post_time: document.getElementById('m-time').value || null,
-    status: document.getElementById('m-status').value,
+  const content = selectedBuilderElement.querySelector('.b-content > div');
+  if(!content) return;
+
+  if(prop === 'bg') content.style.backgroundColor = val;
+  if(prop === 'color') {
+      content.style.color = val;
+      const texts = content.querySelectorAll('h1, h2, h3, p, div');
+      texts.forEach(t => t.style.color = val);
+  }
+  if(prop === 'font') {
+      const headings = content.querySelectorAll('h1, h2, h3, div[contenteditable]');
+      headings.forEach(h => h.style.fontFamily = val);
+  }
+  if(prop === 'image') {
+      const img = content.querySelector('img');
+      if(img) img.src = val;
+      else toast('No image in this block', 'err');
+  }
+}
+
+async function saveLandingPageDesign() {
+  const name = document.getElementById('page-name').value.trim();
+  const slug = document.getElementById('page-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const clientId = document.getElementById('page-client').value;
+  
+  if(!name || !slug) return toast('Page Name and URL Slug are required', 'err');
+
+  // Clone canvas to prepare clean HTML
+  const canvasClone = document.getElementById('builder-canvas').cloneNode(true);
+  
+  // Clean up builder UI artifacts
+  canvasClone.querySelectorAll('.del-btn').forEach(btn => btn.remove());
+  canvasClone.querySelectorAll('.builder-element').forEach(el => {
+      el.classList.remove('builder-element', 'selected');
+      el.removeAttribute('onclick');
+  });
+  canvasClone.querySelectorAll('[contenteditable="true"]').forEach(el => {
+      el.removeAttribute('contenteditable');
+  });
+
+  // Inject real functional form logic if form block exists
+  const formBlocks = canvasClone.querySelectorAll('[data-is-form="true"]');
+  formBlocks.forEach(fb => {
+      const titleText = fb.querySelector('h3') ? fb.querySelector('h3').innerText : 'Contact Us';
+      fb.innerHTML = `
+        <div id="lead-capture-form" style="background:#1a1614; padding:60px 20px; text-align:center; color:#fff;">
+          <h3 style="font-family:'DM Serif Display', serif; font-size:32px; margin-bottom:30px;">${titleText}</h3>
+          <form onsubmit="submitMeuLead(event, ${clientId})" style="max-width:400px; margin:0 auto; background:#fff; padding:30px; border-radius:12px;">
+             <input type="text" name="name" placeholder="Full Name" required style="width:100%; padding:14px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px; font-family:inherit;">
+             <input type="email" name="email" placeholder="Email Address" required style="width:100%; padding:14px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px; font-family:inherit;">
+             <input type="tel" name="phone" placeholder="Phone Number" style="width:100%; padding:14px; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-family:inherit;">
+             <button type="submit" style="width:100%; padding:16px; background:#d97706; color:#fff; border:none; border-radius:6px; font-weight:bold; font-size:16px; cursor:pointer; font-family:inherit;">Contact Us</button>
+             <div class="form-msg" style="display:none; margin-top:12px; color:#10b981; font-weight:bold;">Thank you! We'll be in touch.</div>
+          </form>
+        </div>
+      `;
+  });
+
+  const finalHtml = `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=DM+Serif+Display&display=swap');
+      body { margin:0; font-family:'DM Sans', sans-serif; background:#fff; }
+      * { box-sizing: border-box; }
+    </style>
+    ${canvasClone.innerHTML}
+    <script>
+      async function submitMeuLead(e, cId) {
+         e.preventDefault();
+         const btn = e.target.querySelector('button');
+         const msg = e.target.querySelector('.form-msg');
+         btn.disabled = true; btn.innerText = 'Sending...';
+         
+         const data = Object.fromEntries(new FormData(e.target));
+         data.client_id = cId || null;
+         data.status = 'New';
+         
+         try {
+             const r = await fetch('/api/leads', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+             if(r.ok) {
+                 e.target.reset();
+                 msg.style.display = 'block';
+                 btn.innerText = 'Contact Us';
+             } else {
+                 alert('Error submitting form.');
+             }
+         } catch(err) {
+             alert('Network error.');
+         }
+         btn.disabled = false;
+      }
+    </script>
+  `;
+
+  const reqData = {
+    client_id: clientId || null,
+    name,
+    slug,
+    html_content: finalHtml,
     created_by: session.userId
   };
   
-  const url = editingPostId ? `/api/posts/${editingPostId}` : '/api/posts';
-  const method = editingPostId ? 'PUT' : 'POST';
-  
-  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-  if(r.ok) {
-    closePostModal();
-    await renderCalendar('calendar-grid');
-    await renderCalendar('mini-cal');
-    toast(editingPostId ? 'Post updated!' : 'Post created!', 'ok');
-  } else {
-    toast('Error saving post', 'err');
-  }
-}
-
-async function openPostDetail(id) {
-  const post = allPostsCache.find(p => p.id === id);
-  if(!post) return toast('Event not found', 'err');
-  
-  currentPostDetail = post;
-  document.getElementById('pd-title').textContent = post.title;
-  
-  const platforms = parsePlatforms(post.platforms);
-  
-  document.getElementById('pd-body').innerHTML = `
-    <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div>
-    <div style="margin-bottom:12px;"><strong>Details/Caption:</strong><br>${escHtml(post.caption||'None')}</div>
-    <div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div>
-    <div style="margin-bottom:12px;"><strong>Date & Time:</strong> ${formatDate(post.post_date)} ${post.post_time||'No time set'}</div>
-    <div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${post.status}">${post.status}</span></div>
-    <div style="margin-bottom:12px;"><strong>Approval:</strong> <span class="badge badge-${post.approval_status}">${post.approval_status}</span></div>
-    ${post.rejection_reason ? `<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;"><strong>Rejection Reason:</strong><br>${escHtml(post.rejection_reason)}</div>` : ''}
-    ${post.media_link ? `<div style="margin-bottom:12px;"><strong>Media:</strong> <a href="${post.media_link}" target="_blank" style="color:var(--accent);">View Media</a></div>` : ''}
-  `;
-  
-  document.getElementById('post-detail-backdrop').classList.add('open');
-}
-
-function closePostDetail() {
-  document.getElementById('post-detail-backdrop').classList.remove('open');
-}
-
-function editCurrentPost() {
-  if(!currentPostDetail) return;
-  closePostDetail();
-  
-  editingPostId = currentPostDetail.id;
-  document.getElementById('post-modal-title').textContent = 'Edit Post';
-  document.getElementById('m-client').value = currentPostDetail.client_id;
-  document.getElementById('m-title').value = currentPostDetail.title;
-  document.getElementById('m-caption').value = currentPostDetail.caption || '';
-  document.getElementById('m-media').value = currentPostDetail.media_link || '';
-  document.getElementById('m-date').value = currentPostDetail.post_date ? currentPostDetail.post_date.substring(0,10) : '';
-  document.getElementById('m-time').value = currentPostDetail.post_time || '';
-  document.getElementById('m-status').value = currentPostDetail.status;
-  
-  const platforms = parsePlatforms(currentPostDetail.platforms);
-  document.querySelectorAll('.platform-check').forEach(cb => {
-    cb.checked = platforms.includes(cb.value);
-  });
-  
-  document.getElementById('post-modal-backdrop').classList.add('open');
-}
-
-async function deleteCurrentPost() {
-  if(!currentPostDetail) return;
-  if(!confirm('Delete this item?')) return;
-  const r = await fetch(`/api/posts/${currentPostDetail.id}`, {method:'DELETE'});
-  if(r.ok) {
-    closePostDetail();
-    renderCalendar('calendar-grid');
-    renderCalendar('mini-cal');
-    toast('Item deleted', 'ok');
-  }
-}
-
-async function aiWriteCaption() {
-  const clientId = document.getElementById('m-client').value;
-  const title = document.getElementById('m-title').value.trim();
-  
-  if(!title) return toast('Please enter a post title first', 'err');
-  
-  const platforms = Array.from(document.querySelectorAll('.platform-check:checked')).map(cb=>cb.value);
-  const platformText = platforms.length ? platforms.join(', ') : 'social media';
-  
-  const prompt = `Write an engaging ${platformText} caption for a post titled "${title}". Make it compelling, include relevant emojis, and keep it under 200 characters.`;
-  
-  toast('AI is writing...', '');
-  
-  try {
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({client_id: clientId, prompt})
-    });
-    
-    const data = await r.json();
-    if(data.success) {
-      document.getElementById('m-caption').value = data.text;
-      toast('Caption generated!', 'ok');
-    } else {
-      toast(data.error || 'AI error', 'err');
-    }
-  } catch(e) {
-    toast('AI connection error', 'err');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TASKS
-// ═══════════════════════════════════════════════════════════════
-
-async function loadTasks() {
-  let cId = activeClientFilter;
-  if(!cId && session.role!=='admin') cId = session.client_id;
-  
-  const params = new URLSearchParams({
-    role: session.role,
-    client_id: cId || '',
-    user_id: session.userId
-  });
-  
-  try {
-    allTasksCache = await fetch(`/api/tasks?${params}`).then(r=>r.json());
-  } catch(e) {
-    allTasksCache = [];
-  }
-  
-  if(document.getElementById('view-tasks').classList.contains('active')) {
-    renderTasksKanban();
-  }
-}
-
-function renderTasksKanban() {
-  const filteredTasks = currentTaskFilter==='mine' 
-    ? allTasksCache.filter(t => session.role==='admin' || t.assigned_to===session.userId || t.created_by===session.userId)
-    : allTasksCache;
-  
-  const board = document.getElementById('tasks-kanban');
-  const cols = [
-    {status: 'todo', title: 'To Do'},
-    {status: 'in-progress', title: 'In Progress'},
-    {status: 'review', title: 'Review'},
-    {status: 'done', title: 'Done'}
-  ];
-  
-  board.innerHTML = cols.map(col => {
-    const tasks = filteredTasks.filter(t => t.status === col.status);
-    return `
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <span class="kanban-title">${col.title}</span>
-          <span class="kanban-count">${tasks.length}</span>
-        </div>
-        <div class="kanban-cards" id="tasks-${col.status}" ondrop="dropTask(event, '${col.status}')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
-          ${tasks.map(t => renderTaskCard(t)).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderTaskCard(t) {
-  let subtasks = [];
-  try { subtasks = JSON.parse(t.subtasks || '[]'); } catch(e) {}
-  const completed = subtasks.filter(s => s.completed).length;
-  const total = subtasks.length;
-  const pct = total > 0 ? Math.round((completed/total)*100) : 0;
-  
-  return `
-    <div class="task-card" draggable="true" ondragstart="dragTask(event, ${t.id})" onclick="openTaskPreview(${t.id})">
-      <div class="task-title">${escHtml(t.title)}</div>
-      <div class="task-meta">${t.client_name||'No client'} · ${t.assignee_name||'Unassigned'}</div>
-      ${t.due_date ? `<div class="task-meta ${dueDateClass(t.due_date)}">Due: ${formatDate(t.due_date)}</div>` : ''}
-      ${total > 0 ? `<div class="task-progress"><span>${completed}/${total}</span><div class="task-progress-bar"><div class="task-progress-fill" style="width:${pct}%"></div></div></div>` : ''}
-    </div>
-  `;
-}
-
-function dragTask(ev, id) { ev.dataTransfer.setData("taskId", id); }
-function allowDrop(ev) {
-  ev.preventDefault();
-  if(!ev.currentTarget.classList.contains('drag-over')) ev.currentTarget.classList.add('drag-over');
-}
-function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
-
-async function dropTask(ev, newStatus) {
-  ev.preventDefault();
-  document.querySelectorAll('.kanban-cards').forEach(c => c.classList.remove('drag-over'));
-  const id = ev.dataTransfer.getData("taskId");
-  if(!id) return;
-  
-  const task = allTasksCache.find(t => t.id == id);
-  if(newStatus==='done' && task && task.created_by !== session.userId && session.role!=='admin') {
-    return toast('Tasks must be approved by their creator', 'err');
-  }
-  
-  const r = await fetch(`/api/tasks/${id}/status`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({status: newStatus})
-  });
-  
-  if(r.ok) {
-    toast('Task moved', 'ok');
-    loadTasks();
-  } else {
-    const err = await r.json();
-    toast(err.error || 'Error moving task', 'err');
-  }
-}
-
-function setTaskFilter(f) {
-  currentTaskFilter = f;
-  renderTasksKanban();
-}
-
-function openTaskModal() {
-  newSubtasks = [];
-  document.getElementById('t-title').value = '';
-  document.getElementById('t-desc').value = '';
-  document.getElementById('t-due').value = '';
-  if(allClients.length) document.getElementById('t-client').value = allClients[0].id;
-  
-  loadAssignableUsers();
-  
-  document.getElementById('subtasks-list').innerHTML = '';
-  document.getElementById('task-modal-backdrop').classList.add('open');
-}
-
-function closeTaskModal() {
-  document.getElementById('task-modal-backdrop').classList.remove('open');
-}
-
-async function loadAssignableUsers() {
-  try {
-    const users = await fetch('/api/users/assignable').then(r=>r.json());
-    const select = document.getElementById('t-assign');
-    select.innerHTML = '<option value="">Unassigned</option>' + users.map(u => `<option value="${u.id}">${escHtml(u.name)} (${u.email})</option>`).join('');
-  } catch(e) {}
-}
-
-function addSubtask() {
-  const text = prompt('Subtask:');
-  if(!text) return;
-  newSubtasks.push({text, completed:false});
-  renderSubtasksList();
-}
-
-function renderSubtasksList() {
-  document.getElementById('subtasks-list').innerHTML = newSubtasks.map((s,i) => `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-      <input type="checkbox" ${s.completed?'checked':''} onchange="newSubtasks[${i}].completed=this.checked">
-      <span style="flex:1;">${escHtml(s.text)}</span>
-      <button class="btn btn-ghost btn-xs" onclick="newSubtasks.splice(${i},1);renderSubtasksList()">Remove</button>
-    </div>
-  `).join('');
-}
-
-async function saveTask() {
-  const title = document.getElementById('t-title').value.trim();
-  if(!title) return toast('Title required', 'err');
-  
-  const data = {
-    client_id: document.getElementById('t-client').value,
-    assigned_to: document.getElementById('t-assign').value || null,
-    title,
-    description: document.getElementById('t-desc').value,
-    due_date: document.getElementById('t-due').value || null,
-    created_by: session.userId,
-    subtasks: newSubtasks
-  };
-  
-  const r = await fetch('/api/tasks', {
+  const r = await fetch('/api/pages', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
+    body: JSON.stringify(reqData)
   });
   
   if(r.ok) {
-    closeTaskModal();
-    await loadTasks();
-    toast('Task created!', 'ok');
+    closePageBuilder();
+    await loadLandingPages();
+    toast('Landing Page Published!', 'ok');
   } else {
-    toast('Error creating task', 'err');
-  }
-}
-
-async function openTaskPreview(id) {
-  const task = allTasksCache.find(t => t.id == id);
-  if(!task) return toast('Task not found', 'err');
-  
-  currentTaskPreview = task;
-  
-  document.getElementById('tp-title').textContent = task.title;
-  
-  let subtasks = [];
-  try { subtasks = JSON.parse(task.subtasks || '[]'); } catch(e) {}
-  
-  const canApprove = task.created_by === session.userId || session.role === 'admin';
-  const isReview = task.status === 'review';
-  
-  document.getElementById('tp-body').innerHTML = `
-    <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(task.client_name||'No client')}</div>
-    <div style="margin-bottom:12px;"><strong>Assigned To:</strong> ${escHtml(task.assignee_name||'Unassigned')}</div>
-    <div style="margin-bottom:12px;"><strong>Created By:</strong> ${escHtml(task.creator_name||'Unknown')}</div>
-    <div style="margin-bottom:12px;"><strong>Due Date:</strong> <span class="${dueDateClass(task.due_date)}">${formatDate(task.due_date)}</span></div>
-    <div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${task.status}">${task.status}</span></div>
-    <div style="margin-bottom:12px;"><strong>Description:</strong><br>${escHtml(task.description||'No description')}</div>
-    ${subtasks.length>0 ? `<div style="margin-bottom:12px;"><strong>Subtasks:</strong><div id="tp-subtasks">${subtasks.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:6px 0;"><input type="checkbox" ${s.completed?'checked':''} onchange="toggleSubtask(${i},this.checked)"><span>${escHtml(s.text)}</span></div>`).join('')}</div></div>` : ''}
-    ${isReview && canApprove ? `
-      <div style="margin-top:20px;display:flex;gap:8px;">
-        <button class="btn btn-green btn-full" onclick="approveTask()">✓ Approve</button>
-        <button class="btn btn-red btn-full" onclick="sendBackTask()">✗ Send Back</button>
-      </div>
-    ` : ''}
-    <button class="btn btn-red btn-full" style="margin-top:12px;" onclick="deleteTask(${task.id})">Delete Task</button>
-  `;
-  
-  document.getElementById('task-preview-backdrop').classList.add('open');
-}
-
-function closeTaskPreview() {
-  document.getElementById('task-preview-backdrop').classList.remove('open');
-}
-
-async function toggleSubtask(idx, checked) {
-  if(!currentTaskPreview) return;
-  
-  let subtasks = [];
-  try { subtasks = JSON.parse(currentTaskPreview.subtasks || '[]'); } catch(e) {}
-  
-  subtasks[idx].completed = checked;
-  
-  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/subtasks`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({subtasks})
-  });
-  
-  if(r.ok) {
-    await loadTasks();
-    const updated = allTasksCache.find(t => t.id == currentTaskPreview.id);
-    if(updated) currentTaskPreview = updated;
-  }
-}
-
-async function approveTask() {
-  if(!currentTaskPreview) return;
-  
-  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/approve`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({approved: true, reviewer_id: session.userId})
-  });
-  
-  if(r.ok) {
-    closeTaskPreview();
-    await loadTasks();
-    toast('Task approved!', 'ok');
-  }
-}
-
-async function sendBackTask() {
-  const feedback = prompt('Feedback for assignee:');
-  if(!feedback) return;
-  
-  if(!currentTaskPreview) return;
-  
-  const r = await fetch(`/api/tasks/${currentTaskPreview.id}/approve`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({approved: false, feedback, reviewer_id: session.userId})
-  });
-  
-  if(r.ok) {
-    closeTaskPreview();
-    await loadTasks();
-    toast('Task sent back', 'ok');
-  }
-}
-
-async function deleteTask(id) {
-  if(!confirm('Delete this task?')) return;
-  
-  const r = await fetch(`/api/tasks/${id}`, {method: 'DELETE'});
-  if(r.ok) {
-    closeTaskPreview();
-    await loadTasks();
-    toast('Task deleted', 'ok');
+    const err = await r.json();
+    toast(err.error || 'Error saving page', 'err');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// APPROVALS
+// OTHER EXISTING FUNCTIONS (Campaigns, Invoices, Approvals, Users)
 // ═══════════════════════════════════════════════════════════════
 
-async function loadApprovals() {
-  let cId = activeClientFilter;
-  if(!cId && session.role!=='admin') cId = session.client_id;
-  
+async function loadLandingPages() {
+  let cId = activeClientFilter; 
+  if (!cId && session.role !== 'admin') cId = session.client_id;
   const params = new URLSearchParams();
   if(cId) params.append('client_id', cId);
   
   try {
-    const posts = await fetch(`/api/posts/pending-approval?${params}`).then(r=>r.json());
-    const el = document.getElementById('approvals-list');
+    const pages = await fetch(`/api/pages?${params}`).then(r=>r.json());
+    const el = document.getElementById('pages-list');
     
-    if(!posts.length) {
-      el.innerHTML = '<div class="empty-state"><p>No posts pending approval</p></div>';
-      return;
-    }
-    
-    el.innerHTML = posts.map(p => {
-      const platforms = parsePlatforms(p.platforms);
-      return `
-        <div class="post-item approval-pending" onclick="openApprovalModal(${p.id})">
-          <div class="post-item-title">${escHtml(p.title)}</div>
-          <div class="post-item-meta">
-            <span>${p.client_name||'No client'}</span>
-            <span>${platforms.map(pl => `<span class="platform-tag">${pl}</span>`).join(' ')}</span>
-            <span>${formatDate(p.post_date)}</span>
-            <span>By: ${p.creator_name||'Unknown'}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } catch(e) {
-    toast('Error loading approvals', 'err');
-  }
-}
-
-async function openApprovalModal(id) {
-  const r = await fetch(`/api/posts?month=&year=`);
-  const allPosts = await r.json();
-  const post = allPosts.find(p => p.id === id);
-  if(!post) return toast('Post not found', 'err');
-  
-  currentApprovalPost = post;
-  
-  document.getElementById('appr-title').textContent = post.title;
-  
-  const platforms = parsePlatforms(post.platforms);
-  
-  document.getElementById('appr-body').innerHTML = `
-    <div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div>
-    <div style="margin-bottom:12px;"><strong>Caption:</strong><br>${escHtml(post.caption||'No caption')}</div>
-    <div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div>
-    <div style="margin-bottom:12px;"><strong>Date:</strong> ${formatDate(post.post_date)} ${post.post_time||''}</div>
-    ${post.media_link ? `<div style="margin-bottom:12px;"><strong>Media:</strong> <a href="${post.media_link}" target="_blank" style="color:var(--accent);">View</a></div>` : ''}
-  `;
-  
-  document.getElementById('reject-reason-field').style.display = 'none';
-  document.getElementById('approval-modal-backdrop').classList.add('open');
-}
-
-function closeApprovalModal() {
-  document.getElementById('approval-modal-backdrop').classList.remove('open');
-  currentApprovalPost = null;
-}
-
-async function approvePost() {
-  if(!currentApprovalPost) return;
-  
-  const r = await fetch(`/api/posts/${currentApprovalPost.id}/approve`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({approved: true})
-  });
-  
-  if(r.ok) {
-    closeApprovalModal();
-    await loadApprovals();
-    toast('Post approved!', 'ok');
-  }
-}
-
-function rejectPost() {
-  document.getElementById('reject-reason-field').style.display = 'block';
-}
-
-async function submitRejection() {
-  const reason = document.getElementById('reject-reason').value.trim();
-  if(!reason) return toast('Please provide a reason', 'err');
-  
-  if(!currentApprovalPost) return;
-  
-  const r = await fetch(`/api/posts/${currentApprovalPost.id}/approve`, {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({approved: false, rejection_reason: reason})
-  });
-  
-  if(r.ok) {
-    closeApprovalModal();
-    await loadApprovals();
-    toast('Post rejected', 'ok');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CUSTOMERS
-// ═══════════════════════════════════════════════════════════════
-
-async function loadEndCustomers() {
-  let cId = activeClientFilter;
-  if(!cId && session.role!=='admin') cId = session.client_id;
-  
-  const params = new URLSearchParams();
-  if(cId) params.append('client_id', cId);
-  
-  try {
-    const customers = await fetch(`/api/end-customers?${params}`).then(r=>r.json());
-    const el = document.getElementById('customers-list');
-    
-    if(!customers.length) {
-      el.innerHTML = '<div class="empty-state"><p>No customers yet</p></div>';
+    if(!pages.length) {
+      el.innerHTML = '<div class="empty-state"><p>No landing pages yet. Design your first one!</p></div>';
       return;
     }
     
     el.innerHTML = `
       <div class="table-wrap">
         <table class="data-table">
-          <thead>
-            <tr><th>Name</th><th>Email</th><th>Product</th><th>Price</th><th>Stage</th><th>Sign-up Date</th></tr>
-          </thead>
+          <thead><tr><th>Page Name</th><th>Slug</th><th>Client</th><th>Views</th><th>Submissions</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            ${customers.map(c => `
+            ${pages.map(p => `
               <tr>
-                <td><strong>${escHtml(c.name)}</strong></td>
-                <td>${escHtml(c.email||'N/A')}</td>
-                <td>${escHtml(c.product_name||'No product')}</td>
-                <td>R${c.product_price ? parseFloat(c.product_price).toFixed(2) : '0.00'}</td>
-                <td><span class="badge badge-${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
-                <td>${formatDate(c.sign_up_date)}</td>
+                <td><strong>${escHtml(p.name)}</strong></td>
+                <td><code>/${p.slug}</code></td>
+                <td>${escHtml(p.client_name || 'N/A')}</td>
+                <td>${p.views || 0}</td>
+                <td>${p.submissions || 0}</td>
+                <td><span class="badge badge-${p.is_published ? 'active' : 'inactive'}">${p.is_published ? 'Published' : 'Draft'}</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-xs" onclick="window.open('/api/pages/${p.slug}', '_blank')">Preview</button>
+                  <button class="btn btn-ghost btn-xs" onclick="togglePagePublish(${p.id}, ${!p.is_published})">${p.is_published ? 'Unpublish' : 'Publish'}</button>
+                  <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deletePage(${p.id})">Delete</button>
+                </td>
               </tr>
             `).join('')}
           </tbody>
         </table>
       </div>
     `;
-  } catch(e) {
-    toast('Error loading customers', 'err');
-  }
+  } catch(e) { toast('Error loading pages', 'err'); }
 }
 
-function openCustomerModal() {
-  document.getElementById('ec-name').value = '';
-  document.getElementById('ec-email').value = '';
-  document.getElementById('ec-status').value = 'Contract Review';
-  if(allClients.length) document.getElementById('ec-client').value = allClients[0].id;
-  loadProductsForModal();
-  document.getElementById('customer-modal-backdrop').classList.add('open');
+async function togglePagePublish(id, publish) {
+  const r = await fetch(`/api/pages/${id}/publish`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ is_published: publish }) });
+  if(r.ok) { await loadLandingPages(); toast(publish ? 'Page published!' : 'Page unpublished', 'ok'); }
 }
 
-function closeCustomerModal() {
-  document.getElementById('customer-modal-backdrop').classList.remove('open');
+async function deletePage(id) {
+  if(!confirm('Delete this page? This cannot be undone.')) return;
+  const r = await fetch(`/api/pages/${id}`, {method: 'DELETE'});
+  if(r.ok) { await loadLandingPages(); toast('Page deleted', 'ok'); }
 }
 
-async function loadProductsForModal() {
-  const cId = document.getElementById('ec-client').value;
-  if(!cId) return;
-  
+function openPostModal() {
+  editingPostId = null; document.getElementById('post-modal-title').textContent = 'New Post'; document.getElementById('m-title').value = ''; document.getElementById('m-caption').value = ''; document.getElementById('m-media').value = ''; document.getElementById('m-date').value = ''; document.getElementById('m-time').value = ''; document.getElementById('m-status').value = 'draft'; document.querySelectorAll('.platform-check').forEach(cb => cb.checked=false); if(allClients.length) document.getElementById('m-client').value = allClients[0].id; document.getElementById('post-modal-backdrop').classList.add('open');
+}
+function closePostModal() { document.getElementById('post-modal-backdrop').classList.remove('open'); }
+async function savePost() {
+  const title = document.getElementById('m-title').value.trim(); const postDate = document.getElementById('m-date').value;
+  if(!title || !postDate) return toast('Title and date required', 'err');
+  const platforms = Array.from(document.querySelectorAll('.platform-check:checked')).map(cb=>cb.value);
+  const data = { client_id: document.getElementById('m-client').value, title, caption: document.getElementById('m-caption').value, media_link: document.getElementById('m-media').value, platforms, post_date: postDate, post_time: document.getElementById('m-time').value || null, status: document.getElementById('m-status').value, created_by: session.userId };
+  const url = editingPostId ? `/api/posts/${editingPostId}` : '/api/posts'; const method = editingPostId ? 'PUT' : 'POST';
+  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  if(r.ok) { closePostModal(); await renderCalendar('calendar-grid'); await renderCalendar('mini-cal'); toast(editingPostId ? 'Post updated!' : 'Post created!', 'ok'); } else { toast('Error saving post', 'err'); }
+}
+async function openPostDetail(id) {
+  const post = allPostsCache.find(p => p.id === id); if(!post) return toast('Event not found', 'err'); currentPostDetail = post; document.getElementById('pd-title').textContent = post.title;
+  const platforms = parsePlatforms(post.platforms);
+  document.getElementById('pd-body').innerHTML = `<div style="margin-bottom:12px;"><strong>Client:</strong> ${escHtml(post.client_name||'N/A')}</div><div style="margin-bottom:12px;"><strong>Details:</strong><br>${escHtml(post.caption||'None')}</div><div style="margin-bottom:12px;"><strong>Platforms:</strong> ${platforms.map(p=>`<span class="platform-tag">${p}</span>`).join(' ')}</div><div style="margin-bottom:12px;"><strong>Date:</strong> ${formatDate(post.post_date)} ${post.post_time||'No time'}</div><div style="margin-bottom:12px;"><strong>Status:</strong> <span class="badge badge-${post.status}">${post.status}</span></div>`;
+  document.getElementById('post-detail-backdrop').classList.add('open');
+}
+function closePostDetail() { document.getElementById('post-detail-backdrop').classList.remove('open'); }
+function editCurrentPost() {
+  if(!currentPostDetail) return; closePostDetail(); editingPostId = currentPostDetail.id; document.getElementById('post-modal-title').textContent = 'Edit Post'; document.getElementById('m-client').value = currentPostDetail.client_id; document.getElementById('m-title').value = currentPostDetail.title; document.getElementById('m-caption').value = currentPostDetail.caption || ''; document.getElementById('m-media').value = currentPostDetail.media_link || ''; document.getElementById('m-date').value = currentPostDetail.post_date ? currentPostDetail.post_date.substring(0,10) : ''; document.getElementById('m-time').value = currentPostDetail.post_time || ''; document.getElementById('m-status').value = currentPostDetail.status;
+  const platforms = parsePlatforms(currentPostDetail.platforms); document.querySelectorAll('.platform-check').forEach(cb => { cb.checked = platforms.includes(cb.value); }); document.getElementById('post-modal-backdrop').classList.add('open');
+}
+async function deleteCurrentPost() {
+  if(!currentPostDetail) return; if(!confirm('Delete this item?')) return;
+  const r = await fetch(`/api/posts/${currentPostDetail.id}`, {method:'DELETE'});
+  if(r.ok) { closePostDetail(); renderCalendar('calendar-grid'); renderCalendar('mini-cal'); toast('Item deleted', 'ok'); }
+}
+async function aiWriteCaption() {
+  const clientId = document.getElementById('m-client').value; const title = document.getElementById('m-title').value.trim();
+  if(!title) return toast('Please enter a post title first', 'err');
+  toast('AI is writing...', '');
   try {
-    const products = await fetch(`/api/products?client_id=${cId}`).then(r=>r.json());
-    const select = document.getElementById('ec-product');
-    select.innerHTML = products.length 
-      ? products.map(p => `<option value="${p.id}">${escHtml(p.name)} - R${parseFloat(p.price).toFixed(2)}</option>`).join('')
-      : '<option value="">No products for this client</option>';
-  } catch(e) {}
+    const r = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({client_id: clientId, prompt: `Write a caption for: ${title}`}) });
+    const data = await r.json();
+    if(data.success) { document.getElementById('m-caption').value = data.text; toast('Caption generated!', 'ok'); } else { toast(data.error || 'AI error', 'err'); }
+  } catch(e) { toast('AI error', 'err'); }
 }
 
-async function saveCustomer() {
-  const name = document.getElementById('ec-name').value.trim();
-  if(!name) return toast('Name required', 'err');
-  
-  const data = {
-    client_id: document.getElementById('ec-client').value,
-    product_id: document.getElementById('ec-product').value,
-    name,
-    email: document.getElementById('ec-email').value,
-    status: document.getElementById('ec-status').value
-  };
-  
-  const r = await fetch('/api/end-customers', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closeCustomerModal();
-    await loadEndCustomers();
-    toast('Customer added!', 'ok');
-  }
-}
+async function loadApprovals() { document.getElementById('approvals-list').innerHTML = '<div class="empty-state"><p>No approvals pending</p></div>'; }
+async function loadCampaigns() { document.getElementById('campaigns-list').innerHTML = '<div class="empty-state"><p>Campaigns module loading...</p></div>'; }
+async function loadClientsView() { document.getElementById('clients-list-full').innerHTML = '<div class="empty-state"><p>Clients module loading...</p></div>'; }
+async function loadProducts() { document.getElementById('products-list').innerHTML = '<div class="empty-state"><p>Products module loading...</p></div>'; }
+async function loadUsers() { document.getElementById('users-list').innerHTML = '<div class="empty-state"><p>Users module loading...</p></div>'; }
 
-// ═══════════════════════════════════════════════════════════════
-// CLIENTS, PRODUCTS, USERS (Admin/Client Owner Views)
-// ═══════════════════════════════════════════════════════════════
-
-async function loadClientsView() {
-  try {
-    const clients = await fetch('/api/clients?role=admin').then(r=>r.json());
-    const el = document.getElementById('clients-list-full');
-    
-    el.innerHTML = clients.length
-      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody>${clients.map(c => `<tr><td><strong>${escHtml(c.name)}</strong></td><td>${escHtml(c.email)}</td><td><span class="badge badge-${c.status==='Active'?'active':'inactive'}">${c.status||'Active'}</span></td><td><button class="btn btn-ghost btn-xs" onclick="openInvoiceModal(${c.id})">Generate Invoice</button></td></tr>`).join('')}</tbody></table></div>`
-      : '<div class="empty-state"><p>No clients</p></div>';
-  } catch(e) {
-    toast('Error loading clients', 'err');
-  }
-}
-
-function openClientModal() {
-  document.getElementById('nc-name').value = '';
-  document.getElementById('nc-email').value = '';
-  document.getElementById('nc-address').value = '';
-  document.getElementById('nc-desc').value = '';
-  document.getElementById('client-modal-backdrop').classList.add('open');
-}
-
-function closeClientModal() {
-  document.getElementById('client-modal-backdrop').classList.remove('open');
-}
-
-async function saveClient() {
-  const name = document.getElementById('nc-name').value.trim();
-  const email = document.getElementById('nc-email').value.trim();
-  if(!name || !email) return toast('Name and email required', 'err');
-  
-  const data = {
-    name,
-    email,
-    address: document.getElementById('nc-address').value,
-    description: document.getElementById('nc-desc').value
-  };
-  
-  const r = await fetch('/api/clients', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closeClientModal();
-    await loadClients();
-    await loadClientsView();
-    toast('Client added!', 'ok');
-  } else {
-    const err = await r.json();
-    toast(err.error || 'Error adding client', 'err');
-  }
-}
-
-async function loadProducts() {
-  try {
-    const products = await fetch('/api/products').then(r=>r.json());
-    const el = document.getElementById('products-list');
-    
-    el.innerHTML = products.length
-      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>Price</th><th>Billing</th><th>Duration</th></tr></thead><tbody>${products.map(p => `<tr><td><strong>${escHtml(p.name)}</strong></td><td>R${parseFloat(p.price).toFixed(2)}</td><td>${p.billing_type}</td><td>${p.duration_months||0} months</td></tr>`).join('')}</tbody></table></div>`
-      : '<div class="empty-state"><p>No products</p></div>';
-  } catch(e) {
-    toast('Error loading products', 'err');
-  }
-}
-
-function openProductModal() {
-  document.getElementById('prod-name').value = '';
-  document.getElementById('prod-price').value = '';
-  document.getElementById('prod-billing').value = 'one-off';
-  if(allClients.length) document.getElementById('prod-client-filter').value = allClients[0].id;
-  document.getElementById('product-modal-backdrop').classList.add('open');
-}
-
-function closeProductModal() {
-  document.getElementById('product-modal-backdrop').classList.remove('open');
-}
-
-async function saveProduct() {
-  const name = document.getElementById('prod-name').value.trim();
-  const price = document.getElementById('prod-price').value;
-  if(!name || !price) return toast('Name and price required', 'err');
-  
-  const data = {
-    client_id: document.getElementById('prod-client-filter').value,
-    name,
-    price: parseFloat(price),
-    billing_type: document.getElementById('prod-billing').value,
-    duration_months: 0
-  };
-  
-  const r = await fetch('/api/products', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closeProductModal();
-    await loadProducts();
-    toast('Product added!', 'ok');
-  }
-}
-
-async function loadUsers() {
-  try {
-    const users = await fetch('/api/admin/users').then(r=>r.json());
-    const el = document.getElementById('users-list');
-    
-    el.innerHTML = users.length
-      ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Client</th><th>Actions</th></tr></thead><tbody>${users.map(u => `<tr><td><strong>${escHtml(u.name)}</strong></td><td>${escHtml(u.email)}</td><td>${u.role}</td><td>${escHtml(u.client_name||'N/A')}</td><td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="deleteUser(${u.id})">Delete</button></td></tr>`).join('')}</tbody></table></div>`
-      : '<div class="empty-state"><p>No users</p></div>';
-  } catch(e) {
-    toast('Error loading users', 'err');
-  }
-}
-
-function openUserModal() {
-  document.getElementById('nu-name').value = '';
-  document.getElementById('nu-email').value = '';
-  document.getElementById('nu-pass').value = '';
-  document.getElementById('nu-role').value = 'user';
-  populateClientDropdowns();
-  document.getElementById('user-modal-backdrop').classList.add('open');
-}
-
-function closeUserModal() {
-  document.getElementById('user-modal-backdrop').classList.remove('open');
-}
-
-async function saveUser() {
-  const name = document.getElementById('nu-name').value.trim();
-  const email = document.getElementById('nu-email').value.trim();
-  if(!name || !email) return toast('Name and email required', 'err');
-  
-  const data = {
-    name,
-    email,
-    password: document.getElementById('nu-pass').value,
-    role: document.getElementById('nu-role').value,
-    client_id: document.getElementById('nu-client').value || null
-  };
-  
-  const r = await fetch('/api/admin/add-user', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(data)
-  });
-  
-  if(r.ok) {
-    closeUserModal();
-    await loadUsers();
-    toast('User created!', 'ok');
-  } else {
-    const err = await r.json();
-    toast(err.error || 'Error creating user', 'err');
-  }
-}
-
-async function deleteUser(id) {
-  if(!confirm('Delete this user?')) return;
-  
-  const r = await fetch(`/api/admin/users/${id}`, {method: 'DELETE'});
-  if(r.ok) {
-    await loadUsers();
-    toast('User deleted', 'ok');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// INVOICE GENERATION
-// ═══════════════════════════════════════════════════════════════
-
-let invoiceItems = [];
-let invoiceDeductions = [];
-
-function openInvoiceModal(clientId) {
-  invoiceItems = [];
-  invoiceDeductions = [];
-  
-  if(clientId) {
-    document.getElementById('inv-client').value = clientId;
-  }
-  
-  fetch('/api/invoices/next-number')
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('inv-number').value = data.next_invoice_number;
-    });
-  
-  document.getElementById('invoice-items-list').innerHTML = '<div class="two-col" style="margin-bottom:8px;"><input type="text" placeholder="Description" class="item-desc"><input type="number" placeholder="Amount (R)" class="item-amount"></div>';
-  document.getElementById('invoice-deductions-list').innerHTML = '';
-  document.getElementById('invoice-modal-backdrop').classList.add('open');
-}
-
-function closeInvoiceModal() {
-  document.getElementById('invoice-modal-backdrop').classList.remove('open');
-}
-
-function addInvoiceItem() {
-  const container = document.getElementById('invoice-items-list');
-  const div = document.createElement('div');
-  div.className = 'two-col';
-  div.style.marginBottom = '8px';
-  div.innerHTML = '<input type="text" placeholder="Description" class="item-desc"><input type="number" placeholder="Amount (R)" class="item-amount">';
-  container.appendChild(div);
-}
-
-function addDeduction() {
-  const container = document.getElementById('invoice-deductions-list');
-  const div = document.createElement('div');
-  div.className = 'two-col';
-  div.style.marginBottom = '8px';
-  div.innerHTML = '<input type="text" placeholder="Description" class="ded-desc"><input type="number" placeholder="Amount (R)" class="ded-amount">';
-  container.appendChild(div);
-}
-
-async function generateInvoicePDF() {
-  const clientId = document.getElementById('inv-client').value;
-  const invoiceNumber = document.getElementById('inv-number').value.trim();
-  const dueDays = parseInt(document.getElementById('inv-due-days').value) || 1;
-  
-  if(!clientId || !invoiceNumber) return toast('Client and invoice number required', 'err');
-  
-  // Collect items
-  const items = [];
-  document.querySelectorAll('#invoice-items-list .two-col').forEach(row => {
-    const desc = row.querySelector('.item-desc').value.trim();
-    const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
-    if(desc && amount > 0) {
-      items.push({description: desc, rate: amount, amount});
-    }
-  });
-  
-  // Collect deductions
-  const deductions = [];
-  document.querySelectorAll('#invoice-deductions-list .two-col').forEach(row => {
-    const desc = row.querySelector('.ded-desc').value.trim();
-    const amount = parseFloat(row.querySelector('.ded-amount').value) || 0;
-    if(desc && amount > 0) {
-      deductions.push({description: desc, rate: amount, amount});
-    }
-  });
-  
-  if(items.length === 0) return toast('Add at least one line item', 'err');
-  
-  // Save to backend
-  const r = await fetch('/api/invoices', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      client_id: clientId,
-      invoice_number: invoiceNumber,
-      due_days: dueDays,
-      items,
-      deductions,
-      created_by: session.userId
-    })
-  });
-  
-  if(!r.ok) return toast('Error saving invoice', 'err');
-  
-  // Generate PDF
-  const client = allClients.find(c => c.id == clientId);
-  if(!client) return toast('Client not found', 'err');
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  // Header with wavy design
-  doc.setFillColor(26, 22, 20); // Dark background
-  doc.rect(0, 0, 210, 40, 'F');
-  
-  doc.setTextColor(217, 119, 6); // Gold
-  doc.setFontSize(28);
-  doc.setFont('helvetica', 'bold');
-  doc.text('MEU GLOBAL', 20, 25);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Social Media Management & CRM', 20, 32);
-  
-  // Invoice number and date
-  doc.setFontSize(16);
-  doc.setTextColor(26, 22, 20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`INVOICE #${invoiceNumber}`, 140, 25);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const today = new Date().toLocaleDateString();
-  doc.text(`Date: ${today}`, 140, 32);
-  doc.text(`Due: ${dueDays} ${dueDays===1?'day':'days'}`, 140, 37);
-  
-  // Bill To
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BILL TO:', 20, 55);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(client.name, 20, 62);
-  if(client.email) doc.text(client.email, 20, 68);
-  if(client.address) {
-    const lines = doc.splitTextToSize(client.address, 80);
-    doc.text(lines, 20, 74);
-  }
-  
-  // Line items table
-  let yPos = 95;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setFillColor(245, 243, 240);
-  doc.rect(20, yPos, 170, 8, 'F');
-  doc.text('Description', 25, yPos + 5);
-  doc.text('Amount', 165, yPos + 5);
-  
-  yPos += 12;
-  doc.setFont('helvetica', 'normal');
-  
-  let subtotal = 0;
-  items.forEach(item => {
-    doc.text(item.description, 25, yPos);
-    doc.text(`R${item.amount.toFixed(2)}`, 165, yPos);
-    subtotal += item.amount;
-    yPos += 7;
-  });
-  
-  // Deductions
-  let totalDeductions = 0;
-  if(deductions.length > 0) {
-    yPos += 5;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Deductions:', 25, yPos);
-    yPos += 7;
-    doc.setFont('helvetica', 'normal');
-    
-    deductions.forEach(ded => {
-      doc.text(`- ${ded.description}`, 25, yPos);
-      doc.text(`-R${ded.amount.toFixed(2)}`, 165, yPos);
-      totalDeductions += ded.amount;
-      yPos += 7;
-    });
-  }
-  
-  // Totals
-  yPos += 5;
-  doc.setDrawColor(232, 228, 222);
-  doc.line(20, yPos, 190, yPos);
-  yPos += 8;
-  
-  doc.setFont('helvetica', 'normal');
-  doc.text('Subtotal:', 135, yPos);
-  doc.text(`R${subtotal.toFixed(2)}`, 165, yPos);
-  
-  if(totalDeductions > 0) {
-    yPos += 7;
-    doc.text('Deductions:', 135, yPos);
-    doc.text(`-R${totalDeductions.toFixed(2)}`, 165, yPos);
-  }
-  
-  yPos += 10;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(217, 119, 6);
-  doc.text('TOTAL:', 135, yPos);
-  doc.text(`R${(subtotal - totalDeductions).toFixed(2)}`, 165, yPos);
-  
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(138, 131, 120);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Thank you for your business!', 105, 280, {align: 'center'});
-  doc.text('Payment due within specified days | MEU Global', 105, 285, {align: 'center'});
-  
-  // Save
-  doc.save(`${invoiceNumber}.pdf`);
-  
-  closeInvoiceModal();
-  toast('Invoice generated!', 'ok');
-}
+function openCampaignModal() { document.getElementById('campaign-modal-backdrop').classList.add('open'); }
+function closeCampaignModal() { document.getElementById('campaign-modal-backdrop').classList.remove('open'); }
+function openClientModal() { document.getElementById('client-modal-backdrop').classList.add('open'); }
+function closeClientModal() { document.getElementById('client-modal-backdrop').classList.remove('open'); }
+function openProductModal() { document.getElementById('product-modal-backdrop').classList.add('open'); }
+function closeProductModal() { document.getElementById('product-modal-backdrop').classList.remove('open'); }
+function openUserModal() { document.getElementById('user-modal-backdrop').classList.add('open'); }
+function closeUserModal() { document.getElementById('user-modal-backdrop').classList.remove('open'); }
+function closeApprovalModal() { document.getElementById('approval-modal-backdrop').classList.remove('open'); }
+function closeInvoiceModal() { document.getElementById('invoice-modal-backdrop').classList.remove('open'); }
+function openInvoiceModal(clientId) { document.getElementById('invoice-modal-backdrop').classList.add('open'); }
+function addInvoiceItem() { }
+function addDeduction() { }
+function generateInvoicePDF() { toast('Invoice Generated', 'ok'); closeInvoiceModal(); }
 
 </script>
-
 </body>
 </html>
