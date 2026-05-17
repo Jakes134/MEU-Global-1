@@ -35,8 +35,26 @@ pool.query('SELECT NOW()')
 app.get('/setup-db', async (req, res) => {
   if (!process.env.SETUP_SECRET || req.query.secret !== process.env.SETUP_SECRET) return res.status(403).send('Forbidden');
   try {
-    // 1. Users Table
-    await pool.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE NOT NULL, password TEXT NOT NULL, role VARCHAR(20) DEFAULT 'user', client_id INTEGER, must_change_password BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
+    // 1. Users Table — uses password_hash (matches the original Doc 2 schema your DB already has)
+    await pool.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE NOT NULL, password_hash TEXT NOT NULL, role VARCHAR(20) DEFAULT 'user', client_id INTEGER, must_change_password BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
+
+    // ── DEFENSIVE MIGRATION ─────────────────────────────────────────────
+    // Handle both deployment paths:
+    //   • If the DB has the old `password` column (an earlier Doc 4 deploy), rename it to password_hash.
+    //   • If neither exists for some reason, add password_hash.
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password')
+           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash')
+        THEN
+          ALTER TABLE users RENAME COLUMN password TO password_hash;
+        END IF;
+      END $$;
+    `);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`);
+    // ────────────────────────────────────────────────────────────────────
+
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_id INTEGER`);
@@ -57,7 +75,7 @@ app.get('/setup-db', async (req, res) => {
       UNIQUE(client_id, user_id)
     );`);
 
-    // 4. Leads Table (Sales pipeline - Default status is 'New')
+    // 4. Leads Table
     await pool.query(`CREATE TABLE IF NOT EXISTS leads (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
@@ -74,7 +92,7 @@ app.get('/setup-db', async (req, res) => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 5. Lead Activity (For activity tracking)
+    // 5. Lead Activity
     await pool.query(`CREATE TABLE IF NOT EXISTS lead_activity (
       id SERIAL PRIMARY KEY,
       lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
@@ -101,7 +119,7 @@ app.get('/setup-db', async (req, res) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
-    // 7. Page Submissions (For lead captures)
+    // 7. Page Submissions
     await pool.query(`CREATE TABLE IF NOT EXISTS page_submissions (
       id SERIAL PRIMARY KEY,
       page_id INTEGER REFERENCES landing_pages(id) ON DELETE CASCADE,
@@ -144,7 +162,7 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, price DECIMAL(12,2) NOT NULL, billing_type VARCHAR(20) DEFAULT 'one-off', duration_months INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`CREATE TABLE IF NOT EXISTS end_customers (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, product_id INTEGER REFERENCES products(id) ON DELETE SET NULL, name VARCHAR(100) NOT NULL, email VARCHAR(100), status VARCHAR(30) DEFAULT 'Contract Review', sign_up_date DATE DEFAULT CURRENT_DATE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
 
-    // 11. Posts Table (Includes Content Calendar & Appointments)
+    // 11. Posts Table
     await pool.query(`CREATE TABLE IF NOT EXISTS posts (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, title TEXT NOT NULL, caption TEXT, platforms TEXT[], post_date DATE NOT NULL, post_time TIME, status VARCHAR(20) DEFAULT 'draft', is_approved BOOLEAN DEFAULT FALSE, approval_status VARCHAR(20) DEFAULT 'pending', rejection_reason TEXT, media_link TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`);
     await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'pending'`);
@@ -160,23 +178,23 @@ app.get('/setup-db', async (req, res) => {
 
     // 13. Invoices System
     await pool.query(`CREATE TABLE IF NOT EXISTS invoices (
-      id SERIAL PRIMARY KEY, 
-      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE, 
-      invoice_number VARCHAR(50) UNIQUE NOT NULL, 
-      due_days INTEGER DEFAULT 1, 
-      subtotal DECIMAL(12,2) DEFAULT 0, 
-      deductions DECIMAL(12,2) DEFAULT 0, 
-      total DECIMAL(12,2) DEFAULT 0, 
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      invoice_number VARCHAR(50) UNIQUE NOT NULL,
+      due_days INTEGER DEFAULT 1,
+      subtotal DECIMAL(12,2) DEFAULT 0,
+      deductions DECIMAL(12,2) DEFAULT 0,
+      total DECIMAL(12,2) DEFAULT 0,
       created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
     await pool.query(`CREATE TABLE IF NOT EXISTS invoice_items (
-      id SERIAL PRIMARY KEY, 
-      invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE, 
-      description TEXT NOT NULL, 
-      rate DECIMAL(12,2) NOT NULL, 
-      amount DECIMAL(12,2) NOT NULL, 
+      id SERIAL PRIMARY KEY,
+      invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
+      description TEXT NOT NULL,
+      rate DECIMAL(12,2) NOT NULL,
+      amount DECIMAL(12,2) NOT NULL,
       is_deduction BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
@@ -191,13 +209,16 @@ app.get('/setup-db', async (req, res) => {
     await pool.query(`ALTER TABLE task_comments DROP CONSTRAINT IF EXISTS task_comments_user_id_fkey`);
     await pool.query(`ALTER TABLE task_comments ADD CONSTRAINT task_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL`);
 
-    // Seed Admin User
+    // Seed Admin User (uses password_hash now)
     const { rows } = await pool.query('SELECT COUNT(*) FROM users');
     if (parseInt(rows[0].count) === 0) {
       const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@meuglobal.com';
       const adminPass = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!';
       const hashed = await bcrypt.hash(adminPass, 12);
-      await pool.query(`INSERT INTO users (name, email, password, role, must_change_password) VALUES ('System Admin', $1, $2, 'admin', TRUE)`, [adminEmail, hashed]);
+      await pool.query(
+        `INSERT INTO users (name, email, password_hash, role, must_change_password) VALUES ('System Admin', $1, $2, 'admin', TRUE)`,
+        [adminEmail, hashed]
+      );
     }
     res.send('<pre>Database fully migrated successfully with all new features!</pre>');
 
@@ -217,9 +238,21 @@ app.post('/api/login', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
     if (!rows.length) return res.status(401).json({ error: 'Invalid credentials.' });
     const user = rows[0];
-    if (!(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
-    res.json({ success: true, userId: user.id, name: user.name, role: user.role, client_id: user.client_id, email: user.email, mustChange: user.must_change_password });
+    // ── FIX ── compare against password_hash (the actual column in your DB) ──
+    if (!(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+    res.json({
+      success: true,
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+      client_id: user.client_id,
+      email: user.email,
+      mustChange: user.must_change_password
+    });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -229,7 +262,8 @@ app.post('/api/change-password', async (req, res) => {
   if (!userId || !newPassword) return res.status(400).json({ error: 'Missing fields.' });
   try {
     const hashed = await bcrypt.hash(newPassword, 12);
-    await pool.query('UPDATE users SET password=$1, must_change_password=FALSE WHERE id=$2', [hashed, userId]);
+    // ── FIX ── update password_hash, not password ──
+    await pool.query('UPDATE users SET password_hash=$1, must_change_password=FALSE WHERE id=$2', [hashed, userId]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -256,10 +290,10 @@ app.post('/api/chat', async (req, res) => {
       const clientRes = await pool.query('SELECT name, description FROM clients WHERE id = $1', [client_id]);
       if (clientRes.rows.length > 0) {
         const client = clientRes.rows[0];
-        systemInstruction = `You are the dedicated expert social media manager for the brand/client named "${client.name}". 
-        Here is their brand description, content style, and guidelines: 
+        systemInstruction = `You are the dedicated expert social media manager for the brand/client named "${client.name}".
+        Here is their brand description, content style, and guidelines:
         ${client.description || 'Create engaging, professional content suitable for their industry.'}
-        
+
         Always adapt your tone, vocabulary, and style to perfectly match these guidelines.`;
       }
     }
@@ -297,7 +331,12 @@ app.post('/api/admin/add-user', async (req, res) => {
   try {
     const raw = password && password.trim() || 'ChangeMe123!';
     const hashed = await bcrypt.hash(raw, 12);
-    const result = await pool.query(`INSERT INTO users (name, email, password, role, client_id, must_change_password) VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, name, email, role`, [name.trim(), email.toLowerCase().trim(), hashed, role || 'user', client_id || null]);
+    // ── FIX ── insert into password_hash, not password ──
+    const result = await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, client_id, must_change_password)
+       VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, name, email, role`,
+      [name.trim(), email.toLowerCase().trim(), hashed, role || 'user', client_id || null]
+    );
     res.status(201).json({ success: true, user: result.rows[0] });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email already exists.' });
@@ -434,10 +473,10 @@ app.get('/api/leads', async (req, res) => {
     for (let lead of rows) {
       if (lead.client_id) {
         const teamRes = await pool.query(`
-          SELECT u.id, u.name, u.email 
-          FROM client_team_members ctm 
-          JOIN users u ON ctm.user_id = u.id 
-          WHERE ctm.client_id = $1 
+          SELECT u.id, u.name, u.email
+          FROM client_team_members ctm
+          JOIN users u ON ctm.user_id = u.id
+          WHERE ctm.client_id = $1
           LIMIT 3
         `, [lead.client_id]);
         lead.team_members = teamRes.rows;
@@ -458,7 +497,6 @@ app.post('/api/leads', async (req, res) => {
   try {
     const { rows } = await pool.query(`INSERT INTO leads (client_id, name, email, company, job_title, phone, annual_revenue, status, created_by, lead_owner) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING *`, [client_id, name, email, company, job_title, phone, annual_revenue, status || 'New', created_by]);
 
-    // Log activity
     await pool.query(`
       INSERT INTO lead_activity (lead_id, user_id, activity_type, description)
       VALUES ($1, $2, 'created', 'Lead created')
@@ -475,17 +513,15 @@ app.put('/api/leads/:id', async (req, res) => {
   const { name, email, company, job_title, phone, annual_revenue, status, lead_owner } = req.body;
 
   try {
-    // Get old status for activity tracking
     const oldLead = await pool.query('SELECT status FROM leads WHERE id = $1', [req.params.id]);
 
     const { rows } = await pool.query(`
-      UPDATE leads 
+      UPDATE leads
       SET name=$1, email=$2, company=$3, job_title=$4, phone=$5, annual_revenue=$6, status=$7, lead_owner=$8, updated_at=CURRENT_TIMESTAMP
       WHERE id=$9
       RETURNING *
     `, [name, email, company, job_title, phone, annual_revenue, status, lead_owner, req.params.id]);
 
-    // Log status change
     if (oldLead.rows[0] && oldLead.rows[0].status !== status) {
       await pool.query(`
         INSERT INTO lead_activity (lead_id, activity_type, description)
@@ -506,7 +542,6 @@ app.put('/api/leads/:id/status', async (req, res) => {
   try {
     await pool.query('UPDATE leads SET status=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2', [status, req.params.id]);
 
-    // Log activity
     await pool.query(`
       INSERT INTO lead_activity (lead_id, user_id, activity_type, description)
       VALUES ($1, $2, 'status_changed', $3)
@@ -593,7 +628,6 @@ app.get('/api/pages/:slug', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM landing_pages WHERE slug = $1', [req.params.slug]);
     if (!rows.length) return res.status(404).send('Page not found');
 
-    // Increment views
     await pool.query('UPDATE landing_pages SET views = views + 1 WHERE id = $1', [rows[0].id]);
 
     res.send(rows[0].html_content);
@@ -607,19 +641,16 @@ app.post('/api/pages/:slug/submit', async (req, res) => {
   const { name, email, phone } = req.body;
 
   try {
-    // Get page
     const pageRes = await pool.query('SELECT id FROM landing_pages WHERE slug = $1', [req.params.slug]);
     if (!pageRes.rows.length) return res.status(404).json({ error: 'Page not found' });
 
     const pageId = pageRes.rows[0].id;
 
-    // Save submission
     await pool.query(`
       INSERT INTO page_submissions (page_id, name, email, phone, data)
       VALUES ($1, $2, $3, $4, $5)
     `, [pageId, name, email, phone, JSON.stringify(req.body)]);
 
-    // Increment submissions count
     await pool.query('UPDATE landing_pages SET submissions = submissions + 1 WHERE id = $1', [pageId]);
 
     res.json({ success: true });
@@ -687,16 +718,15 @@ app.post('/api/campaigns', async (req, res) => {
 });
 
 app.post('/api/campaigns/:id/recipients', async (req, res) => {
-  const { recipients } = req.body; // Array of { email, name }
+  const { recipients } = req.body;
 
   try {
     for (const recipient of recipients) {
       await pool.query(`INSERT INTO campaign_recipients (campaign_id, email, name) VALUES ($1, $2, $3)`, [req.params.id, recipient.email, recipient.name]);
     }
 
-    // Update count
     await pool.query(`
-      UPDATE email_campaigns 
+      UPDATE email_campaigns
       SET recipients_count = (SELECT COUNT(*) FROM campaign_recipients WHERE campaign_id = $1)
       WHERE id = $1
     `, [req.params.id]);
@@ -709,8 +739,6 @@ app.post('/api/campaigns/:id/recipients', async (req, res) => {
 });
 
 app.put('/api/campaigns/:id/send', async (req, res) => {
-  // This would integrate with an email service like SendGrid or AWS SES
-  // For now, just mark as sent
   try {
     await pool.query(`UPDATE email_campaigns SET status = 'sent', sent_date = CURRENT_TIMESTAMP WHERE id = $1`, [req.params.id]);
 
@@ -775,7 +803,7 @@ app.post('/api/invoices', async (req, res) => {
     const total = subtotal - totalDeductions;
 
     const invRes = await client.query(
-      `INSERT INTO invoices (client_id, invoice_number, due_days, subtotal, deductions, total, created_by) 
+      `INSERT INTO invoices (client_id, invoice_number, due_days, subtotal, deductions, total, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
       [client_id, invoice_number, due_days || 1, subtotal, totalDeductions, total, created_by || null]
     );
@@ -1011,6 +1039,10 @@ app.get('/api/tasks', async (req, res) => {
       params.push(user_id);
       query += ` AND t.assigned_to=$${params.length}`;
     }
+    if (client_id && client_id !== 'null' && client_id !== '') {
+      params.push(client_id);
+      query += ` AND t.client_id=$${params.length}`;
+    }
     if (due_month && due_year) {
       params.push(due_year, due_month);
       query += ` AND t.due_date IS NOT NULL AND EXTRACT(YEAR FROM t.due_date)=$${params.length - 1} AND EXTRACT(MONTH FROM t.due_date)=$${params.length}`;
@@ -1101,6 +1133,8 @@ app.post('/api/tasks/:id/comments', async (req, res) => {
 // ============================================================================
 // SERVE FRONTEND
 // ============================================================================
+app.use(express.static(path.join(__dirname)));
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
